@@ -1203,7 +1203,7 @@ function buildPreviewHTML(title){
   });
   const bodyInner = clone.outerHTML;
   return `<!DOCTYPE html>
-  <!--
+<!--
   Złoty MD — Copyright (c) Cybersecurity Department(Отдел кибербезопасности). MIT License.
 
   Third-party libraries used in this file:
@@ -1368,7 +1368,11 @@ function executePdfDownload(){
   win.document.write(pdfHTML);
   win.document.close();
   win.addEventListener('load', () => {
-    setTimeout(() => { win.focus(); win.print(); win.close(); }, 800);
+    setTimeout(() => {
+      win.focus();
+      win.addEventListener('afterprint', () => { win.close(); });
+      win.print();
+    }, 800);
   });
 }
 
