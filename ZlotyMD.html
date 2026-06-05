@@ -1368,7 +1368,7 @@ function executePdfDownload(){
   win.document.write(pdfHTML);
   win.document.close();
   win.addEventListener('load', () => {
-    setTimeout(() => { win.focus(); win.print(); }, 800);
+    setTimeout(() => { win.focus(); win.print(); win.close(); }, 800);
   });
 }
 
