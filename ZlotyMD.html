@@ -135,7 +135,8 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .badge.gn{background:var(--ggt);color:var(--gg)}
 .badge.tx{background:var(--grt);color:var(--gr)}
 
-.pv-copy-btn{
+
+.pv-pop-btn{
   display:flex;align-items:center;gap:var(--s5);
   padding:0 var(--s13);height:26px;border-radius:var(--r8);
   border:1.5px solid var(--bord);background:var(--bg);
@@ -143,12 +144,11 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   color:var(--mut);cursor:pointer;white-space:nowrap;flex-shrink:0;
   transition:border-color .15s,color .15s,background .15s,transform .12s
 }
-.pv-copy-btn svg{width:12px;height:12px;flex-shrink:0}
-.pv-copy-btn:hover{border-color:var(--gg);color:var(--gg);background:var(--ggt);transform:translateY(-1px)}
-.pv-copy-btn:active{transform:scale(.95)}
-.pv-copy-btn.ok{border-color:var(--gg);color:var(--gg);background:var(--ggt)}
+.pv-pop-btn svg{width:12px;height:12px;flex-shrink:0}
+.pv-pop-btn:hover{border-color:var(--gg);color:var(--gg);background:var(--ggt);transform:translateY(-1px)}
+.pv-pop-btn:active{transform:scale(.95)}
 
-.rz{
+
   width:5px;background:var(--bord);cursor:col-resize;flex-shrink:0;
   transition:background .15s
 }
@@ -910,7 +910,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
     <div class="pp v" id="pP">
       <div class="pl">
         <span class="badge gn">HTML</span> <span data-i18n="previewLabel">Preview</span>
-        <button class="pv-copy-btn" id="pvPopBtn" title="Open in new window" data-i18n-title="pvPopBtnTitle" onclick="openPreviewWindow()" style="margin-left:auto">
+        <button class="pv-pop-btn" id="pvPopBtn" title="Open in new window" data-i18n-title="pvPopBtnTitle" onclick="openPreviewWindow()" style="margin-left:auto">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M7 3H3a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V9"/>
             <polyline points="10 1 15 1 15 6"/>
@@ -1160,21 +1160,6 @@ if(typeof mermaid!=='undefined'){
 </html>`;
 }
 
-function copyPreviewHTML(){
-  if(!ed.value.trim()) return;
-  const html = buildPreviewHTML();
-  const btn = document.getElementById('pvCopyBtn');
-  const COPY_ICON = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"/><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"/></svg>`;
-  const CHECK_ICON = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 9 6 13 14 4"/></svg>`;
-  navigator.clipboard.writeText(html).then(()=>{
-    btn.innerHTML = CHECK_ICON + (LANGS[currentLang]?.copiedHTML||'Copied!');
-    btn.classList.add('ok');
-    setTimeout(()=>{
-      btn.innerHTML = COPY_ICON + (LANGS[currentLang]?.copyHTML||'Copy HTML');
-      btn.classList.remove('ok');
-    }, 2500);
-  });
-}
 
 function openPreviewWindow(){
   if(!ed.value.trim()) return;
@@ -1637,7 +1622,6 @@ const LANGS = {
     chars:'chars', words:'words', lines:'lines',
     editorLabel:'Editor', previewLabel:'Preview',
     tabEdit:'Edit', tabPreview:'Preview',
-    copyHTML:'Copy HTML', copiedHTML:'Copied!',
     codeCopy:'Copy', codeCopied:'Copied',
     emptyTitle:'Preview Area',
     emptyDesc:'Type Markdown in the editor to see a live preview',
@@ -1650,7 +1634,6 @@ const LANGS = {
     savedLabel:'Saved', unsavedLabel:'Unsaved',
     restoredMsg:'Content restored from saved session',
     tooLargeMsg:'Content too large to save in cookie',
-    pvCopyBtnTitle:'Copy preview HTML with CSS',
     pvPopBtnTitle:'Open preview in new window',
     openWindow:'Open',
     diffPrompt:'Enter language name (leave blank for plain diff):',
@@ -1768,7 +1751,6 @@ sequenceDiagram
     chars:'文字', words:'単語', lines:'行',
     editorLabel:'エディター', previewLabel:'プレビュー',
     tabEdit:'編集', tabPreview:'プレビュー',
-    copyHTML:'HTMLをコピー', copiedHTML:'コピー済！',
     codeCopy:'コピー', codeCopied:'コピー済',
     emptyTitle:'プレビューエリア',
     emptyDesc:'左のエディターにMarkdownを入力するとリアルタイムで表示されます',
@@ -1781,7 +1763,6 @@ sequenceDiagram
     savedLabel:'保存済み', unsavedLabel:'未保存',
     restoredMsg:'保存した内容を復元しました',
     tooLargeMsg:'コンテンツが大きすぎてCookieに保存できません',
-    pvCopyBtnTitle:'プレビューのHTMLをCSS込みでコピー',
     pvPopBtnTitle:'プレビューを別ウィンドウで開く',
     openWindow:'開く',
     diffPrompt:'言語名を入力（空欄なら diff のみ）:',
@@ -1899,7 +1880,6 @@ sequenceDiagram
     chars:'Zeichen', words:'Wörter', lines:'Zeilen',
     editorLabel:'Editor', previewLabel:'Vorschau',
     tabEdit:'Bearbeiten', tabPreview:'Vorschau',
-    copyHTML:'HTML kopieren', copiedHTML:'Kopiert!',
     codeCopy:'Kopieren', codeCopied:'Kopiert',
     emptyTitle:'Vorschaubereich',
     emptyDesc:'Gib Markdown im Editor ein, um eine Live-Vorschau zu sehen',
@@ -1912,7 +1892,6 @@ sequenceDiagram
     savedLabel:'Gespeichert', unsavedLabel:'Ungespeichert',
     restoredMsg:'Inhalt aus gespeicherter Sitzung wiederhergestellt',
     tooLargeMsg:'Inhalt zu groß für Cookie',
-    pvCopyBtnTitle:'Vorschau-HTML mit CSS kopieren',
     pvPopBtnTitle:'Vorschau in neuem Fenster öffnen',
     openWindow:'Öffnen',
     diffPrompt:'Sprachname eingeben (leer lassen für einfaches diff):',
@@ -2030,7 +2009,6 @@ sequenceDiagram
     chars:'симв.', words:'слов', lines:'строк',
     editorLabel:'Редактор', previewLabel:'Просмотр',
     tabEdit:'Редактировать', tabPreview:'Просмотр',
-    copyHTML:'Копировать HTML', copiedHTML:'Скопировано!',
     codeCopy:'Копировать', codeCopied:'Скопировано',
     emptyTitle:'Область просмотра',
     emptyDesc:'Введите Markdown в редактор для просмотра в реальном времени',
@@ -2043,7 +2021,6 @@ sequenceDiagram
     savedLabel:'Сохранено', unsavedLabel:'Не сохранено',
     restoredMsg:'Содержимое восстановлено из сохранённой сессии',
     tooLargeMsg:'Содержимое слишком большое для cookie',
-    pvCopyBtnTitle:'Копировать HTML предпросмотра с CSS',
     pvPopBtnTitle:'Открыть предпросмотр в новом окне',
     openWindow:'Открыть',
     diffPrompt:'Введите название языка (оставьте пустым для обычного diff):',
@@ -2161,7 +2138,6 @@ sequenceDiagram
     chars:'znaki', words:'słowa', lines:'linie',
     editorLabel:'Edytor', previewLabel:'Podgląd',
     tabEdit:'Edycja', tabPreview:'Podgląd',
-    copyHTML:'Kopiuj HTML', copiedHTML:'Skopiowano!',
     codeCopy:'Kopiuj', codeCopied:'Skopiowano',
     emptyTitle:'Obszar podglądu',
     emptyDesc:'Wpisz Markdown w edytorze, aby zobaczyć podgląd na żywo',
@@ -2174,7 +2150,6 @@ sequenceDiagram
     savedLabel:'Zapisano', unsavedLabel:'Niezapisane',
     restoredMsg:'Treść przywrócona z poprzedniej sesji',
     tooLargeMsg:'Treść zbyt duża, aby zapisać w cookie',
-    pvCopyBtnTitle:'Kopiuj HTML podglądu z CSS',
     pvPopBtnTitle:'Otwórz podgląd w nowym oknie',
     openWindow:'Otwórz',
     diffPrompt:'Podaj nazwę języka (pozostaw puste dla zwykłego diff):',
@@ -2292,7 +2267,6 @@ sequenceDiagram
     chars:'χαρακτήρες', words:'λέξεις', lines:'γραμμές',
     editorLabel:'Επεξεργαστής', previewLabel:'Προεπισκόπηση',
     tabEdit:'Επεξεργασία', tabPreview:'Προεπισκόπηση',
-    copyHTML:'Αντιγραφή HTML', copiedHTML:'Αντιγράφηκε!',
     codeCopy:'Αντιγραφή', codeCopied:'Αντιγράφηκε',
     emptyTitle:'Περιοχή Προεπισκόπησης',
     emptyDesc:'Πληκτρολογήστε Markdown στον επεξεργαστή για να δείτε ζωντανή προεπισκόπηση',
@@ -2305,7 +2279,6 @@ sequenceDiagram
     savedLabel:'Αποθηκευμένο', unsavedLabel:'Μη αποθηκευμένο',
     restoredMsg:'Το περιεχόμενο επαναφέρθηκε από την αποθηκευμένη συνεδρία',
     tooLargeMsg:'Το περιεχόμενο είναι πολύ μεγάλο για αποθήκευση σε cookie',
-    pvCopyBtnTitle:'Αντιγραφή HTML προεπισκόπησης με CSS',
     pvPopBtnTitle:'Άνοιγμα προεπισκόπησης σε νέο παράθυρο',
     openWindow:'Άνοιγμα',
     diffPrompt:'Εισαγάγετε όνομα γλώσσας (αφήστε κενό για απλό diff):',
@@ -2423,7 +2396,6 @@ sequenceDiagram
 
 function applyLang(code) {
   const t = LANGS[code];
-  document.documentElement.lang = t;
   if (!t) return;
   currentLang = code;
   document.documentElement.lang = code;
