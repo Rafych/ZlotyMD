@@ -360,7 +360,8 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .about-modal{
   display:none;position:fixed;
   top:calc(var(--hh) + 10px);right:var(--s21);
-  width:320px;
+  width:min(320px, calc(100vw - 2 * var(--s21)));
+  max-height:calc(100vh - var(--hh) - 20px);overflow-y:auto;
   background:var(--bg);border:1.5px solid var(--bord);border-radius:var(--r21);
   box-shadow:0 8px 32px rgba(32,33,36,.18);z-index:101
 }
@@ -465,7 +466,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .font-modal{
   display:none;position:fixed;
   top:calc(var(--hh) + 10px);right:var(--s21);
-  width:370px;max-height:calc(100vh - 80px);overflow-y:auto;
+  width:min(370px, calc(100vw - 2 * var(--s21)));max-height:calc(100vh - 80px);overflow-y:auto;
   background:var(--bg);border:1.5px solid var(--bord);border-radius:var(--r21);
   box-shadow:0 8px 32px rgba(32,33,36,.18);z-index:101
 }
@@ -484,6 +485,25 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   grid-template-columns:52px 34px 1fr 48px 20px;
   align-items:center;gap:var(--s8);
   margin-bottom:var(--s13)
+}
+@media(max-width:400px){
+  .font-row{
+    grid-template-columns:40px 28px 1fr 40px 16px;
+    gap:var(--s5)
+  }
+  .font-preview{width:28px;height:22px;font-size:10px}
+  .font-num{width:40px;font-size:10px}
+  .font-label{font-size:10px}
+}
+
+@media(max-width:480px){
+  .about-modal,
+  .font-modal,
+  .dl-modal{
+    right:var(--s13);
+    left:var(--s13);
+    width:auto
+  }
 }
 .font-label{
   font-size:11px;font-weight:700;letter-spacing:.08em;
@@ -582,7 +602,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .dl-modal{
   display:none;position:fixed;
   top:calc(var(--hh) + 10px);right:var(--s21);
-  width:280px;
+  width:min(280px, calc(100vw - 2 * var(--s21)));
   background:var(--bg);border:1.5px solid var(--bord);border-radius:var(--r21);
   box-shadow:0 8px 32px rgba(32,33,36,.18);z-index:201;
   padding:var(--s13) var(--s13) var(--s13)
@@ -611,7 +631,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .dl-opt:active{transform:scale(.95)}
 
 /* PDF info modal */
-.dl-modal--pdf{width:320px;padding:var(--s21)}
+.dl-modal--pdf{width:min(320px, calc(100vw - 2 * var(--s21)));padding:var(--s21)}
 .pdf-field{margin-bottom:var(--s13)}
 .pdf-label{
   display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
@@ -1362,17 +1382,14 @@ function executePdfDownload(){
   const pdfHTML = baseHTML
     .replace('</style>', pdfCSS + '</style>');
 
-  let pf = document.getElementById('_printFrame');
-  if (!pf) {
-    pf = document.createElement('iframe');
-    pf.id = '_printFrame';
-    pf.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;visibility:hidden';
-    document.body.appendChild(pf);
-  }
-  pf.onload = () => {
-    setTimeout(() => { pf.contentWindow.focus(); pf.contentWindow.print(); }, 800);
-  };
-  pf.srcdoc = pdfHTML;
+  const win = window.open('','_blank');
+  if(!win) return;
+  win.document.open();
+  win.document.write(pdfHTML);
+  win.document.close();
+  win.addEventListener('load', () => {
+    setTimeout(() => { win.focus(); win.print(); win.close(); }, 800);
+  });
 }
 
 const COPY_SVG=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"/><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"/></svg>`;
