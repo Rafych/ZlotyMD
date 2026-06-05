@@ -1370,8 +1370,13 @@ function executePdfDownload(){
   win.addEventListener('load', () => {
     setTimeout(() => {
       win.focus();
-      win.addEventListener('afterprint', () => { win.close(); });
-      win.print();
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (isMobile) {
+        win.print();
+      } else {
+        win.addEventListener('afterprint', () => { win.close(); });
+        win.print();
+      }
     }, 800);
   });
 }
