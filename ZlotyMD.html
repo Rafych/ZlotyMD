@@ -1393,7 +1393,7 @@ function executePdfDownload(){
     setTimeout(() => {
       const doc = iframe.contentDocument || iframe.contentWindow.document;
       const s = doc.createElement('script');
-      s.textContent = 'window.print();';
+      s.textContent = `document.title=${JSON.stringify(title)};window.print();`;
       doc.body.appendChild(s);
     }, 800);
   };
