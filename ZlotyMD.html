@@ -719,6 +719,13 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       <div class="chip"><div class="dot" style="background:var(--gr)"></div><strong id="lc">0</strong><span data-i18n="lines">lines</span></div>
     </div>
 
+    <button class="about-btn" id="downloadBtn" title="Download as HTML" data-i18n-title="downloadBtnTitle" onclick="downloadHTML()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 2v8M5 7l3 3 3-3"/>
+        <path d="M2 12h12"/>
+      </svg>
+    </button>
+
     <button class="about-btn" id="settingsBtn" title="Settings" data-i18n-title="settingsBtnTitle" onclick="toggleSettings()">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="8" cy="8" r="2.2"/>
@@ -812,50 +819,50 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       <div class="font-row">
         <span class="font-label" data-i18n="fontH1">H1</span>
         <div class="font-preview font-preview-h1" id="fp-h1">Aa</div>
-        <input type="range" class="font-slider" id="fs-h1" min="1" max="9999" step="1" oninput="onFontSlider('h1',this.value)">
-        <input type="number" class="font-num" id="fn-h1" min="1" oninput="onFontNum('h1',this.value)">
+        <input type="range" class="font-slider" id="fs-h1" min="1" max="70" step="1" oninput="onFontSlider('h1',this.value)">
+        <input type="number" class="font-num" id="fn-h1" onchange="onFontNum('h1',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
         <span class="font-unit">px</span>
       </div>
       <div class="font-row">
         <span class="font-label" data-i18n="fontH2">H2</span>
         <div class="font-preview font-preview-h2" id="fp-h2">Aa</div>
-        <input type="range" class="font-slider" id="fs-h2" min="1" max="9999" step="1" oninput="onFontSlider('h2',this.value)">
-        <input type="number" class="font-num" id="fn-h2" min="1" oninput="onFontNum('h2',this.value)">
+        <input type="range" class="font-slider" id="fs-h2" min="1" max="70" step="1" oninput="onFontSlider('h2',this.value)">
+        <input type="number" class="font-num" id="fn-h2" onchange="onFontNum('h2',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
         <span class="font-unit">px</span>
       </div>
       <div class="font-row">
         <span class="font-label" data-i18n="fontH3">H3</span>
         <div class="font-preview font-preview-h3" id="fp-h3">Aa</div>
-        <input type="range" class="font-slider" id="fs-h3" min="1" max="9999" step="1" oninput="onFontSlider('h3',this.value)">
-        <input type="number" class="font-num" id="fn-h3" min="1" oninput="onFontNum('h3',this.value)">
+        <input type="range" class="font-slider" id="fs-h3" min="1" max="70" step="1" oninput="onFontSlider('h3',this.value)">
+        <input type="number" class="font-num" id="fn-h3" onchange="onFontNum('h3',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
         <span class="font-unit">px</span>
       </div>
       <div class="font-row">
         <span class="font-label" data-i18n="fontBody">Body</span>
         <div class="font-preview font-preview-body" id="fp-body">Aa</div>
-        <input type="range" class="font-slider" id="fs-body" min="1" max="9999" step="1" oninput="onFontSlider('body',this.value)">
-        <input type="number" class="font-num" id="fn-body" min="1" oninput="onFontNum('body',this.value)">
+        <input type="range" class="font-slider" id="fs-body" min="1" max="70" step="1" oninput="onFontSlider('body',this.value)">
+        <input type="number" class="font-num" id="fn-body" onchange="onFontNum('body',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
         <span class="font-unit">px</span>
       </div>
       <div class="font-row">
         <span class="font-label" data-i18n="fontLatex">LaTeX</span>
         <div class="font-preview font-preview-latex" id="fp-latex" style="font-family:var(--mono)">∑∫</div>
-        <input type="range" class="font-slider" id="fs-latex" min="1" max="9999" step="1" oninput="onFontSlider('latex',this.value)">
-        <input type="number" class="font-num" id="fn-latex" min="1" oninput="onFontNum('latex',this.value)">
+        <input type="range" class="font-slider" id="fs-latex" min="1" max="70" step="1" oninput="onFontSlider('latex',this.value)">
+        <input type="number" class="font-num" id="fn-latex" onchange="onFontNum('latex',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
         <span class="font-unit">px</span>
       </div>
       <div class="font-row">
         <span class="font-label" data-i18n="fontMermaid">Mermaid</span>
         <div class="font-preview font-preview-mmd" id="fp-mmd" style="font-family:var(--font)">◇</div>
-        <input type="range" class="font-slider" id="fs-mmd" min="1" max="9999" step="1" oninput="onFontSlider('mmd',this.value)">
-        <input type="number" class="font-num" id="fn-mmd" min="1" oninput="onFontNum('mmd',this.value)">
+        <input type="range" class="font-slider" id="fs-mmd" min="1" max="70" step="1" oninput="onFontSlider('mmd',this.value)">
+        <input type="number" class="font-num" id="fn-mmd" onchange="onFontNum('mmd',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
         <span class="font-unit">px</span>
       </div>
       <div class="font-row">
         <span class="font-label" data-i18n="fontCode">Code</span>
         <div class="font-preview font-preview-code" id="fp-code" style="font-family:var(--mono)">fn()</div>
-        <input type="range" class="font-slider" id="fs-code" min="1" max="9999" step="1" oninput="onFontSlider('code',this.value)">
-        <input type="number" class="font-num" id="fn-code" min="1" oninput="onFontNum('code',this.value)">
+        <input type="range" class="font-slider" id="fs-code" min="1" max="70" step="1" oninput="onFontSlider('code',this.value)">
+        <input type="number" class="font-num" id="fn-code" onchange="onFontNum('code',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
         <span class="font-unit">px</span>
       </div>
       <div class="font-actions">
@@ -987,7 +994,8 @@ function escapeHtmlInMarkdown(text) {
 function escapeHtmlTags(str) {
   return str.replace(/<(\/?[a-zA-Z][^>]*)>/g, '&lt;$1&gt;');
 }
-function buildPreviewHTML(){
+function buildPreviewHTML(title){
+  title = title || 'Złoty MD Preview';
   const PREVIEW_CSS = `
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;webkit-print-color-adjust:exact;print-color-adjust:exact;}
     :root{
@@ -1113,7 +1121,7 @@ function buildPreviewHTML(){
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Złoty MD Preview</title>
+<title>${title}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
@@ -1169,6 +1177,23 @@ function openPreviewWindow(){
   win.document.open();
   win.document.write(html);
   win.document.close();
+}
+
+function downloadHTML(){
+  if(!ed.value.trim()) return;
+  const t = LANGS[currentLang] || LANGS['en'];
+  const defaultTitle = (ed.value.match(/^#\s+(.+)/m) || [])[1]?.trim() || 'document';
+  const title = prompt(t.downloadPrompt || 'Page title:', defaultTitle);
+  if(title === null) return;
+  const finalTitle = title.trim() || defaultTitle;
+  const html = buildPreviewHTML(finalTitle);
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = finalTitle.replace(/[\\/:*?"<>|]/g,'_') + '.html';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
 }
 
 const COPY_SVG=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"/><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"/></svg>`;
@@ -1634,7 +1659,8 @@ const LANGS = {
     savedLabel:'Saved', unsavedLabel:'Unsaved',
     restoredMsg:'Content restored from saved session',
     tooLargeMsg:'Content too large to save in cookie',
-    pvPopBtnTitle:'Open preview in new window',
+    downloadBtnTitle:'Download as HTML',
+    downloadPrompt:'Page title:',
     openWindow:'Open',
     diffPrompt:'Enter language name (leave blank for plain diff):',
     diffDefault:'- removed line\n+ added line',
@@ -1763,7 +1789,8 @@ sequenceDiagram
     savedLabel:'保存済み', unsavedLabel:'未保存',
     restoredMsg:'保存した内容を復元しました',
     tooLargeMsg:'コンテンツが大きすぎてCookieに保存できません',
-    pvPopBtnTitle:'プレビューを別ウィンドウで開く',
+    downloadBtnTitle:'HTMLとしてダウンロード',
+    downloadPrompt:'ページタイトル:',
     openWindow:'開く',
     diffPrompt:'言語名を入力（空欄なら diff のみ）:',
     diffDefault:'- 削除された行\n+ 追加された行',
@@ -1892,7 +1919,8 @@ sequenceDiagram
     savedLabel:'Gespeichert', unsavedLabel:'Ungespeichert',
     restoredMsg:'Inhalt aus gespeicherter Sitzung wiederhergestellt',
     tooLargeMsg:'Inhalt zu groß für Cookie',
-    pvPopBtnTitle:'Vorschau in neuem Fenster öffnen',
+    downloadBtnTitle:'Als HTML herunterladen',
+    downloadPrompt:'Seitentitel:',
     openWindow:'Öffnen',
     diffPrompt:'Sprachname eingeben (leer lassen für einfaches diff):',
     diffDefault:'- entfernte Zeile\n+ hinzugefügte Zeile',
@@ -2021,7 +2049,8 @@ sequenceDiagram
     savedLabel:'Сохранено', unsavedLabel:'Не сохранено',
     restoredMsg:'Содержимое восстановлено из сохранённой сессии',
     tooLargeMsg:'Содержимое слишком большое для cookie',
-    pvPopBtnTitle:'Открыть предпросмотр в новом окне',
+    downloadBtnTitle:'Скачать как HTML',
+    downloadPrompt:'Заголовок страницы:',
     openWindow:'Открыть',
     diffPrompt:'Введите название языка (оставьте пустым для обычного diff):',
     diffDefault:'- удалённая строка\n+ добавленная строка',
@@ -2150,7 +2179,8 @@ sequenceDiagram
     savedLabel:'Zapisano', unsavedLabel:'Niezapisane',
     restoredMsg:'Treść przywrócona z poprzedniej sesji',
     tooLargeMsg:'Treść zbyt duża, aby zapisać w cookie',
-    pvPopBtnTitle:'Otwórz podgląd w nowym oknie',
+    downloadBtnTitle:'Pobierz jako HTML',
+    downloadPrompt:'Tytuł strony:',
     openWindow:'Otwórz',
     diffPrompt:'Podaj nazwę języka (pozostaw puste dla zwykłego diff):',
     diffDefault:'- usunięta linia\n+ dodana linia',
@@ -2279,7 +2309,8 @@ sequenceDiagram
     savedLabel:'Αποθηκευμένο', unsavedLabel:'Μη αποθηκευμένο',
     restoredMsg:'Το περιεχόμενο επαναφέρθηκε από την αποθηκευμένη συνεδρία',
     tooLargeMsg:'Το περιεχόμενο είναι πολύ μεγάλο για αποθήκευση σε cookie',
-    pvPopBtnTitle:'Άνοιγμα προεπισκόπησης σε νέο παράθυρο',
+    downloadBtnTitle:'Λήψη ως HTML',
+    downloadPrompt:'Τίτλος σελίδας:',
     openWindow:'Άνοιγμα',
     diffPrompt:'Εισαγάγετε όνομα γλώσσας (αφήστε κενό για απλό diff):',
     diffDefault:'- γραμμή που αφαιρέθηκε\n+ γραμμή που προστέθηκε',
@@ -2655,7 +2686,7 @@ function syncFontPanelUI() {
     const s = document.getElementById('fs-' + key);
     const n = document.getElementById('fn-' + key);
     const p = document.getElementById('fp-' + key);
-    if (s) s.value = fontSizes[key];
+    if (s) s.value = Math.min(fontSizes[key], 70);
     if (n) n.value = fontSizes[key];
     if (p) p.style.fontSize = Math.min(fontSizes[key], 18) + 'px';
   });
@@ -2672,10 +2703,13 @@ function onFontSlider(key, val) {
 }
 
 function onFontNum(key, val) {
-  const v = Math.max(1, parseInt(val) || 1);
+  const parsed = parseFloat(val);
+  const v = (!isFinite(parsed) || parsed <= 0) ? 1 : parsed;
+  const n = document.getElementById('fn-' + key);
+  if (n) n.value = v;
   fontSizes[key] = v;
   const s = document.getElementById('fs-' + key);
-  if (s) s.value = v;
+  if (s) s.value = Math.min(v, 70);
   const p = document.getElementById('fp-' + key);
   if (p) p.style.fontSize = Math.min(v, 18) + 'px';
   applyFontSizesToDOM();
