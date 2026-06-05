@@ -978,7 +978,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
           <div class="settings-row-desc" data-i18n="settingsDocNameDesc">Used as the title for HTML and PDF downloads.</div>
         </div>
       </div>
-      <input class="pdf-input" id="docTitleInput" type="text" autocomplete="off" style="margin-bottom:var(--s21)" oninput="onDocTitleInput(this.value)">
+      <input class="pdf-input" id="docTitleInput" type="text" autocomplete="off" style="margin-bottom:var(--s21)" oninput="onDocTitleInput(this.value)" onkeydown="if(event.key==='Enter')this.blur()">
 
       <div class="settings-section-title" data-i18n="settingsRenderTitle">HTML Rendering</div>
 
@@ -1369,18 +1369,17 @@ function executePdfDownload(){
     iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;visibility:hidden';
     document.body.appendChild(iframe);
   }
-  document.title = title;
+
   iframe.onload = () => {
     setTimeout(() => {
       const doc = iframe.contentDocument || iframe.contentWindow.document;
       const s = doc.createElement('script');
-      s.textContent = `document.title=${JSON.stringify(title)};window.print();`;
+      s.textContent = `window.print();`;
       doc.body.appendChild(s);
     }, 800);
   };
 
   iframe.srcdoc = pdfHTML;
-  document.title = "Złoty MD";
 }
 
 const COPY_SVG=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"/><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"/></svg>`;
