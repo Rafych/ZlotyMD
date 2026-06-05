@@ -970,6 +970,16 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
     </div>
     <div class="font-modal-body">
 
+      <div class="settings-section-title" data-i18n="settingsDocTitle">Document</div>
+
+      <div class="settings-row" style="align-items:center">
+        <div class="settings-row-text">
+          <div class="settings-row-label" data-i18n="settingsDocNameLabel">Document Name</div>
+          <div class="settings-row-desc" data-i18n="settingsDocNameDesc">Used as the title for HTML and PDF downloads.</div>
+        </div>
+      </div>
+      <input class="pdf-input" id="docTitleInput" type="text" autocomplete="off" style="margin-bottom:var(--s21)" oninput="onDocTitleInput(this.value)">
+
       <div class="settings-section-title" data-i18n="settingsRenderTitle">HTML Rendering</div>
 
       <div class="settings-row">
@@ -1056,19 +1066,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
     </div>
   </div>
 
-  <!-- PDF Info Modal -->
-  <div class="dl-overlay" id="pdfOverlay" onclick="closePdfModal()"></div>
-  <div class="dl-modal dl-modal--pdf" id="pdfModal">
-    <div class="dl-title" data-i18n="pdfTitle">PDF Settings</div>
-    <div class="pdf-field">
-      <label class="pdf-label" for="pdfTitleInput" data-i18n="pdfTitleLabel">Title</label>
-      <input class="pdf-input" id="pdfTitleInput" type="text" autocomplete="off">
-    </div>
-    <div class="pdf-actions">
-      <button class="pdf-cancel-btn" onclick="closePdfModal()" data-i18n="pdfCancel">Cancel</button>
-      <button class="pdf-ok-btn" onclick="executePdfDownload()" data-i18n="pdfOk">Open Print Dialog</button>
-    </div>
-  </div>
 
   <div class="restore-toast" id="restoreToast">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="2 9 6 13 14 4"/></svg>
@@ -1083,7 +1080,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 const ed=document.getElementById('ed'),mo=document.getElementById('mo'),emp=document.getElementById('emp');
 const cc=document.getElementById('cc'),wc=document.getElementById('wc'),lc=document.getElementById('lc');
 
-const SETTINGS_DEFAULTS = { htmlRendering: false };
+const SETTINGS_DEFAULTS = { htmlRendering: false, docTitle: '' };
 let appSettings = {...SETTINGS_DEFAULTS};
 
 const FONT_DEFAULTS = {
@@ -1322,7 +1319,7 @@ function closeDownloadMenu(){
 }
 function _syncDownloadMenuI18n(){
   const t = LANGS[currentLang] || LANGS['en'];
-  const els = document.querySelectorAll('#dlModal [data-i18n],#pdfModal [data-i18n]');
+  const els = document.querySelectorAll('#dlModal [data-i18n]');
   els.forEach(el => {
     const key = el.getAttribute('data-i18n');
     if(t[key]) el.textContent = t[key];
@@ -1334,43 +1331,27 @@ function dlChooseHTML(){
 }
 function dlChoosePDF(){
   closeDownloadMenu();
-  openPdfModal();
+  executePdfDownload();
+}
+function getDocTitle(){
+  return appSettings.docTitle.trim()
+    || (ed.value.match(/^#\s+(.+)/m) || [])[1]?.trim()
+    || 'document';
 }
 function downloadHTML(){
   if(!ed.value.trim()) return;
-  const t = LANGS[currentLang] || LANGS['en'];
-  const defaultTitle = (ed.value.match(/^#\s+(.+)/m) || [])[1]?.trim() || 'document';
-  const title = prompt(t.downloadPrompt || 'Page title:', defaultTitle);
-  if(title === null) return;
-  const finalTitle = title.trim() || defaultTitle;
-  const html = buildPreviewHTML(finalTitle);
+  const title = getDocTitle();
+  const html = buildPreviewHTML(title);
   const blob = new Blob([html], {type:'text/html;charset=utf-8'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = finalTitle.replace(/[\\/:*?"<>|]/g,'_') + '.html';
+  a.download = title.replace(/[\\/:*?"<>|]/g,'_') + '.html';
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 3000);
 }
-function openPdfModal(){
-  const t = LANGS[currentLang] || LANGS['en'];
-  const defaultTitle = (ed.value.match(/^#\s+(.+)/m) || [])[1]?.trim() || 'document';
-  document.getElementById('pdfTitleInput').value = defaultTitle;
-  _syncDownloadMenuI18n();
-  document.getElementById('pdfOverlay').classList.add('open');
-  document.getElementById('pdfModal').classList.add('open');
-  setTimeout(()=>{
-    document.getElementById('pdfTitleInput').focus();
-    document.getElementById('pdfTitleInput').onkeydown = e => { if(e.key==='Enter') executePdfDownload(); };
-  }, 80);
-}
-function closePdfModal(){
-  document.getElementById('pdfOverlay').classList.remove('open');
-  document.getElementById('pdfModal').classList.remove('open');
-}
 function executePdfDownload(){
-  const title = document.getElementById('pdfTitleInput').value.trim() || 'document';
-  closePdfModal();
+  const title = getDocTitle();
 
   const pdfCSS = `
     @page{margin:20mm}
@@ -1388,7 +1369,7 @@ function executePdfDownload(){
     iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;visibility:hidden';
     document.body.appendChild(iframe);
   }
-
+  document.title = title;
   iframe.onload = () => {
     setTimeout(() => {
       const doc = iframe.contentDocument || iframe.contentWindow.document;
@@ -1399,6 +1380,7 @@ function executePdfDownload(){
   };
 
   iframe.srcdoc = pdfHTML;
+  document.title = "Złoty MD";
 }
 
 const COPY_SVG=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"/><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"/></svg>`;
@@ -1865,14 +1847,12 @@ const LANGS = {
     restoredMsg:'Content restored from saved session',
     tooLargeMsg:'Content too large to save in cookie',
     downloadBtnTitle:'Download',
-    downloadPrompt:'Page title:',
     dlTitle:'Download as…',
     dlHtmlDesc:'Standalone HTML file',
     dlPdfDesc:'Save via print dialog',
-    pdfTitle:'PDF Settings',
-    pdfTitleLabel:'Title',
-    pdfCancel:'Cancel',
-    pdfOk:'Open Print Dialog',
+    settingsDocTitle:'Document',
+    settingsDocNameLabel:'Document Name',
+    settingsDocNameDesc:'Used as the title for HTML and PDF downloads. Leave blank to use the first heading.',
     openWindow:'Open',
     diffPrompt:'Enter language name (leave blank for plain diff):',
     diffDefault:'- removed line\n+ added line',
@@ -2002,14 +1982,12 @@ sequenceDiagram
     restoredMsg:'保存した内容を復元しました',
     tooLargeMsg:'コンテンツが大きすぎてCookieに保存できません',
     downloadBtnTitle:'ダウンロード',
-    downloadPrompt:'ページタイトル:',
     dlTitle:'形式を選択…',
     dlHtmlDesc:'スタンドアロン HTML ファイル',
     dlPdfDesc:'印刷ダイアログ経由で保存',
-    pdfTitle:'PDF 設定',
-    pdfTitleLabel:'タイトル',
-    pdfCancel:'キャンセル',
-    pdfOk:'印刷ダイアログを開く',
+    settingsDocTitle:'ドキュメント',
+    settingsDocNameLabel:'ドキュメント名',
+    settingsDocNameDesc:'HTML・PDF ダウンロード時のタイトルに使われます。空欄の場合は最初の見出しを使用します。',
     openWindow:'開く',
     diffPrompt:'言語名を入力（空欄なら diff のみ）:',
     diffDefault:'- 削除された行\n+ 追加された行',
@@ -2139,14 +2117,12 @@ sequenceDiagram
     restoredMsg:'Inhalt aus gespeicherter Sitzung wiederhergestellt',
     tooLargeMsg:'Inhalt zu groß für Cookie',
     downloadBtnTitle:'Herunterladen',
-    downloadPrompt:'Seitentitel:',
     dlTitle:'Herunterladen als…',
     dlHtmlDesc:'Eigenständige HTML-Datei',
     dlPdfDesc:'Über Druckdialog speichern',
-    pdfTitle:'PDF-Einstellungen',
-    pdfTitleLabel:'Titel',
-    pdfCancel:'Abbrechen',
-    pdfOk:'Druckdialog öffnen',
+    settingsDocTitle:'Dokument',
+    settingsDocNameLabel:'Dokumentname',
+    settingsDocNameDesc:'Wird als Titel für HTML- und PDF-Downloads verwendet. Leer lassen, um die erste Überschrift zu verwenden.',
     openWindow:'Öffnen',
     diffPrompt:'Sprachname eingeben (leer lassen für einfaches diff):',
     diffDefault:'- entfernte Zeile\n+ hinzugefügte Zeile',
@@ -2276,14 +2252,12 @@ sequenceDiagram
     restoredMsg:'Содержимое восстановлено из сохранённой сессии',
     tooLargeMsg:'Содержимое слишком большое для cookie',
     downloadBtnTitle:'Скачать',
-    downloadPrompt:'Заголовок страницы:',
     dlTitle:'Скачать как…',
     dlHtmlDesc:'Автономный HTML-файл',
     dlPdfDesc:'Сохранить через диалог печати',
-    pdfTitle:'Настройки PDF',
-    pdfTitleLabel:'Заголовок',
-    pdfCancel:'Отмена',
-    pdfOk:'Открыть диалог печати',
+    settingsDocTitle:'Документ',
+    settingsDocNameLabel:'Название документа',
+    settingsDocNameDesc:'Используется как заголовок при скачивании HTML и PDF. Оставьте пустым, чтобы использовать первый заголовок.',
     openWindow:'Открыть',
     diffPrompt:'Введите название языка (оставьте пустым для обычного diff):',
     diffDefault:'- удалённая строка\n+ добавленная строка',
@@ -2413,14 +2387,12 @@ sequenceDiagram
     restoredMsg:'Treść przywrócona z poprzedniej sesji',
     tooLargeMsg:'Treść zbyt duża, aby zapisać w cookie',
     downloadBtnTitle:'Pobierz',
-    downloadPrompt:'Tytuł strony:',
     dlTitle:'Pobierz jako…',
     dlHtmlDesc:'Samodzielny plik HTML',
     dlPdfDesc:'Zapisz przez okno drukowania',
-    pdfTitle:'Ustawienia PDF',
-    pdfTitleLabel:'Tytuł',
-    pdfCancel:'Anuluj',
-    pdfOk:'Otwórz okno drukowania',
+    settingsDocTitle:'Dokument',
+    settingsDocNameLabel:'Nazwa dokumentu',
+    settingsDocNameDesc:'Używana jako tytuł podczas pobierania HTML i PDF. Pozostaw puste, aby użyć pierwszego nagłówka.',
     openWindow:'Otwórz',
     diffPrompt:'Podaj nazwę języka (pozostaw puste dla zwykłego diff):',
     diffDefault:'- usunięta linia\n+ dodana linia',
@@ -2550,14 +2522,12 @@ sequenceDiagram
     restoredMsg:'Το περιεχόμενο επαναφέρθηκε από την αποθηκευμένη συνεδρία',
     tooLargeMsg:'Το περιεχόμενο είναι πολύ μεγάλο για αποθήκευση σε cookie',
     downloadBtnTitle:'Λήψη',
-    downloadPrompt:'Τίτλος σελίδας:',
     dlTitle:'Λήψη ως…',
     dlHtmlDesc:'Αυτόνομο αρχείο HTML',
     dlPdfDesc:'Αποθήκευση μέσω εκτύπωσης',
-    pdfTitle:'Ρυθμίσεις PDF',
-    pdfTitleLabel:'Τίτλος',
-    pdfCancel:'Ακύρωση',
-    pdfOk:'Άνοιγμα διαλόγου εκτύπωσης',
+    settingsDocTitle:'Έγγραφο',
+    settingsDocNameLabel:'Όνομα εγγράφου',
+    settingsDocNameDesc:'Χρησιμοποιείται ως τίτλος κατά τη λήψη HTML και PDF. Αφήστε κενό για χρήση της πρώτης επικεφαλίδας.',
     openWindow:'Άνοιγμα',
     diffPrompt:'Εισαγάγετε όνομα γλώσσας (αφήστε κενό για απλό diff):',
     diffDefault:'- γραμμή που αφαιρέθηκε\n+ γραμμή που προστέθηκε',
@@ -2985,7 +2955,7 @@ function closeFontPanel() {
   document.getElementById('fontModal').classList.remove('open');
   document.getElementById('fontSizeBtn').style.color = '';
 }
-document.addEventListener('keydown', e => { if(e.key === 'Escape') { closeFontPanel(); closeAbout(); closeSettings(); closeDownloadMenu(); closePdfModal(); } });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') { closeFontPanel(); closeAbout(); closeSettings(); closeDownloadMenu(); } });
 
 const IDB_FONT_KEY = 'zmd_fontsizes';
 async function saveFontSizes() {
@@ -3008,6 +2978,8 @@ function applySettings() {
   marked.setOptions({ gfm: true, breaks: true });
   const tog = document.getElementById('htmlToggle');
   if (tog) tog.setAttribute('aria-checked', appSettings.htmlRendering ? 'true' : 'false');
+  const inp = document.getElementById('docTitleInput');
+  if (inp) inp.value = appSettings.docTitle || '';
   updateSettingsPreview();
   if (ed.value) (typeof _render === 'function' ? _render : render)(ed.value);
 }
@@ -3026,6 +2998,11 @@ function updateSettingsPreview() {
 function toggleHtmlRendering() {
   appSettings.htmlRendering = !appSettings.htmlRendering;
   applySettings();
+  saveSettings();
+}
+
+function onDocTitleInput(val) {
+  appSettings.docTitle = val;
   saveSettings();
 }
 
@@ -3050,11 +3027,13 @@ function toggleSettings() {
     modal.classList.add('open');
     document.getElementById('settingsBtn').style.color = 'var(--gb)';
     updateSettingsPreview();
-    const descEl = document.querySelector('#settingsModal [data-i18n="settingsHtmlDesc"]');
-    if (descEl) {
-      const t = LANGS[currentLang] || LANGS['en'];
-      if (t.settingsHtmlDesc) descEl.textContent = t.settingsHtmlDesc;
-    }
+    const t = LANGS[currentLang] || LANGS['en'];
+    ['settingsHtmlDesc','settingsDocNameDesc'].forEach(key => {
+      const el = document.querySelector(`#settingsModal [data-i18n="${key}"]`);
+      if (el && t[key]) el.textContent = t[key];
+    });
+    const inp = document.getElementById('docTitleInput');
+    if (inp) inp.value = appSettings.docTitle || '';
   }
 }
 function closeSettings() {
