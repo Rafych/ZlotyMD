@@ -3,7 +3,6 @@
 > **A Markdown editor with golden ratio proportions and a Google-style color palette.**
 
 # [Open web editor](./ZlotyMD.html)
-# [Download for Desktop](./app)
 
 ## About the project
 
