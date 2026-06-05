@@ -175,7 +175,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .md h2::before{content:'';display:block;width:5px;height:21px;background:var(--gr);border-radius:99px;flex-shrink:0}
 .md h3{font-size:16px;font-weight:700;margin-top:var(--s21);margin-bottom:var(--s5)}
 .md p{font-size:var(--f13);line-height:1.85;margin-bottom:var(--s13)}
-.md a{color:var(--gb);text-decoration:none;border-bottom:1.5px solid var(--gbt)}
+.md a{color:var(--gb);text-decoration:none;border-bottom:1.5px solid var(--gbt)}.md a:visited{color:var(--gb)}
 .md a:hover{border-bottom-color:var(--gb)}
 .md ul,.md ol{padding-left:var(--s21);margin-bottom:var(--s13)}
 .md li{font-size:var(--f13);line-height:1.85;margin-bottom:var(--s5)}
@@ -572,6 +572,74 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 }
 .settings-preview-output p{margin-bottom:0!important;font-size:12px!important}
 
+/* Download menu */
+.dl-overlay{
+  display:none;position:fixed;inset:0;background:rgba(32,33,36,.35);
+  backdrop-filter:blur(2px);z-index:200
+}
+.dl-overlay.open{display:block;animation:fadeIn .18s ease}
+.dl-modal{
+  display:none;position:fixed;
+  top:calc(var(--hh) + 10px);right:var(--s21);
+  width:280px;
+  background:var(--bg);border:1.5px solid var(--bord);border-radius:var(--r21);
+  box-shadow:0 8px 32px rgba(32,33,36,.18);z-index:201;
+  padding:var(--s13) var(--s13) var(--s13)
+}
+.dl-modal.open{display:block;animation:slideDown .2s cubic-bezier(.34,1.56,.64,1)}
+.dl-title{
+  font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--sub);padding:0 var(--s5) var(--s8);margin-bottom:var(--s5);
+  border-bottom:1px solid var(--bord)
+}
+.dl-options{display:flex;gap:var(--s8);padding-top:var(--s8)}
+.dl-opt{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:var(--s5);
+  padding:var(--s13) var(--s8);border-radius:var(--r13);
+  border:1.5px solid var(--bord);background:var(--surf);
+  cursor:pointer;font-family:var(--font);
+  transition:border-color .15s,background .15s,transform .12s
+}
+.dl-opt svg{width:28px;height:28px;color:var(--mut);transition:color .15s;flex-shrink:0}
+.dl-opt-label{font-size:var(--f13);font-weight:700;color:var(--txt)}
+.dl-opt-desc{font-size:10px;color:var(--sub);text-align:center;line-height:1.4}
+#dlOptHtml:hover{border-color:var(--gb);background:var(--gbt)}
+#dlOptHtml:hover svg,#dlOptHtml:hover .dl-opt-label{color:var(--gb)}
+#dlOptPdf:hover{border-color:var(--gr);background:var(--grt)}
+#dlOptPdf:hover svg,#dlOptPdf:hover .dl-opt-label{color:var(--gr)}
+.dl-opt:active{transform:scale(.95)}
+
+/* PDF info modal */
+.dl-modal--pdf{width:320px;padding:var(--s21)}
+.pdf-field{margin-bottom:var(--s13)}
+.pdf-label{
+  display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--sub);margin-bottom:var(--s5)
+}
+.pdf-input{
+  width:100%;height:36px;border:1.5px solid var(--bord);border-radius:var(--r8);
+  background:var(--bg);font-family:var(--font);font-size:var(--f13);color:var(--txt);
+  padding:0 var(--s13);outline:none;
+  transition:border-color .15s,box-shadow .15s
+}
+.pdf-input:focus{border-color:var(--gb);box-shadow:0 0 0 3px rgba(66,133,244,.12)}
+.pdf-actions{display:flex;gap:var(--s8);margin-top:var(--s21)}
+.pdf-cancel-btn{
+  flex:1;height:34px;border-radius:var(--r8);border:1.5px solid var(--bord);
+  background:var(--bg);font-family:var(--font);font-size:var(--f13);font-weight:600;
+  color:var(--mut);cursor:pointer;
+  transition:border-color .15s,color .15s,background .15s
+}
+.pdf-cancel-btn:hover{border-color:var(--gr);color:var(--gr);background:var(--grt)}
+.pdf-ok-btn{
+  flex:2;height:34px;border-radius:var(--r8);border:none;
+  background:var(--gb);font-family:var(--font);font-size:var(--f13);font-weight:700;
+  color:#fff;cursor:pointer;
+  transition:background .15s,transform .1s
+}
+.pdf-ok-btn:hover{background:#1a73e8}
+.pdf-ok-btn:active{transform:scale(.96)}
+
 </style>
 </head>
 <body>
@@ -719,7 +787,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       <div class="chip"><div class="dot" style="background:var(--gr)"></div><strong id="lc">0</strong><span data-i18n="lines">lines</span></div>
     </div>
 
-    <button class="about-btn" id="downloadBtn" title="Download as HTML" data-i18n-title="downloadBtnTitle" onclick="downloadHTML()">
+    <button class="about-btn" id="downloadBtn" title="Download as HTML" data-i18n-title="downloadBtnTitle" onclick="openDownloadMenu()">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
         <path d="M8 2v8M5 7l3 3 3-3"/>
         <path d="M2 12h12"/>
@@ -942,6 +1010,45 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       </div>
     </div>
   
+  <!-- Download Format Selection Modal -->
+  <div class="dl-overlay" id="dlOverlay" onclick="closeDownloadMenu()"></div>
+  <div class="dl-modal" id="dlModal">
+    <div class="dl-title" data-i18n="dlTitle">Download as…</div>
+    <div class="dl-options">
+      <button class="dl-opt" id="dlOptHtml" onclick="dlChooseHTML()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+        </svg>
+        <span class="dl-opt-label">HTML</span>
+        <span class="dl-opt-desc" data-i18n="dlHtmlDesc">Standalone HTML file</span>
+      </button>
+      <button class="dl-opt" id="dlOptPdf" onclick="dlChoosePDF()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="9" y1="13" x2="15" y2="13"/>
+          <line x1="9" y1="17" x2="15" y2="17"/>
+        </svg>
+        <span class="dl-opt-label">PDF</span>
+        <span class="dl-opt-desc" data-i18n="dlPdfDesc">Save via print dialog</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- PDF Info Modal -->
+  <div class="dl-overlay" id="pdfOverlay" onclick="closePdfModal()"></div>
+  <div class="dl-modal dl-modal--pdf" id="pdfModal">
+    <div class="dl-title" data-i18n="pdfTitle">PDF Settings</div>
+    <div class="pdf-field">
+      <label class="pdf-label" for="pdfTitleInput" data-i18n="pdfTitleLabel">Title</label>
+      <input class="pdf-input" id="pdfTitleInput" type="text" autocomplete="off">
+    </div>
+    <div class="pdf-actions">
+      <button class="pdf-cancel-btn" onclick="closePdfModal()" data-i18n="pdfCancel">Cancel</button>
+      <button class="pdf-ok-btn" onclick="executePdfDownload()" data-i18n="pdfOk">Open Print Dialog</button>
+    </div>
+  </div>
+
   <div class="restore-toast" id="restoreToast">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="2 9 6 13 14 4"/></svg>
     <span id="toastMsg">Content restored from saved session</span>
@@ -1179,6 +1286,34 @@ function openPreviewWindow(){
   win.document.close();
 }
 
+function openDownloadMenu(){
+  if(!ed.value.trim()) return;
+  const overlay = document.getElementById('dlOverlay');
+  const modal = document.getElementById('dlModal');
+  overlay.classList.add('open');
+  modal.classList.add('open');
+  _syncDownloadMenuI18n();
+}
+function closeDownloadMenu(){
+  document.getElementById('dlOverlay').classList.remove('open');
+  document.getElementById('dlModal').classList.remove('open');
+}
+function _syncDownloadMenuI18n(){
+  const t = LANGS[currentLang] || LANGS['en'];
+  const els = document.querySelectorAll('#dlModal [data-i18n],#pdfModal [data-i18n]');
+  els.forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if(t[key]) el.textContent = t[key];
+  });
+}
+function dlChooseHTML(){
+  closeDownloadMenu();
+  downloadHTML();
+}
+function dlChoosePDF(){
+  closeDownloadMenu();
+  openPdfModal();
+}
 function downloadHTML(){
   if(!ed.value.trim()) return;
   const t = LANGS[currentLang] || LANGS['en'];
@@ -1194,6 +1329,45 @@ function downloadHTML(){
   a.download = finalTitle.replace(/[\\/:*?"<>|]/g,'_') + '.html';
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+function openPdfModal(){
+  const t = LANGS[currentLang] || LANGS['en'];
+  const defaultTitle = (ed.value.match(/^#\s+(.+)/m) || [])[1]?.trim() || 'document';
+  document.getElementById('pdfTitleInput').value = defaultTitle;
+  _syncDownloadMenuI18n();
+  document.getElementById('pdfOverlay').classList.add('open');
+  document.getElementById('pdfModal').classList.add('open');
+  setTimeout(()=>{
+    document.getElementById('pdfTitleInput').focus();
+    document.getElementById('pdfTitleInput').onkeydown = e => { if(e.key==='Enter') executePdfDownload(); };
+  }, 80);
+}
+function closePdfModal(){
+  document.getElementById('pdfOverlay').classList.remove('open');
+  document.getElementById('pdfModal').classList.remove('open');
+}
+function executePdfDownload(){
+  const title  = document.getElementById('pdfTitleInput').value.trim()  || 'document';
+  closePdfModal();
+
+  const pdfCSS = `
+    @page{margin:20mm}
+    body{font-family:'Google Sans',sans-serif;background:#fff;color:#202124;padding:0;max-width:none;margin:0;line-height:1.85}
+    @media print{body{padding:0}}
+  `;
+
+  const baseHTML = buildPreviewHTML(title);
+  const pdfHTML = baseHTML
+    .replace('</style>', pdfCSS + '</style>');
+
+  const win = window.open('','_blank');
+  if(!win) return;
+  win.document.open();
+  win.document.write(pdfHTML);
+  win.document.close();
+  win.addEventListener('load', () => {
+    setTimeout(() => { win.focus(); win.print(); }, 800);
+  });
 }
 
 const COPY_SVG=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"/><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"/></svg>`;
@@ -1659,8 +1833,15 @@ const LANGS = {
     savedLabel:'Saved', unsavedLabel:'Unsaved',
     restoredMsg:'Content restored from saved session',
     tooLargeMsg:'Content too large to save in cookie',
-    downloadBtnTitle:'Download as HTML',
+    downloadBtnTitle:'Download',
     downloadPrompt:'Page title:',
+    dlTitle:'Download as…',
+    dlHtmlDesc:'Standalone HTML file',
+    dlPdfDesc:'Save via print dialog',
+    pdfTitle:'PDF Settings',
+    pdfTitleLabel:'Title',
+    pdfCancel:'Cancel',
+    pdfOk:'Open Print Dialog',
     openWindow:'Open',
     diffPrompt:'Enter language name (leave blank for plain diff):',
     diffDefault:'- removed line\n+ added line',
@@ -1789,8 +1970,15 @@ sequenceDiagram
     savedLabel:'保存済み', unsavedLabel:'未保存',
     restoredMsg:'保存した内容を復元しました',
     tooLargeMsg:'コンテンツが大きすぎてCookieに保存できません',
-    downloadBtnTitle:'HTMLとしてダウンロード',
+    downloadBtnTitle:'ダウンロード',
     downloadPrompt:'ページタイトル:',
+    dlTitle:'形式を選択…',
+    dlHtmlDesc:'スタンドアロン HTML ファイル',
+    dlPdfDesc:'印刷ダイアログ経由で保存',
+    pdfTitle:'PDF 設定',
+    pdfTitleLabel:'タイトル',
+    pdfCancel:'キャンセル',
+    pdfOk:'印刷ダイアログを開く',
     openWindow:'開く',
     diffPrompt:'言語名を入力（空欄なら diff のみ）:',
     diffDefault:'- 削除された行\n+ 追加された行',
@@ -1919,8 +2107,15 @@ sequenceDiagram
     savedLabel:'Gespeichert', unsavedLabel:'Ungespeichert',
     restoredMsg:'Inhalt aus gespeicherter Sitzung wiederhergestellt',
     tooLargeMsg:'Inhalt zu groß für Cookie',
-    downloadBtnTitle:'Als HTML herunterladen',
+    downloadBtnTitle:'Herunterladen',
     downloadPrompt:'Seitentitel:',
+    dlTitle:'Herunterladen als…',
+    dlHtmlDesc:'Eigenständige HTML-Datei',
+    dlPdfDesc:'Über Druckdialog speichern',
+    pdfTitle:'PDF-Einstellungen',
+    pdfTitleLabel:'Titel',
+    pdfCancel:'Abbrechen',
+    pdfOk:'Druckdialog öffnen',
     openWindow:'Öffnen',
     diffPrompt:'Sprachname eingeben (leer lassen für einfaches diff):',
     diffDefault:'- entfernte Zeile\n+ hinzugefügte Zeile',
@@ -2049,8 +2244,15 @@ sequenceDiagram
     savedLabel:'Сохранено', unsavedLabel:'Не сохранено',
     restoredMsg:'Содержимое восстановлено из сохранённой сессии',
     tooLargeMsg:'Содержимое слишком большое для cookie',
-    downloadBtnTitle:'Скачать как HTML',
+    downloadBtnTitle:'Скачать',
     downloadPrompt:'Заголовок страницы:',
+    dlTitle:'Скачать как…',
+    dlHtmlDesc:'Автономный HTML-файл',
+    dlPdfDesc:'Сохранить через диалог печати',
+    pdfTitle:'Настройки PDF',
+    pdfTitleLabel:'Заголовок',
+    pdfCancel:'Отмена',
+    pdfOk:'Открыть диалог печати',
     openWindow:'Открыть',
     diffPrompt:'Введите название языка (оставьте пустым для обычного diff):',
     diffDefault:'- удалённая строка\n+ добавленная строка',
@@ -2179,8 +2381,15 @@ sequenceDiagram
     savedLabel:'Zapisano', unsavedLabel:'Niezapisane',
     restoredMsg:'Treść przywrócona z poprzedniej sesji',
     tooLargeMsg:'Treść zbyt duża, aby zapisać w cookie',
-    downloadBtnTitle:'Pobierz jako HTML',
+    downloadBtnTitle:'Pobierz',
     downloadPrompt:'Tytuł strony:',
+    dlTitle:'Pobierz jako…',
+    dlHtmlDesc:'Samodzielny plik HTML',
+    dlPdfDesc:'Zapisz przez okno drukowania',
+    pdfTitle:'Ustawienia PDF',
+    pdfTitleLabel:'Tytuł',
+    pdfCancel:'Anuluj',
+    pdfOk:'Otwórz okno drukowania',
     openWindow:'Otwórz',
     diffPrompt:'Podaj nazwę języka (pozostaw puste dla zwykłego diff):',
     diffDefault:'- usunięta linia\n+ dodana linia',
@@ -2309,8 +2518,15 @@ sequenceDiagram
     savedLabel:'Αποθηκευμένο', unsavedLabel:'Μη αποθηκευμένο',
     restoredMsg:'Το περιεχόμενο επαναφέρθηκε από την αποθηκευμένη συνεδρία',
     tooLargeMsg:'Το περιεχόμενο είναι πολύ μεγάλο για αποθήκευση σε cookie',
-    downloadBtnTitle:'Λήψη ως HTML',
+    downloadBtnTitle:'Λήψη',
     downloadPrompt:'Τίτλος σελίδας:',
+    dlTitle:'Λήψη ως…',
+    dlHtmlDesc:'Αυτόνομο αρχείο HTML',
+    dlPdfDesc:'Αποθήκευση μέσω εκτύπωσης',
+    pdfTitle:'Ρυθμίσεις PDF',
+    pdfTitleLabel:'Τίτλος',
+    pdfCancel:'Ακύρωση',
+    pdfOk:'Άνοιγμα διαλόγου εκτύπωσης',
     openWindow:'Άνοιγμα',
     diffPrompt:'Εισαγάγετε όνομα γλώσσας (αφήστε κενό για απλό diff):',
     diffDefault:'- γραμμή που αφαιρέθηκε\n+ γραμμή που προστέθηκε',
@@ -2738,7 +2954,7 @@ function closeFontPanel() {
   document.getElementById('fontModal').classList.remove('open');
   document.getElementById('fontSizeBtn').style.color = '';
 }
-document.addEventListener('keydown', e => { if(e.key === 'Escape') { closeFontPanel(); closeAbout(); closeSettings(); } });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') { closeFontPanel(); closeAbout(); closeSettings(); closeDownloadMenu(); closePdfModal(); } });
 
 const IDB_FONT_KEY = 'zmd_fontsizes';
 async function saveFontSizes() {
