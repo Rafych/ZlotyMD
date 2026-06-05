@@ -1362,29 +1362,24 @@ function executePdfDownload(){
   const pdfHTML = baseHTML
     .replace('</style>', pdfCSS + '</style>');
 
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
   const win = window.open('','_blank');
   if(!win) return;
   win.document.open();
   win.document.write(pdfHTML);
   win.document.close();
-
-  const doPrint = () => {
-    win.focus();
-    if (isMobile) {
+  win.addEventListener('load', () => {
+    setTimeout(() => {
+      win.focus();
+      const mql = win.matchMedia('print');
+      mql.addEventListener('change', function onPrintChange(e) {
+        if (!e.matches) {
+          mql.removeEventListener('change', onPrintChange);
+          win.close();
+        }
+      });
       win.print();
-    } else {
-      win.addEventListener('afterprint', () => { win.close(); });
-      win.print();
-    }
-  };
-
-  if (win.document.readyState === 'complete') {
-    setTimeout(doPrint, 800);
-  } else {
-    win.addEventListener('load', () => { setTimeout(doPrint, 800); });
-  }
+    }, 800);
+  });
 }
 
 const COPY_SVG=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"/><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"/></svg>`;
