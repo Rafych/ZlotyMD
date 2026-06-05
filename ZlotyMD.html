@@ -149,6 +149,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .pv-pop-btn:active{transform:scale(.95)}
 
 
+.rz{
   width:5px;background:var(--bord);cursor:col-resize;flex-shrink:0;
   transition:background .15s
 }
@@ -329,7 +330,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 
 @media(max-width:768px){
   .tabbar{display:block}
-  .panes{display:block;overflow:hidden;height:100%}
+  .panes{display:block;overflow:hidden;flex:1;min-height:0}
   .ep,.pp{height:100%;display:none;border:none}
   .ep.v,.pp.v{display:flex}
   .rz{display:none}.stats{display:none}.hsep{display:none}
@@ -2788,7 +2789,7 @@ if (typeof mermaid !== 'undefined') {
 }
 
 const INIT = LANGS['en'].init;
-ed.value = INIT; render(INIT); ed.focus();
+ed.value = INIT; render(INIT); if(window.innerWidth > 768) ed.focus();
 applyLang('en');
 
 document.getElementById('aboutYear').textContent = new Date().getFullYear();
