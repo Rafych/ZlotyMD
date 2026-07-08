@@ -1023,7 +1023,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
     </button>
 
     <div class="lang-wrap" id="langWrap">
-      <button class="lang-btn" id="langBtn" onclick="toggleLang()" title="Language">
+      <button class="lang-btn" id="langBtn" onclick="toggleLang()" title="Language" data-i18n-title="langBtnTitle">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="8" cy="8" r="6.5"/>
           <path d="M8 1.5C8 1.5 5.5 4 5.5 8s2.5 6.5 2.5 6.5"/>
@@ -1100,7 +1100,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
             <span class="about-lib-name">marked <span class="about-lib-ver">v9.1.6</span></span>
             <span class="about-lib-badge">MIT</span>
           </div>
-          <span class="about-lib-copy">© 2011–2018 Christopher Jeffrey</span>
+          <span class="about-lib-copy" data-i18n="aboutLibMarkedCopy">© 2011–2018 Christopher Jeffrey</span>
         </li>
         <li class="about-lib-item">
           <div class="about-lib-top">
@@ -1126,9 +1126,9 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
         <li class="about-lib-item">
           <div class="about-lib-top">
             <span class="about-lib-name">JetBrains Mono</span>
-            <span class="about-lib-badge about-lib-badge-alt">SIL OFL 1.1</span>
+            <span class="about-lib-badge about-lib-badge-alt" data-i18n="aboutLibJetbrainsBadge">SIL OFL 1.1</span>
           </div>
-          <span class="about-lib-copy">© 2020 JetBrains s.r.o.</span>
+          <span class="about-lib-copy" data-i18n="aboutLibJetbrainsCopy">© 2020 JetBrains s.r.o.</span>
         </li>
       </ul>
     </div>
@@ -1365,28 +1365,28 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 <div class="tbl-overlay" id="tblOverlay" onclick="if(event.target===this)closeTblDialog()">
   <div class="tbl-dlg">
     <div class="tbl-dlg-hd">
-      <h3>カスタムテーブルを挿入</h3>
+      <h3 data-i18n="tblDialogTitle">カスタムテーブルを挿入</h3>
       <button class="about-close" onclick="closeTblDialog()">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
       </button>
     </div>
     <div class="tbl-dlg-bd">
       <div class="tbl-row">
-        <span class="tbl-lbl">列数</span>
+        <span class="tbl-lbl" data-i18n="tblColsLabel">列数</span>
         <input class="tbl-num" id="tblCols" type="number" value="3" min="1" max="10">
       </div>
       <div class="tbl-row">
-        <span class="tbl-lbl">行数（ヘッダー除く）</span>
+        <span class="tbl-lbl" data-i18n="tblRowsLabel">行数（ヘッダー除く）</span>
         <input class="tbl-num" id="tblRows" type="number" value="3" min="1" max="20">
       </div>
       <div class="tbl-chks">
-        <label class="tbl-chk"><input type="checkbox" id="tblStripe" checked> ストライプ</label>
-        <label class="tbl-chk"><input type="checkbox" id="tblBorder"> 枠線</label>
+        <label class="tbl-chk"><input type="checkbox" id="tblStripe" checked> <span data-i18n="tblStripeLabel">ストライプ</span></label>
+        <label class="tbl-chk"><input type="checkbox" id="tblBorder"> <span data-i18n="tblBorderLabel">枠線</span></label>
       </div>
     </div>
     <div class="tbl-dlg-ft">
-      <button class="tbl-cancel" onclick="closeTblDialog()">キャンセル</button>
-      <button class="tbl-ok" onclick="insertCustomTable()">挿入</button>
+      <button class="tbl-cancel" onclick="closeTblDialog()" data-i18n="tblCancelBtn">キャンセル</button>
+      <button class="tbl-ok" onclick="insertCustomTable()" data-i18n="tblInsertBtn">挿入</button>
     </div>
   </div>
 </div>
@@ -2189,6 +2189,17 @@ const LANGS = {
     aboutLibMermaidCopy:'© 2014–2023 Knut Sveidqvist and contributors',
     aboutLibGoogleFontsBadge:'SIL OFL 1.1',
     aboutLibGoogleSansCopy:'© Google Inc. — SIL Open Font License 1.1',
+    aboutLibMarkedCopy:'© 2011–2018 Christopher Jeffrey',
+    aboutLibJetbrainsBadge:'SIL OFL 1.1',
+    aboutLibJetbrainsCopy:'© 2020 JetBrains s.r.o.',
+    langBtnTitle:'Language',
+    tblDialogTitle:'Insert custom table',
+    tblColsLabel:'Columns',
+    tblRowsLabel:'Rows (excluding header)',
+    tblStripeLabel:'Striped',
+    tblBorderLabel:'Bordered',
+    tblCancelBtn:'Cancel',
+    tblInsertBtn:'Insert',
     placeholder:'Type Markdown here…\n\n# Heading\n**bold** *italic* `code`',
     defaultText:'text', defaultLink:'link', defaultImgAlt:'alt text',
     savedLabel:'Saved', unsavedLabel:'Unsaved',
@@ -2347,6 +2358,17 @@ sequenceDiagram
     aboutLibMermaidCopy:'© 2014–2023 Knut Sveidqvist и соавторы',
     aboutLibGoogleFontsBadge:'SIL OFL 1.1',
     aboutLibGoogleSansCopy:'© Google Inc. — SIL Open Font License 1.1',
+    aboutLibMarkedCopy:'© 2011–2018 Christopher Jeffrey',
+    aboutLibJetbrainsBadge:'SIL OFL 1.1',
+    aboutLibJetbrainsCopy:'© 2020 JetBrains s.r.o.',
+    langBtnTitle:'Язык',
+    tblDialogTitle:'Вставить пользовательскую таблицу',
+    tblColsLabel:'Столбцы',
+    tblRowsLabel:'Строки (без учёта заголовка)',
+    tblStripeLabel:'Полосатая',
+    tblBorderLabel:'С рамкой',
+    tblCancelBtn:'Отмена',
+    tblInsertBtn:'Вставить',
     placeholder:'Введите Markdown здесь…\n\n# Заголовок\n**жирный** *курсив* `код`',
     defaultText:'текст', defaultLink:'ссылка', defaultImgAlt:'описание',
     savedLabel:'Сохранено', unsavedLabel:'Не сохранено',
@@ -2496,6 +2518,17 @@ sequenceDiagram
     aboutLibMermaidCopy:'© 2014–2023 Knut Sveidqvist 他',
     aboutLibGoogleFontsBadge:'SIL OFL 1.1',
     aboutLibGoogleSansCopy:'© Google Inc. — SIL Open Font License 1.1',
+    aboutLibMarkedCopy:'© 2011–2018 Christopher Jeffrey',
+    aboutLibJetbrainsBadge:'SIL OFL 1.1',
+    aboutLibJetbrainsCopy:'© 2020 JetBrains s.r.o.',
+    langBtnTitle:'言語',
+    tblDialogTitle:'カスタムテーブルを挿入',
+    tblColsLabel:'列数',
+    tblRowsLabel:'行数（ヘッダー除く）',
+    tblStripeLabel:'ストライプ',
+    tblBorderLabel:'枠線',
+    tblCancelBtn:'キャンセル',
+    tblInsertBtn:'挿入',
     placeholder:'ここにMarkdownを入力…\n\n# 見出し\n**太字** *斜体* `コード`',
     defaultText:'テキスト', defaultLink:'リンク', defaultImgAlt:'説明',
     savedLabel:'保存済み', unsavedLabel:'未保存',
@@ -2654,6 +2687,17 @@ sequenceDiagram
     aboutLibMermaidCopy:'© 2014–2023 Knut Sveidqvist und Mitwirkende',
     aboutLibGoogleFontsBadge:'SIL OFL 1.1',
     aboutLibGoogleSansCopy:'© Google Inc. — SIL Open Font License 1.1',
+    aboutLibMarkedCopy:'© 2011–2018 Christopher Jeffrey',
+    aboutLibJetbrainsBadge:'SIL OFL 1.1',
+    aboutLibJetbrainsCopy:'© 2020 JetBrains s.r.o.',
+    langBtnTitle:'Sprache',
+    tblDialogTitle:'Benutzerdefinierte Tabelle einfügen',
+    tblColsLabel:'Spalten',
+    tblRowsLabel:'Zeilen (ohne Kopfzeile)',
+    tblStripeLabel:'Gestreift',
+    tblBorderLabel:'Umrandet',
+    tblCancelBtn:'Abbrechen',
+    tblInsertBtn:'Einfügen',
     placeholder:'Markdown hier eingeben…\n\n# Überschrift\n**fett** *kursiv* `Code`',
     defaultText:'Text', defaultLink:'Link', defaultImgAlt:'Bildbeschreibung',
     savedLabel:'Gespeichert', unsavedLabel:'Ungespeichert',
@@ -2803,6 +2847,17 @@ sequenceDiagram
     aboutLibMermaidCopy:'© 2014–2023 Knut Sveidqvist i współtwórcy',
     aboutLibGoogleFontsBadge:'SIL OFL 1.1',
     aboutLibGoogleSansCopy:'© Google Inc. — SIL Open Font License 1.1',
+    aboutLibMarkedCopy:'© 2011–2018 Christopher Jeffrey',
+    aboutLibJetbrainsBadge:'SIL OFL 1.1',
+    aboutLibJetbrainsCopy:'© 2020 JetBrains s.r.o.',
+    langBtnTitle:'Język',
+    tblDialogTitle:'Wstaw niestandardową tabelę',
+    tblColsLabel:'Kolumny',
+    tblRowsLabel:'Wiersze (bez nagłówka)',
+    tblStripeLabel:'Naprzemienne wiersze',
+    tblBorderLabel:'Obramowanie',
+    tblCancelBtn:'Anuluj',
+    tblInsertBtn:'Wstaw',
     placeholder:'Wpisz Markdown tutaj…\n\n# Nagłówek\n**pogrubiony** *kursywa* `kod`',
     defaultText:'tekst', defaultLink:'odnośnik', defaultImgAlt:'tekst alternatywny',
     savedLabel:'Zapisano', unsavedLabel:'Niezapisane',
@@ -2952,6 +3007,17 @@ sequenceDiagram
     aboutLibMermaidCopy:'© 2014–2023 Knut Sveidqvist και συνεργάτες',
     aboutLibGoogleFontsBadge:'SIL OFL 1.1',
     aboutLibGoogleSansCopy:'© Google Inc. — SIL Open Font License 1.1',
+    aboutLibMarkedCopy:'© 2011–2018 Christopher Jeffrey',
+    aboutLibJetbrainsBadge:'SIL OFL 1.1',
+    aboutLibJetbrainsCopy:'© 2020 JetBrains s.r.o.',
+    langBtnTitle:'Γλώσσα',
+    tblDialogTitle:'Εισαγωγή προσαρμοσμένου πίνακα',
+    tblColsLabel:'Στήλες',
+    tblRowsLabel:'Γραμμές (χωρίς επικεφαλίδα)',
+    tblStripeLabel:'Ριγέ',
+    tblBorderLabel:'Με περίγραμμα',
+    tblCancelBtn:'Άκυρο',
+    tblInsertBtn:'Εισαγωγή',
     placeholder:'Πληκτρολογήστε Markdown εδώ…\n\n# Επικεφαλίδα\n**έντονα** *πλάγια* `κώδικας`',
     defaultText:'κείμενο', defaultLink:'σύνδεσμος', defaultImgAlt:'εναλλακτικό κείμενο',
     savedLabel:'Αποθηκευμένο', unsavedLabel:'Μη αποθηκευμένο',
