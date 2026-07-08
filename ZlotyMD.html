@@ -270,6 +270,21 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .md th:last-child{border-radius:0 var(--r8) 0 0}
 .md td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord)}
 .md tr:last-child td{border-bottom:none}
+.ztbl{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13);overflow:hidden;border-radius:var(--r8)}
+.ztbl thead tr th{background:var(--gbt);color:var(--gb);padding:var(--s8) var(--s13);font-weight:700;text-align:left;border-bottom:2px solid var(--gb)}
+.ztbl tbody tr td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord)}
+.ztbl tbody tr:last-child td{border-bottom:none}
+.ztbl.stripe tbody tr:nth-child(even) td{background:var(--surf)}
+.ztbl.border td,.ztbl.border th{border:1px solid var(--bord)}
+.ztbl tbody tr:hover td{background:rgba(66,133,244,.05)}
+.ztbl td.bg-b,.ztbl th.bg-b{background:var(--gbt)!important;color:var(--gb)!important}
+.ztbl td.bg-r,.ztbl th.bg-r{background:var(--grt)!important;color:var(--gr)!important}
+.ztbl td.bg-y,.ztbl th.bg-y{background:var(--gyt)!important;color:#7A4F00!important}
+.ztbl td.bg-g,.ztbl th.bg-g{background:var(--ggt)!important;color:var(--gg)!important}
+.ztbl td.al,.ztbl th.al{text-align:left}
+.ztbl td.ac,.ztbl th.ac{text-align:center}
+.ztbl td.ar,.ztbl th.ar{text-align:right}
+.ztbl td.fw,.ztbl th.fw{font-weight:700}
 .md tr:hover td{background:var(--surf)}
 .md hr{border:none;height:1.5px;background:var(--bord);margin:var(--s34) 0}
 .md strong{font-weight:700}
@@ -661,6 +676,104 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .pdf-ok-btn:hover{background:#1a73e8}
 .pdf-ok-btn:active{transform:scale(.96)}
 
+/* ── AI Panel ─────────────────────────────────────── */
+.ai-panel{
+  width:0;flex-shrink:0;overflow:hidden;
+  display:flex;flex-direction:column;
+  background:var(--bg);
+  transition:width .25s cubic-bezier(.4,0,.2,1),border-left-width .25s;
+  border-left:0px solid var(--bord);
+}
+.ai-panel.open{width:300px;border-left-width:1.5px}
+.ai-ph{
+  height:var(--hh);padding:0 var(--s13);flex-shrink:0;
+  border-bottom:1px solid var(--bord);background:var(--surf);
+  display:flex;align-items:center;gap:var(--s8);
+}
+.ai-ph-title{flex:1;display:flex;align-items:center;gap:6px}
+.ai-ph svg{width:13px;height:13px;flex-shrink:0;stroke:var(--gb)}
+.ai-close{width:22px;height:22px;border:none;border-radius:var(--r5);background:transparent;cursor:pointer;color:var(--sub);display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s}
+.ai-close:hover{background:var(--grt);color:var(--gr)}
+.ai-close svg{width:12px;height:12px;stroke:currentColor}
+.ai-msgs{flex:1;overflow-y:auto;padding:var(--s13);display:flex;flex-direction:column;gap:var(--s8)}
+.ai-msgs::-webkit-scrollbar{width:4px}
+.ai-msgs::-webkit-scrollbar-thumb{background:var(--bord);border-radius:99px}
+.ai-bubble{padding:var(--s8) var(--s13);border-radius:var(--r8);font-size:12px;line-height:1.7;max-width:95%;word-break:break-word}
+.ai-bubble.u{background:var(--gbt);color:var(--gb);align-self:flex-end;border-radius:var(--r8) var(--r8) var(--r5) var(--r8)}
+.ai-bubble.a{background:var(--surf);border:1px solid var(--bord);align-self:flex-start;white-space:pre-wrap}
+.ai-bubble.thinking{color:var(--sub);font-style:italic;background:transparent;border:none;align-self:flex-start;padding-left:var(--s5)}
+.ai-footer{padding:var(--s8);border-top:1px solid var(--bord);display:flex;flex-direction:column;gap:var(--s5);flex-shrink:0}
+.ai-presets{display:flex;flex-wrap:wrap;gap:var(--s5)}
+.ai-preset{padding:3px var(--s8);border-radius:var(--r34);border:1.5px solid var(--bord);background:var(--bg);font-family:var(--font);font-size:10px;font-weight:700;color:var(--mut);cursor:pointer;transition:border-color .12s,color .12s,background .12s,transform .1s;white-space:nowrap}
+.ai-preset:hover{border-color:var(--gb);color:var(--gb);background:var(--gbt);transform:translateY(-1px)}
+.ai-irow{display:flex;gap:var(--s5)}
+.ai-tin{flex:1;padding:var(--s8) var(--s13);border-radius:var(--r8);border:1.5px solid var(--bord);background:var(--bg);font-family:var(--font);font-size:12px;color:var(--txt);outline:none;resize:none;line-height:1.5;min-height:34px;max-height:80px;transition:border-color .15s}
+.ai-tin:focus{border-color:var(--gb)}
+.ai-tin::placeholder{color:var(--sub)}
+.ai-send{width:34px;height:34px;border:none;border-radius:var(--r8);background:var(--gb);color:#fff;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:opacity .15s,transform .1s}
+.ai-send:hover{opacity:.88;transform:translateY(-1px)}
+.ai-send:active{transform:scale(.93)}
+.ai-send:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.ai-send svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ai-insert{display:none;width:100%;padding:var(--s5);border:1.5px solid var(--gg);border-radius:var(--r8);background:var(--ggt);color:var(--gg);font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.ai-insert.vis{display:block}
+.ai-insert:hover{opacity:.8}
+.ai-keyrow{display:flex;align-items:center;gap:var(--s5);padding:var(--s5) var(--s8);background:var(--gyt);border:1px solid var(--gy);border-radius:var(--r8);font-size:11px;color:#7A4F00;flex-shrink:0}
+.ai-keyrow svg{width:12px;height:12px;flex-shrink:0;stroke:#7A4F00;fill:none}
+#aiKey{flex:1;border:none;background:transparent;outline:none;font-family:var(--mono);font-size:11px;color:#7A4F00}
+#aiKey::placeholder{color:#B8850A;opacity:.7}
+.ai-ksave{padding:2px var(--s8);border-radius:var(--r5);border:1px solid var(--gy);background:var(--bg);color:#7A4F00;font-family:var(--font);font-size:10px;font-weight:700;cursor:pointer;transition:background .12s}
+.ai-ksave:hover{background:var(--gy);color:#fff}
+.ai-btn{width:34px;height:34px;border:none;border-radius:var(--r8);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mut);flex-shrink:0;transition:background .12s,color .12s,transform .1s}
+.ai-btn:hover{background:var(--gbt);color:var(--gb);transform:translateY(-2px) scale(1.08)}
+.ai-btn:active{transform:scale(.93)}
+.ai-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ai-btn.on{background:var(--gbt);color:var(--gb)}
+@media(max-width:768px){.ai-panel.open{width:0;border-left-width:0}}
+
+/* ── Table Insert Dialog ──────────────────────────── */
+.tbl-overlay{display:none;position:fixed;inset:0;background:rgba(32,33,36,.35);backdrop-filter:blur(2px);z-index:200;align-items:center;justify-content:center}
+.tbl-overlay.open{display:flex}
+.tbl-dlg{background:var(--bg);border:1.5px solid var(--bord);border-radius:var(--r21);box-shadow:0 8px 32px rgba(32,33,36,.18);width:340px;animation:slideDown .2s cubic-bezier(.34,1.56,.64,1)}
+.tbl-dlg-hd{display:flex;align-items:center;justify-content:space-between;padding:var(--s13) var(--s21);border-bottom:1px solid var(--bord)}
+.tbl-dlg-hd h3{font-size:var(--f13);font-weight:700}
+.tbl-dlg-bd{padding:var(--s21);display:flex;flex-direction:column;gap:var(--s13)}
+.tbl-row{display:flex;align-items:center;gap:var(--s13)}
+.tbl-lbl{font-size:12px;font-weight:700;color:var(--mut);width:90px;flex-shrink:0}
+.tbl-num{width:55px;padding:var(--s5) var(--s8);border-radius:var(--r8);border:1.5px solid var(--bord);background:var(--bg);font-family:var(--font);font-size:var(--f13);color:var(--txt);outline:none;text-align:center;transition:border-color .15s}
+.tbl-num:focus{border-color:var(--gb)}
+.tbl-chks{display:flex;gap:var(--s21)}
+.tbl-chk{display:flex;align-items:center;gap:var(--s5);font-size:12px;cursor:pointer}
+.tbl-chk input{accent-color:var(--gb)}
+.tbl-dlg-ft{display:flex;justify-content:flex-end;gap:var(--s8);padding:var(--s13) var(--s21);border-top:1px solid var(--bord)}
+.tbl-cancel{padding:var(--s8) var(--s13);border-radius:var(--r8);border:1.5px solid var(--bord);background:transparent;font-family:var(--font);font-size:var(--f13);font-weight:700;color:var(--mut);cursor:pointer;transition:background .12s}
+.tbl-cancel:hover{background:var(--surf)}
+.tbl-ok{padding:var(--s8) var(--s13);border-radius:var(--r8);border:none;background:var(--gb);color:#fff;font-family:var(--font);font-size:var(--f13);font-weight:700;cursor:pointer;transition:opacity .12s,transform .1s}
+.tbl-ok:hover{opacity:.88;transform:translateY(-1px)}
+
+/* ── Print ────────────────────────────────────────── */
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .doodle,.hd,.ep,.rz,.tabbar,.restore-toast,.about-overlay,.about-modal,.font-overlay,.font-modal,.dl-overlay,.dl-modal,.tbl-overlay,.ai-panel{display:none!important}
+  .app{display:block!important;height:auto!important}
+  .panes{display:block!important;height:auto!important;overflow:visible!important}
+  .pp{display:block!important;border:none!important;height:auto!important;overflow:visible!important;flex:none!important}
+  #pv{overflow:visible!important;padding:0!important}
+  .md{font-size:10.5pt;line-height:1.7;color:#000}
+  .md h1{font-size:20pt;break-after:avoid}
+  .md h2{font-size:15pt;break-after:avoid}
+  .md h3{font-size:12pt;break-after:avoid}
+  .md pre{break-inside:avoid;border:1px solid #ccc!important;background:#f5f5f5!important;color:#222!important;box-shadow:none!important}
+  .md pre code{color:#222!important}
+  .pre-header{background:#ececec!important;border-bottom:1px solid #ccc!important}
+  .cpbtn{display:none!important}
+  .md table,.ztbl{break-inside:avoid}
+  .md img{max-width:100%;break-inside:avoid}
+  .md .mermaid-wrap{break-inside:avoid;border:1px solid #ccc!important;box-shadow:none!important}
+  .md blockquote{border-left:3px solid #FBBC04;background:#fffde7!important}
+  @page{size:A4;margin:20mm 18mm 20mm 18mm}
+}
+
 </style>
 </head>
 <body>
@@ -791,6 +904,13 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       <div class="tg">
         <button class="btn g" title="Mermaid diagram (%%%...%%%)" data-i18n-title="ttMermaid" onclick="iMermaid()" style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:-.3px">mmd</button>
       </div>
+      <div class="tsep"></div>
+      <div class="tg">
+        <button class="btn b" title="カスタムテーブルを挿入" data-i18n-title="ttTable" onclick="openTblDialog()" style="font-family:var(--mono);font-size:10px;font-weight:700">tbl</button>
+        <button class="btn y" title="印刷" data-i18n-title="ttPrint" onclick="printDoc()" style="font-size:11px">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4V2h8v2"/><rect x="1" y="4" width="14" height="7" rx="1.5"/><path d="M4 8v6h8V8"/><circle cx="12.5" cy="7.5" r=".8" fill="currentColor" stroke="none"/></svg>
+        </button>
+      </div>
     </div>
 
     <div class="save-chip" id="saveChip">
@@ -848,6 +968,10 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
         <button class="lang-opt" data-lang="el" onclick="setLang('el')">🇬🇷 Ελληνικά</button>
       </div>
     </div>
+
+    <button class="ai-btn" id="aiToggleBtn" title="AI Assistant" data-i18n-title="aiBtnTitle" onclick="toggleAiPanel()">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3.5"/><path d="M2 13.5c0-2.5 2.7-4 6-4s6 1.5 6 4"/><circle cx="12.5" cy="4.5" r="1.5" fill="var(--gb)" stroke="none"/></svg>
+    </button>
 
     <button class="about-btn" id="aboutBtn" title="Credits &amp; Copyright" data-i18n-title="aboutBtnTitle" onclick="toggleAbout()">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -1040,7 +1164,47 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
         <div class="md" id="mo" style="display:none"></div>
       </div>
     </div>
-  
+
+    <!-- AI Panel -->
+    <div class="ai-panel" id="aiPanel">
+      <div class="ai-ph">
+        <div class="ai-ph-title">
+          <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3.5"/><path d="M2 13.5c0-2.5 2.7-4 6-4s6 1.5 6 4"/><circle cx="12.5" cy="4.5" r="1.5" fill="var(--gb)" stroke="none"/></svg>
+          AI Assistant
+        </div>
+        <button class="ai-close" onclick="toggleAiPanel()">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg>
+        </button>
+      </div>
+      <div class="ai-msgs" id="aiMsgs">
+        <div class="ai-bubble a">👋 こんにちは！MarkdownエディタのAIアシスタントです（Gemini）。<br><br>Google AI Studio のAPIキーを入力して「保存」してから、テキストを選択してプリセットを押すか、自由に質問してください。</div>
+      </div>
+      <div class="ai-footer">
+        <div class="ai-keyrow">
+          <svg viewBox="0 0 16 16"><rect x="2" y="4" width="12" height="9" rx="1.5"/><line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="10" x2="9" y2="10"/></svg>
+          <input id="aiKey" type="password" placeholder="Google AI Studio APIキーを入力…">
+          <button class="ai-ksave" onclick="saveApiKey()">保存</button>
+        </div>
+        <div class="ai-presets">
+          <button class="ai-preset" onclick="aiPreset('続きを書いて')">続きを書く</button>
+          <button class="ai-preset" onclick="aiPreset('要約して')">要約</button>
+          <button class="ai-preset" onclick="aiPreset('日本語に翻訳して')">和訳</button>
+          <button class="ai-preset" onclick="aiPreset('英語に翻訳して')">英訳</button>
+          <button class="ai-preset" onclick="aiPreset('校正・修正して')">校正</button>
+          <button class="ai-preset" onclick="aiPreset('箇条書きに変換して')">箇条書き</button>
+        </div>
+        <div class="ai-irow">
+          <textarea class="ai-tin" id="aiInput" placeholder="質問や指示を入力…" rows="1"
+            onkeydown="if((e=event).key==='Enter'&&!e.shiftKey){e.preventDefault();sendAi()}"
+            oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
+          <button class="ai-send" id="aiSendBtn" onclick="sendAi()">
+            <svg viewBox="0 0 16 16"><line x1="14" y1="2" x2="2" y2="8"/><line x1="14" y1="2" x2="6" y2="14"/><line x1="2" y1="8" x2="6" y2="14"/></svg>
+          </button>
+        </div>
+        <button class="ai-insert vis" id="aiInsertBtn" style="display:none" onclick="insertAiResult()">⬇ エディタに挿入</button>
+      </div>
+    </div>
+
   <!-- Download Format Selection Modal -->
   <div class="dl-overlay" id="dlOverlay" onclick="closeDownloadMenu()"></div>
   <div class="dl-modal" id="dlModal">
@@ -1074,6 +1238,36 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   </div>
 </div>
 
+</div>
+
+<!-- Table Insert Dialog -->
+<div class="tbl-overlay" id="tblOverlay" onclick="if(event.target===this)closeTblDialog()">
+  <div class="tbl-dlg">
+    <div class="tbl-dlg-hd">
+      <h3>カスタムテーブルを挿入</h3>
+      <button class="about-close" onclick="closeTblDialog()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="tbl-dlg-bd">
+      <div class="tbl-row">
+        <span class="tbl-lbl">列数</span>
+        <input class="tbl-num" id="tblCols" type="number" value="3" min="1" max="10">
+      </div>
+      <div class="tbl-row">
+        <span class="tbl-lbl">行数（ヘッダー除く）</span>
+        <input class="tbl-num" id="tblRows" type="number" value="3" min="1" max="20">
+      </div>
+      <div class="tbl-chks">
+        <label class="tbl-chk"><input type="checkbox" id="tblStripe" checked> ストライプ</label>
+        <label class="tbl-chk"><input type="checkbox" id="tblBorder"> 枠線</label>
+      </div>
+    </div>
+    <div class="tbl-dlg-ft">
+      <button class="tbl-cancel" onclick="closeTblDialog()">キャンセル</button>
+      <button class="tbl-ok" onclick="insertCustomTable()">挿入</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1194,6 +1388,21 @@ function buildPreviewHTML(title){
     .md td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord)}
     .md tr:last-child td{border-bottom:none}
     .md tr:hover td{background:var(--surf)}
+    .ztbl{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13);overflow:hidden;border-radius:var(--r8)}
+    .ztbl thead tr th{background:var(--gbt);color:var(--gb);padding:var(--s8) var(--s13);font-weight:700;text-align:left;border-bottom:2px solid var(--gb)}
+    .ztbl tbody tr td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord)}
+    .ztbl tbody tr:last-child td{border-bottom:none}
+    .ztbl.stripe tbody tr:nth-child(even) td{background:var(--surf)}
+    .ztbl.border td,.ztbl.border th{border:1px solid var(--bord)}
+    .ztbl tbody tr:hover td{background:rgba(66,133,244,.05)}
+    .ztbl td.bg-b,.ztbl th.bg-b{background:var(--gbt)!important;color:var(--gb)!important}
+    .ztbl td.bg-r,.ztbl th.bg-r{background:var(--grt)!important;color:var(--gr)!important}
+    .ztbl td.bg-y,.ztbl th.bg-y{background:var(--gyt)!important;color:#7A4F00!important}
+    .ztbl td.bg-g,.ztbl th.bg-g{background:var(--ggt)!important;color:var(--gg)!important}
+    .ztbl td.al,.ztbl th.al{text-align:left}
+    .ztbl td.ac,.ztbl th.ac{text-align:center}
+    .ztbl td.ar,.ztbl th.ar{text-align:right}
+    .ztbl td.fw,.ztbl th.fw{font-weight:700}
     .md hr{border:none;height:1.5px;background:var(--bord);margin:var(--s34) 0}
     .md strong{font-weight:700}
     .md img{max-width:100%;border-radius:var(--r13)}
@@ -1734,7 +1943,7 @@ function render(v){
       mo.innerHTML = _renderLatexDoc(v);
     } else {
       const hasMmd = /%%%/.test(v);
-      const vv = _processImageAttrs(hasMmd ? _protectMermaid(v) : v);
+      const vv = _processCustomTables(_processImageAttrs(hasMmd ? _protectMermaid(v) : v));
       mo.innerHTML = _restoreEscapes(_restoreLatex(marked.parse(_protectEscapes(_protectLatex(vv)))));
       if (hasMmd && typeof mermaid !== 'undefined') {
         requestAnimationFrame(() => {
@@ -1837,6 +2046,7 @@ const LANGS = {
     emptyTitle:'Preview Area',
     emptyDesc:'Type Markdown in the editor to see a live preview',
     aboutBtnTitle:'Credits & Copyright',
+    aiBtnTitle:'AI Assistant',
     aboutAuthor:'Author', aboutCopyright:'Copyright',
     aboutVersion:'Version', aboutLicense:'License',
     aboutDesc:'A Markdown editor with golden-ratio proportions and a Google-inspired color palette.',
@@ -1861,6 +2071,7 @@ const LANGS = {
     ttMathInline:'Inline math ($...$)', ttMathBlock:'Block math ($$...$$)',
     ttDiff:'Diff block (diff / diff_lang)',
     ttMermaid: 'Mermaid diagram (%%%...%%%)',
+    ttTable:'Insert custom table', ttPrint:'Print',
     fontSizeBtnTitle:'Font size settings',
     fontPanelTitle:'Font Sizes',
     fontH1:'H1', fontH2:'H2', fontH3:'H3',
@@ -1972,6 +2183,7 @@ sequenceDiagram
     emptyTitle:'プレビューエリア',
     emptyDesc:'左のエディターにMarkdownを入力するとリアルタイムで表示されます',
     aboutBtnTitle:'クレジット・著作権情報',
+    aiBtnTitle:'AIアシスタント',
     aboutAuthor:'作者', aboutCopyright:'著作権',
     aboutVersion:'バージョン', aboutLicense:'ライセンス',
     aboutDesc:'黄金比のプロポーションと Google インスパイアドなカラーパレットを持つ Markdown エディター。',
@@ -1996,6 +2208,7 @@ sequenceDiagram
     ttMathInline:'インライン数式 ($...$)', ttMathBlock:'ブロック数式 ($$...$$)',
     ttDiff:'diff ブロック (diff / diff_言語名)',
     ttMermaid:'Mermaid ダイアグラム (%%%...%%%)',
+    ttTable:'カスタムテーブルを挿入', ttPrint:'印刷',
     fontSizeBtnTitle:'文字サイズ設定',
     fontPanelTitle:'文字サイズ',
     fontH1:'H1', fontH2:'H2', fontH3:'H3',
@@ -2107,6 +2320,7 @@ sequenceDiagram
     emptyTitle:'Vorschaubereich',
     emptyDesc:'Gib Markdown im Editor ein, um eine Live-Vorschau zu sehen',
     aboutBtnTitle:'Credits & Copyright',
+    aiBtnTitle:'KI-Assistent',
     aboutAuthor:'Autor', aboutCopyright:'Urheberrecht',
     aboutVersion:'Version', aboutLicense:'Lizenz',
     aboutDesc:'Ein Markdown-Editor mit Proportionen des Goldenen Schnitts und einer von Google inspirierten Farbpalette.',
@@ -2131,6 +2345,7 @@ sequenceDiagram
     ttMathInline:'Inline-Formel ($...$)', ttMathBlock:'Blockformel ($$...$$)',
     ttDiff:'Diff-Block (diff / diff_Sprache)',
     ttMermaid: 'Mermaid-Diagramm (%%%...%%%)',
+    ttTable:'Benutzerdefinierte Tabelle einfügen', ttPrint:'Drucken',
     fontSizeBtnTitle:'Schriftgrößen-Einstellungen',
     fontPanelTitle:'Schriftgrößen',
     fontH1:'H1', fontH2:'H2', fontH3:'H3',
@@ -2242,6 +2457,7 @@ sequenceDiagram
     emptyTitle:'Область просмотра',
     emptyDesc:'Введите Markdown в редактор для просмотра в реальном времени',
     aboutBtnTitle:'Авторство и права',
+    aiBtnTitle:'ИИ-помощник',
     aboutAuthor:'Автор', aboutCopyright:'Авторское право',
     aboutVersion:'Версия', aboutLicense:'Лицензия',
     aboutDesc:'Редактор Markdown с пропорциями золотого сечения и цветовой палитрой в стиле Google.',
@@ -2266,6 +2482,7 @@ sequenceDiagram
     ttMathInline:'Встроенная формула ($...$)', ttMathBlock:'Блочная формула ($$...$$)',
     ttDiff:'Блок diff (diff / diff_язык)',
     ttMermaid: 'Диаграмма Mermaid (%%%...%%%)',
+    ttTable:'Вставить пользовательскую таблицу', ttPrint:'Печать',
     fontSizeBtnTitle:'Настройки размера шрифта',
     fontPanelTitle:'Размеры шрифтов',
     fontH1:'H1', fontH2:'H2', fontH3:'H3',
@@ -2377,6 +2594,7 @@ sequenceDiagram
     emptyTitle:'Obszar podglądu',
     emptyDesc:'Wpisz Markdown w edytorze, aby zobaczyć podgląd na żywo',
     aboutBtnTitle:'Autorzy i prawa autorskie',
+    aiBtnTitle:'Asystent AI',
     aboutAuthor:'Autor', aboutCopyright:'Prawa autorskie',
     aboutVersion:'Wersja', aboutLicense:'Licencja',
     aboutDesc:'Edytor Markdown z proporcjami złotego podziału i paletą barw inspirowaną Google.',
@@ -2401,6 +2619,7 @@ sequenceDiagram
     ttMathInline:'Matematyka inline ($...$)', ttMathBlock:'Blok matematyczny ($$...$$)',
     ttDiff:'Blok diff (diff / diff_język)',
     ttMermaid: 'Diagram Mermaid (%%%...%%%)',
+    ttTable:'Wstaw niestandardową tabelę', ttPrint:'Drukuj',
     fontSizeBtnTitle:'Ustawienia rozmiaru czcionki',
     fontPanelTitle:'Rozmiary czcionek',
     fontH1:'H1', fontH2:'H2', fontH3:'H3',
@@ -2512,6 +2731,7 @@ sequenceDiagram
     emptyTitle:'Περιοχή Προεπισκόπησης',
     emptyDesc:'Πληκτρολογήστε Markdown στον επεξεργαστή για να δείτε ζωντανή προεπισκόπηση',
     aboutBtnTitle:'Συντελεστές & Πνευματικά Δικαιώματα',
+    aiBtnTitle:'Βοηθός AI',
     aboutAuthor:'Συγγραφέας', aboutCopyright:'Πνευματικά Δικαιώματα',
     aboutVersion:'Έκδοση', aboutLicense:'Άδεια',
     aboutDesc:'Ένας επεξεργαστής Markdown με αναλογίες χρυσής τομής και παλέτα χρωμάτων εμπνευσμένη από τη Google.',
@@ -2536,6 +2756,7 @@ sequenceDiagram
     ttMathInline:'Ενσωματωμένα μαθηματικά ($...$)', ttMathBlock:'Μπλοκ μαθηματικών ($$...$$)',
     ttDiff:'Μπλοκ diff (diff / diff_lang)',
     ttMermaid: 'Διάγραμμα Mermaid (%%%...%%%)',
+    ttTable:'Εισαγωγή προσαρμοσμένου πίνακα', ttPrint:'Εκτύπωση',
     fontSizeBtnTitle:'Ρυθμίσεις μεγέθους γραμματοσειράς',
     fontPanelTitle:'Μεγέθη γραμματοσειράς',
     fontH1:'H1', fontH2:'H2', fontH3:'H3',
@@ -3110,6 +3331,232 @@ document.addEventListener('keydown', e => {
     setSaveStatus('unsaved');
   }
 })();
+
+/* ══════════════════════════════════════════════════
+   ------------custom table syntax------------------
+   構文: :::table stripe border
+         | 見出し1 | 見出し2 {bg=b} | 見出し3 {ac} |
+         | セル1   | セル2          | セル3 {fw}   |
+         :::
+   ══════════════════════════════════════════════════ */
+function _processCustomTables(v) {
+  return v.replace(/:::table([^\n]*)\n([\s\S]*?):::/g, (_, opts, body) => {
+    const stripe = /stripe/.test(opts) ? ' stripe' : '';
+    const border = /border/.test(opts) ? ' border' : '';
+    const lines = body.trim().split('\n').filter(l => l.trim().startsWith('|'));
+    if (!lines.length) return _;
+    const parseRow = (line, tag) => {
+      const cells = line.split('|').slice(1, -1);
+      return cells.map(cell => {
+        const m = cell.match(/^([\s\S]*?)\{([^}]*)\}(.*)$/);
+        let content = cell.trim();
+        let classes = '';
+        let extra = '';
+        if (m) {
+          content = (m[1] + m[3]).trim();
+          const attrs = m[2].trim();
+          if (/bg=b/.test(attrs)) classes += ' bg-b';
+          if (/bg=r/.test(attrs)) classes += ' bg-r';
+          if (/bg=y/.test(attrs)) classes += ' bg-y';
+          if (/bg=g/.test(attrs)) classes += ' bg-g';
+          if (/ac/.test(attrs)) classes += ' ac';
+          if (/ar/.test(attrs)) classes += ' ar';
+          if (/al/.test(attrs)) classes += ' al';
+          if (/fw/.test(attrs)) classes += ' fw';
+          const cs = attrs.match(/col=(\d+)/);
+          const rs = attrs.match(/row=(\d+)/);
+          if (cs) extra += ` colspan="${cs[1]}"`;
+          if (rs) extra += ` rowspan="${rs[1]}"`;
+        }
+        const cls = classes.trim() ? ` class="${classes.trim()}"` : '';
+        return `<${tag}${cls}${extra}>${content}</${tag}>`;
+      }).join('');
+    };
+    const [header, ...rows] = lines;
+    const thead = `<thead><tr>${parseRow(header, 'th')}</tr></thead>`;
+    const tbody = `<tbody>${rows.map(r => `<tr>${parseRow(r, 'td')}</tr>`).join('')}</tbody>`;
+    return `<table class="ztbl${stripe}${border}">${thead}${tbody}</table>`;
+  });
+}
+
+/* -----table dialog functions----- */
+function openTblDialog() {
+  document.getElementById('tblOverlay').classList.add('open');
+  document.getElementById('tblCols').focus();
+}
+function closeTblDialog() {
+  document.getElementById('tblOverlay').classList.remove('open');
+}
+function insertCustomTable() {
+  const cols = Math.max(1, Math.min(10, parseInt(document.getElementById('tblCols').value) || 3));
+  const rows = Math.max(1, Math.min(20, parseInt(document.getElementById('tblRows').value) || 3));
+  const stripe = document.getElementById('tblStripe').checked ? ' stripe' : '';
+  const border = document.getElementById('tblBorder').checked ? ' border' : '';
+  const hdr = '| ' + Array.from({length: cols}, (_, i) => `見出し${i + 1}`).join(' | ') + ' |';
+  const dataRows = Array.from({length: rows}, (_, r) =>
+    '| ' + Array.from({length: cols}, (_, c) => `セル${r + 1}-${c + 1}`).join(' | ') + ' |'
+  );
+  const snippet = `:::table${stripe}${border}\n${hdr}\n${dataRows.join('\n')}\n:::\n`;
+  const {s, e} = {s: ed.selectionStart, e: ed.selectionEnd};
+  ed.value = ed.value.slice(0, s) + snippet + ed.value.slice(e);
+  ed.selectionStart = ed.selectionEnd = s + snippet.length;
+  ed.focus();
+  render(ed.value);
+  closeTblDialog();
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeTblDialog();
+});
+
+/*------print function------*/
+function printDoc() {
+  window.print();
+}
+
+/*-------ai assistant functions-------
+   正式版に切り替える場合は AI_BACKEND を 'anthropic' に変更し
+   Anthropic APIキーを入力するだけでOK。--------------
+   ══════════════════════════════════════════════════ */
+const AI_BACKEND = 'gemini'; // 'gemini' | 'anthropic'
+const GEMINI_MODEL   = 'gemini-2.0-flash';
+const ANTHROPIC_MODEL = 'claude-sonnet-4-20250514';
+const AI_SYSTEM = 'あなたはMarkdownドキュメントの執筆・編集を支援するAIアシスタントです。Markdown記法を適切に使用して、役立つ回答を提供してください。返答は簡潔かつ実用的にしてください。';
+
+let _aiKey = '';
+let _aiLastResponse = '';
+
+(function loadAiKey() {
+  try {
+    const k = localStorage.getItem('zmd_ai_key_' + AI_BACKEND);
+    if (k) { _aiKey = k; document.getElementById('aiKey').value = k; }
+  } catch(_) {}
+})();
+
+function saveApiKey() {
+  const k = document.getElementById('aiKey').value.trim();
+  if (!k) return;
+  _aiKey = k;
+  try { localStorage.setItem('zmd_ai_key_' + AI_BACKEND, k); } catch(_) {}
+  const btn = document.querySelector('.ai-ksave');
+  btn.textContent = '保存済 ✓';
+  setTimeout(() => { btn.textContent = '保存'; }, 1500);
+}
+
+function toggleAiPanel() {
+  const p = document.getElementById('aiPanel');
+  const b = document.getElementById('aiToggleBtn');
+  const open = p.classList.toggle('open');
+  b.classList.toggle('on', open);
+  if (open) document.getElementById('aiInput').focus();
+}
+
+function _aiAddMsg(text, role) {
+  const msgs = document.getElementById('aiMsgs');
+  const d = document.createElement('div');
+  d.className = 'ai-bubble ' + role;
+  d.textContent = text;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+  return d;
+}
+
+function aiPreset(prompt) {
+  document.getElementById('aiInput').value = prompt;
+  sendAi();
+}
+
+async function _callGemini(fullPrompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${_aiKey}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      system_instruction: { parts: [{ text: AI_SYSTEM }] },
+      contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+      generationConfig: { maxOutputTokens: 1024 }
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '(空の返答)';
+}
+
+async function _callAnthropic(fullPrompt) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': _aiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: ANTHROPIC_MODEL,
+      max_tokens: 1024,
+      system: AI_SYSTEM,
+      messages: [{ role: 'user', content: fullPrompt }]
+    })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  return data.content?.map(c => c.text || '').join('') || '(空の返答)';
+}
+
+async function sendAi() {
+  const input = document.getElementById('aiInput');
+  const prompt = input.value.trim();
+  if (!prompt) return;
+
+  if (!_aiKey) {
+    _aiAddMsg(`⚠ ${AI_BACKEND === 'gemini' ? 'Google AI Studio' : 'Anthropic'} のAPIキーを入力して「保存」してください。`, 'thinking');
+    return;
+  }
+
+  const selected = ed.value.substring(ed.selectionStart, ed.selectionEnd);
+  const contextNote = selected ? `\n\n以下のテキストを対象としてください:\n"""\n${selected}\n"""` : '';
+  const fullPrompt = prompt + contextNote;
+
+  input.value = '';
+  input.style.height = '34px';
+  _aiAddMsg(prompt + (selected ? ` (選択テキスト: ${selected.length}文字)` : ''), 'u');
+
+  const btn = document.getElementById('aiSendBtn');
+  btn.disabled = true;
+  const thinking = _aiAddMsg('● 考え中…', 'thinking');
+
+  try {
+    const text = AI_BACKEND === 'gemini'
+      ? await _callGemini(fullPrompt)
+      : await _callAnthropic(fullPrompt);
+    thinking.remove();
+    _aiLastResponse = text;
+    _aiAddMsg(text, 'a');
+    document.getElementById('aiInsertBtn').style.display = 'block';
+  } catch (err) {
+    thinking.remove();
+    _aiAddMsg(`⚠ エラー: ${err.message}`, 'thinking');
+  } finally {
+    btn.disabled = false;
+    document.getElementById('aiInput').focus();
+  }
+}
+
+function insertAiResult() {
+  if (!_aiLastResponse) return;
+  const {s, e} = {s: ed.selectionStart, e: ed.selectionEnd};
+  const insert = '\n\n' + _aiLastResponse + '\n';
+  ed.value = ed.value.slice(0, s) + insert + ed.value.slice(e);
+  ed.selectionStart = ed.selectionEnd = s + insert.length;
+  ed.focus();
+  render(ed.value);
+  document.getElementById('aiInsertBtn').style.display = 'none';
+}
 
 </script>
 </body>
