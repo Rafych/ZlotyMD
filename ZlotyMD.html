@@ -1293,6 +1293,9 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
           <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3.5"/><path d="M2 13.5c0-2.5 2.7-4 6-4s6 1.5 6 4"/><circle cx="12.5" cy="4.5" r="1.5" fill="var(--gb)" stroke="none"/></svg>
           <span data-i18n="aiBtnTitle">AI Assistant</span>
         </div>
+        <button class="ai-close" id="aiResetBtn" title="Reset conversation" data-i18n-title="aiResetBtnTitle" onclick="resetAiConversation()" style="margin-right:4px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        </button>
         <button class="ai-close" onclick="toggleAiPanel()">
           <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg>
         </button>
@@ -1303,13 +1306,13 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       <div class="ai-footer">
         <div class="ai-keyrow">
           <svg viewBox="0 0 16 16"><rect x="2" y="4" width="12" height="9" rx="1.5"/><line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="10" x2="9" y2="10"/></svg>
-          <input id="aiKey" type="password" placeholder="Google AI Studio APIキーを入力…" data-i18n-placeholder="aiKeyPlaceholder">
+          <input id="aiKey" type="password" placeholder="Anthropic APIキーを入力…" data-i18n-placeholder="aiKeyPlaceholder">
           <button class="ai-ksave" id="aiKsaveBtn" onclick="saveApiKey()" data-i18n="aiSaveBtn">保存</button>
         </div>
         <div class="ai-presets">
           <button class="ai-preset" data-i18n="aiPresetContinue" data-i18n-prompt="aiPresetContinuePrompt" onclick="aiPreset(this.dataset.prompt)" data-prompt="続きを書いて">続きを書く</button>
           <button class="ai-preset" data-i18n="aiPresetSummarize" data-i18n-prompt="aiPresetSummarizePrompt" onclick="aiPreset(this.dataset.prompt)" data-prompt="要約して">要約</button>
-          <button class="ai-preset" data-i18n="aiPresetTranslateJa" data-i18n-prompt="aiPresetTranslateJaPrompt" onclick="aiPreset(this.dataset.prompt)" data-prompt="日本語に翻訳して">和訳</button>
+          <button class="ai-preset" data-i18n="aiPresetTranslateNative" data-i18n-prompt="aiPresetTranslateNativePrompt" onclick="aiPreset(this.dataset.prompt)" data-prompt="Translate to Russian">To Russian</button>
           <button class="ai-preset" data-i18n="aiPresetTranslateEn" data-i18n-prompt="aiPresetTranslateEnPrompt" onclick="aiPreset(this.dataset.prompt)" data-prompt="英語に翻訳して">英訳</button>
           <button class="ai-preset" data-i18n="aiPresetProofread" data-i18n-prompt="aiPresetProofreadPrompt" onclick="aiPreset(this.dataset.prompt)" data-prompt="校正・修正して">校正</button>
           <button class="ai-preset" data-i18n="aiPresetBullet" data-i18n-prompt="aiPresetBulletPrompt" onclick="aiPreset(this.dataset.prompt)" data-prompt="箇条書きに変換して">箇条書き</button>
@@ -2103,7 +2106,7 @@ function render(v){
                 if (wrap && !wrap.querySelector('svg') && !wrap.querySelector('.mermaid-error')) {
                   const errDiv = document.createElement('div');
                   errDiv.className = 'mermaid-error';
-                  errDiv.textContent = '⚠ Mermaid: 構文エラー（diagram syntax error）';
+                  errDiv.textContent = LANGS[currentLang]?.mermaidSyntaxError || LANGS['en'].mermaidSyntaxError;
                   wrap.appendChild(errDiv);
                 }
               }
@@ -2174,12 +2177,14 @@ const LANGS = {
     emptyDesc:'Type Markdown in the editor to see a live preview',
     aboutBtnTitle:'Credits & Copyright',
     aiBtnTitle:'AI Assistant',
-    aiWelcome:'👋 Hi! I\'m the AI Assistant (Gemini) for this Markdown editor.<br><br>Enter your Google AI Studio API key and press "Save", then select text and click a preset, or ask anything freely.',
-    aiKeyPlaceholder:'Enter Google AI Studio API key…', aiSaveBtn:'Save', aiSavedBtn:'Saved ✓',
+    aiWelcome:'👋 Hi! I\'m the AI Assistant (Claude) for this Markdown editor.<br><br>Enter your Anthropic API key and press "Save", then select text and click a preset, or ask anything freely.',
+    aiKeyPlaceholder:'Enter Anthropic API key…', aiSaveBtn:'Save', aiSavedBtn:'Saved ✓',
     aiPresetContinue:'Continue', aiPresetSummarize:'Summarize', aiPresetTranslateJa:'To Japanese', aiPresetTranslateEn:'To English', aiPresetProofread:'Proofread', aiPresetBullet:'Bulletize',
     aiPresetContinuePrompt:'Continue writing', aiPresetSummarizePrompt:'Summarize this', aiPresetTranslateJaPrompt:'Translate to Japanese', aiPresetTranslateEnPrompt:'Translate to English', aiPresetProofreadPrompt:'Proofread and correct this', aiPresetBulletPrompt:'Convert to a bullet list',
+    aiPresetTranslateNative:'To Russian', aiPresetTranslateNativePrompt:'Translate to Russian',
     aiInputPlaceholder:'Ask a question or give an instruction…', aiInsertBtn:'⬇ Insert into editor',
     aiKeyWarning:'⚠ Please enter your {backend} API key and press "Save".', aiThinking:'● Thinking…', aiErrorPrefix:'⚠ Error: ', aiSelectedSuffix:' (selected text: {n} chars)', aiEmptyResponse:'(empty response)',
+    aiResetBtnTitle:'Reset conversation', aiResetConfirm:'Clear the conversation history? This cannot be undone.',
     aiSystemPrompt:'You are an AI assistant that helps write and edit Markdown documents. Use Markdown syntax appropriately and give helpful answers. Keep responses concise and practical.',
     aboutAuthor:'Author', aboutCopyright:'Copyright',
     aboutVersion:'Version', aboutLicense:'License',
@@ -2202,6 +2207,8 @@ const LANGS = {
     tblInsertBtn:'Insert',
     placeholder:'Type Markdown here…\n\n# Heading\n**bold** *italic* `code`',
     defaultText:'text', defaultLink:'link', defaultImgAlt:'alt text',
+    tblHeaderDefault:'Header', tblCellDefault:'Cell',
+    mermaidSyntaxError:'⚠ Mermaid: syntax error (diagram syntax error)',
     savedLabel:'Saved', unsavedLabel:'Unsaved',
     restoredMsg:'Content restored from saved session',
     tooLargeMsg:'Content too large to save in cookie',
@@ -2343,12 +2350,14 @@ sequenceDiagram
     emptyDesc:'Введите Markdown в редактор для просмотра в реальном времени',
     aboutBtnTitle:'Авторство и права',
     aiBtnTitle:'ИИ-помощник',
-    aiWelcome:'👋 Привет! Я ИИ-ассистент (Gemini) для этого Markdown-редактора.<br><br>Введите ключ API Google AI Studio и нажмите «Сохранить», затем выделите текст и нажмите шаблон или просто задайте вопрос.',
-    aiKeyPlaceholder:'Введите ключ API Google AI Studio…', aiSaveBtn:'Сохранить', aiSavedBtn:'Сохранено ✓',
+    aiWelcome:'👋 Привет! Я ИИ-ассистент (Claude) для этого Markdown-редактора.<br><br>Введите ключ API Anthropic и нажмите «Сохранить», затем выделите текст и нажмите шаблон или просто задайте вопрос.',
+    aiKeyPlaceholder:'Введите ключ API Anthropic…', aiSaveBtn:'Сохранить', aiSavedBtn:'Сохранено ✓',
     aiPresetContinue:'Продолжить', aiPresetSummarize:'Резюме', aiPresetTranslateJa:'На японский', aiPresetTranslateEn:'На английский', aiPresetProofread:'Правка', aiPresetBullet:'В список',
     aiPresetContinuePrompt:'Продолжи текст', aiPresetSummarizePrompt:'Сделай резюме', aiPresetTranslateJaPrompt:'Переведи на японский', aiPresetTranslateEnPrompt:'Переведи на английский', aiPresetProofreadPrompt:'Проверь и исправь текст', aiPresetBulletPrompt:'Преобразуй в маркированный список',
+    aiPresetTranslateNative:'На русский', aiPresetTranslateNativePrompt:'Переведи на русский',
     aiInputPlaceholder:'Введите вопрос или инструкцию…', aiInsertBtn:'⬇ Вставить в редактор',
     aiKeyWarning:'⚠ Введите ключ API {backend} и нажмите «Сохранить».', aiThinking:'● Думаю…', aiErrorPrefix:'⚠ Ошибка: ', aiSelectedSuffix:' (выделено символов: {n})', aiEmptyResponse:'(пустой ответ)',
+    aiResetBtnTitle:'Сбросить диалог', aiResetConfirm:'Очистить историю диалога? Это действие необратимо.',
     aiSystemPrompt:'Вы — ИИ-ассистент, помогающий писать и редактировать документы в формате Markdown. Используйте синтаксис Markdown уместно и давайте полезные ответы. Отвечайте кратко и по делу.',
     aboutAuthor:'Автор', aboutCopyright:'Авторское право',
     aboutVersion:'Версия', aboutLicense:'Лицензия',
@@ -2371,6 +2380,8 @@ sequenceDiagram
     tblInsertBtn:'Вставить',
     placeholder:'Введите Markdown здесь…\n\n# Заголовок\n**жирный** *курсив* `код`',
     defaultText:'текст', defaultLink:'ссылка', defaultImgAlt:'описание',
+    tblHeaderDefault:'Заголовок', tblCellDefault:'Ячейка',
+    mermaidSyntaxError:'⚠ Mermaid: ошибка синтаксиса (diagram syntax error)',
     savedLabel:'Сохранено', unsavedLabel:'Не сохранено',
     restoredMsg:'Содержимое восстановлено из сохранённой сессии',
     tooLargeMsg:'Содержимое слишком большое для cookie',
@@ -2503,12 +2514,14 @@ sequenceDiagram
     emptyDesc:'左のエディターにMarkdownを入力するとリアルタイムで表示されます',
     aboutBtnTitle:'クレジット・著作権情報',
     aiBtnTitle:'AIアシスタント',
-    aiWelcome:'👋 こんにちは！MarkdownエディタのAIアシスタントです（Gemini）。<br><br>Google AI Studio のAPIキーを入力して「保存」してから、テキストを選択してプリセットを押すか、自由に質問してください。',
-    aiKeyPlaceholder:'Google AI Studio APIキーを入力…', aiSaveBtn:'保存', aiSavedBtn:'保存済 ✓',
+    aiWelcome:'👋 こんにちは！MarkdownエディタのAIアシスタントです（Claude）。<br><br>Anthropic のAPIキーを入力して「保存」してから、テキストを選択してプリセットを押すか、自由に質問してください。',
+    aiKeyPlaceholder:'Anthropic APIキーを入力…', aiSaveBtn:'保存', aiSavedBtn:'保存済 ✓',
     aiPresetContinue:'続きを書く', aiPresetSummarize:'要約', aiPresetTranslateJa:'和訳', aiPresetTranslateEn:'英訳', aiPresetProofread:'校正', aiPresetBullet:'箇条書き',
     aiPresetContinuePrompt:'続きを書いて', aiPresetSummarizePrompt:'要約して', aiPresetTranslateJaPrompt:'日本語に翻訳して', aiPresetTranslateEnPrompt:'英語に翻訳して', aiPresetProofreadPrompt:'校正・修正して', aiPresetBulletPrompt:'箇条書きに変換して',
+    aiPresetTranslateNative:'和訳', aiPresetTranslateNativePrompt:'日本語に翻訳して',
     aiInputPlaceholder:'質問や指示を入力…', aiInsertBtn:'⬇ エディタに挿入',
     aiKeyWarning:'⚠ {backend} のAPIキーを入力して「保存」してください。', aiThinking:'● 考え中…', aiErrorPrefix:'⚠ エラー: ', aiSelectedSuffix:' (選択テキスト: {n}文字)', aiEmptyResponse:'(空の返答)',
+    aiResetBtnTitle:'会話をリセット', aiResetConfirm:'会話履歴を削除しますか？この操作は元に戻せません。',
     aiSystemPrompt:'あなたはMarkdownドキュメントの執筆・編集を支援するAIアシスタントです。Markdown記法を適切に使用して、役立つ回答を提供してください。返答は簡潔かつ実用的にしてください。',
     aboutAuthor:'作者', aboutCopyright:'著作権',
     aboutVersion:'バージョン', aboutLicense:'ライセンス',
@@ -2531,6 +2544,8 @@ sequenceDiagram
     tblInsertBtn:'挿入',
     placeholder:'ここにMarkdownを入力…\n\n# 見出し\n**太字** *斜体* `コード`',
     defaultText:'テキスト', defaultLink:'リンク', defaultImgAlt:'説明',
+    tblHeaderDefault:'見出し', tblCellDefault:'セル',
+    mermaidSyntaxError:'⚠ Mermaid: 構文エラー（diagram syntax error）',
     savedLabel:'保存済み', unsavedLabel:'未保存',
     restoredMsg:'保存した内容を復元しました',
     tooLargeMsg:'コンテンツが大きすぎてCookieに保存できません',
@@ -2672,12 +2687,14 @@ sequenceDiagram
     emptyDesc:'Gib Markdown im Editor ein, um eine Live-Vorschau zu sehen',
     aboutBtnTitle:'Credits & Copyright',
     aiBtnTitle:'KI-Assistent',
-    aiWelcome:'👋 Hallo! Ich bin der KI-Assistent (Gemini) für diesen Markdown-Editor.<br><br>Gib deinen Google AI Studio API-Schlüssel ein und klicke auf „Speichern“, wähle dann Text aus und klicke auf eine Vorlage oder stelle einfach eine Frage.',
-    aiKeyPlaceholder:'Google AI Studio API-Schlüssel eingeben…', aiSaveBtn:'Speichern', aiSavedBtn:'Gespeichert ✓',
+    aiWelcome:'👋 Hallo! Ich bin der KI-Assistent (Claude) für diesen Markdown-Editor.<br><br>Gib deinen Anthropic API-Schlüssel ein und klicke auf „Speichern“, wähle dann Text aus und klicke auf eine Vorlage oder stelle einfach eine Frage.',
+    aiKeyPlaceholder:'Anthropic API-Schlüssel eingeben…', aiSaveBtn:'Speichern', aiSavedBtn:'Gespeichert ✓',
     aiPresetContinue:'Weiterschreiben', aiPresetSummarize:'Zusammenfassen', aiPresetTranslateJa:'Ins Japanische', aiPresetTranslateEn:'Ins Englische', aiPresetProofread:'Korrigieren', aiPresetBullet:'Aufzählung',
     aiPresetContinuePrompt:'Schreibe weiter', aiPresetSummarizePrompt:'Fasse dies zusammen', aiPresetTranslateJaPrompt:'Übersetze ins Japanische', aiPresetTranslateEnPrompt:'Übersetze ins Englische', aiPresetProofreadPrompt:'Korrigiere und verbessere dies', aiPresetBulletPrompt:'Wandle dies in eine Aufzählung um',
+    aiPresetTranslateNative:'Ins Deutsche', aiPresetTranslateNativePrompt:'Übersetze ins Deutsche',
     aiInputPlaceholder:'Frage oder Anweisung eingeben…', aiInsertBtn:'⬇ In Editor einfügen',
     aiKeyWarning:'⚠ Bitte gib deinen {backend} API-Schlüssel ein und klicke auf „Speichern“.', aiThinking:'● Denke nach…', aiErrorPrefix:'⚠ Fehler: ', aiSelectedSuffix:' (ausgewählter Text: {n} Zeichen)', aiEmptyResponse:'(leere Antwort)',
+    aiResetBtnTitle:'Unterhaltung zurücksetzen', aiResetConfirm:'Gesprächsverlauf löschen? Dies kann nicht rückgängig gemacht werden.',
     aiSystemPrompt:'Du bist ein KI-Assistent, der beim Schreiben und Bearbeiten von Markdown-Dokumenten hilft. Verwende die Markdown-Syntax angemessen und gib hilfreiche Antworten. Halte die Antworten prägnant und praktisch.',
     aboutAuthor:'Autor', aboutCopyright:'Urheberrecht',
     aboutVersion:'Version', aboutLicense:'Lizenz',
@@ -2700,6 +2717,8 @@ sequenceDiagram
     tblInsertBtn:'Einfügen',
     placeholder:'Markdown hier eingeben…\n\n# Überschrift\n**fett** *kursiv* `Code`',
     defaultText:'Text', defaultLink:'Link', defaultImgAlt:'Bildbeschreibung',
+    tblHeaderDefault:'Überschrift', tblCellDefault:'Zelle',
+    mermaidSyntaxError:'⚠ Mermaid: Syntaxfehler (diagram syntax error)',
     savedLabel:'Gespeichert', unsavedLabel:'Ungespeichert',
     restoredMsg:'Inhalt aus gespeicherter Sitzung wiederhergestellt',
     tooLargeMsg:'Inhalt zu groß für Cookie',
@@ -2832,12 +2851,14 @@ sequenceDiagram
     emptyDesc:'Wpisz Markdown w edytorze, aby zobaczyć podgląd na żywo',
     aboutBtnTitle:'Autorzy i prawa autorskie',
     aiBtnTitle:'Asystent AI',
-    aiWelcome:'👋 Cześć! Jestem asystentem AI (Gemini) dla tego edytora Markdown.<br><br>Wpisz klucz API Google AI Studio i kliknij „Zapisz”, następnie zaznacz tekst i wybierz szablon lub po prostu zadaj pytanie.',
-    aiKeyPlaceholder:'Wpisz klucz API Google AI Studio…', aiSaveBtn:'Zapisz', aiSavedBtn:'Zapisano ✓',
+    aiWelcome:'👋 Cześć! Jestem asystentem AI (Claude) dla tego edytora Markdown.<br><br>Wpisz klucz API Anthropic i kliknij „Zapisz”, następnie zaznacz tekst i wybierz szablon lub po prostu zadaj pytanie.',
+    aiKeyPlaceholder:'Wpisz klucz API Anthropic…', aiSaveBtn:'Zapisz', aiSavedBtn:'Zapisano ✓',
     aiPresetContinue:'Kontynuuj', aiPresetSummarize:'Streść', aiPresetTranslateJa:'Na japoński', aiPresetTranslateEn:'Na angielski', aiPresetProofread:'Korekta', aiPresetBullet:'Lista',
     aiPresetContinuePrompt:'Kontynuuj pisanie', aiPresetSummarizePrompt:'Streść ten tekst', aiPresetTranslateJaPrompt:'Przetłumacz na japoński', aiPresetTranslateEnPrompt:'Przetłumacz na angielski', aiPresetProofreadPrompt:'Popraw i skoryguj ten tekst', aiPresetBulletPrompt:'Zamień na listę punktowaną',
+    aiPresetTranslateNative:'Na polski', aiPresetTranslateNativePrompt:'Przetłumacz na polski',
     aiInputPlaceholder:'Wpisz pytanie lub polecenie…', aiInsertBtn:'⬇ Wstaw do edytora',
     aiKeyWarning:'⚠ Wprowadź klucz API {backend} i kliknij „Zapisz”.', aiThinking:'● Myślę…', aiErrorPrefix:'⚠ Błąd: ', aiSelectedSuffix:' (zaznaczony tekst: {n} znaków)', aiEmptyResponse:'(pusta odpowiedź)',
+    aiResetBtnTitle:'Zresetuj rozmowę', aiResetConfirm:'Wyczyścić historię rozmowy? Tej operacji nie można cofnąć.',
     aiSystemPrompt:'Jesteś asystentem AI pomagającym pisać i edytować dokumenty Markdown. Używaj odpowiednio składni Markdown i udzielaj pomocnych odpowiedzi. Odpowiadaj zwięźle i praktycznie.',
     aboutAuthor:'Autor', aboutCopyright:'Prawa autorskie',
     aboutVersion:'Wersja', aboutLicense:'Licencja',
@@ -2860,6 +2881,8 @@ sequenceDiagram
     tblInsertBtn:'Wstaw',
     placeholder:'Wpisz Markdown tutaj…\n\n# Nagłówek\n**pogrubiony** *kursywa* `kod`',
     defaultText:'tekst', defaultLink:'odnośnik', defaultImgAlt:'tekst alternatywny',
+    tblHeaderDefault:'Nagłówek', tblCellDefault:'Komórka',
+    mermaidSyntaxError:'⚠ Mermaid: błąd składni (diagram syntax error)',
     savedLabel:'Zapisano', unsavedLabel:'Niezapisane',
     restoredMsg:'Treść przywrócona z poprzedniej sesji',
     tooLargeMsg:'Treść zbyt duża, aby zapisać w cookie',
@@ -2992,12 +3015,14 @@ sequenceDiagram
     emptyDesc:'Πληκτρολογήστε Markdown στον επεξεργαστή για να δείτε ζωντανή προεπισκόπηση',
     aboutBtnTitle:'Συντελεστές & Πνευματικά Δικαιώματα',
     aiBtnTitle:'Βοηθός AI',
-    aiWelcome:'👋 Γεια σου! Είμαι ο βοηθός AI (Gemini) για αυτόν τον επεξεργαστή Markdown.<br><br>Εισάγετε το κλειδί API του Google AI Studio και πατήστε «Αποθήκευση», έπειτα επιλέξτε κείμενο και πατήστε ένα πρότυπο ή απλώς κάντε μια ερώτηση.',
-    aiKeyPlaceholder:'Εισαγάγετε το κλειδί API του Google AI Studio…', aiSaveBtn:'Αποθήκευση', aiSavedBtn:'Αποθηκεύτηκε ✓',
+    aiWelcome:'👋 Γεια σου! Είμαι ο βοηθός AI (Claude) για αυτόν τον επεξεργαστή Markdown.<br><br>Εισάγετε το κλειδί API της Anthropic και πατήστε «Αποθήκευση», έπειτα επιλέξτε κείμενο και πατήστε ένα πρότυπο ή απλώς κάντε μια ερώτηση.',
+    aiKeyPlaceholder:'Εισαγάγετε το κλειδί API της Anthropic…', aiSaveBtn:'Αποθήκευση', aiSavedBtn:'Αποθηκεύτηκε ✓',
     aiPresetContinue:'Συνέχεια', aiPresetSummarize:'Περίληψη', aiPresetTranslateJa:'Στα Ιαπωνικά', aiPresetTranslateEn:'Στα Αγγλικά', aiPresetProofread:'Διόρθωση', aiPresetBullet:'Λίστα',
     aiPresetContinuePrompt:'Συνέχισε το κείμενο', aiPresetSummarizePrompt:'Κάνε περίληψη αυτού', aiPresetTranslateJaPrompt:'Μετάφρασε στα Ιαπωνικά', aiPresetTranslateEnPrompt:'Μετάφρασε στα Αγγλικά', aiPresetProofreadPrompt:'Διόρθωσε και βελτίωσε αυτό το κείμενο', aiPresetBulletPrompt:'Μετέτρεψέ το σε λίστα με κουκκίδες',
+    aiPresetTranslateNative:'Στα Ελληνικά', aiPresetTranslateNativePrompt:'Μετάφρασε στα Ελληνικά',
     aiInputPlaceholder:'Πληκτρολογήστε ερώτηση ή εντολή…', aiInsertBtn:'⬇ Εισαγωγή στον επεξεργαστή',
     aiKeyWarning:'⚠ Εισαγάγετε το κλειδί API {backend} και πατήστε «Αποθήκευση».', aiThinking:'● Σκέφτομαι…', aiErrorPrefix:'⚠ Σφάλμα: ', aiSelectedSuffix:' (επιλεγμένο κείμενο: {n} χαρακτήρες)', aiEmptyResponse:'(κενή απάντηση)',
+    aiResetBtnTitle:'Επαναφορά συνομιλίας', aiResetConfirm:'Διαγραφή ιστορικού συνομιλίας; Δεν μπορεί να αναιρεθεί.',
     aiSystemPrompt:'Είσαι ένας βοηθός AI που βοηθά στη συγγραφή και επεξεργασία εγγράφων Markdown. Χρησιμοποίησε κατάλληλα τη σύνταξη Markdown και δώσε χρήσιμες απαντήσεις. Κράτησε τις απαντήσεις σύντομες και πρακτικές.',
     aboutAuthor:'Συγγραφέας', aboutCopyright:'Πνευματικά Δικαιώματα',
     aboutVersion:'Έκδοση', aboutLicense:'Άδεια',
@@ -3020,6 +3045,8 @@ sequenceDiagram
     tblInsertBtn:'Εισαγωγή',
     placeholder:'Πληκτρολογήστε Markdown εδώ…\n\n# Επικεφαλίδα\n**έντονα** *πλάγια* `κώδικας`',
     defaultText:'κείμενο', defaultLink:'σύνδεσμος', defaultImgAlt:'εναλλακτικό κείμενο',
+    tblHeaderDefault:'Επικεφαλίδα', tblCellDefault:'Κελί',
+    mermaidSyntaxError:'⚠ Mermaid: σφάλμα σύνταξης (diagram syntax error)',
     savedLabel:'Αποθηκευμένο', unsavedLabel:'Μη αποθηκευμένο',
     restoredMsg:'Το περιεχόμενο επαναφέρθηκε από την αποθηκευμένη συνεδρία',
     tooLargeMsg:'Το περιεχόμενο είναι πολύ μεγάλο για αποθήκευση σε cookie',
@@ -3993,9 +4020,11 @@ function insertCustomTable() {
   const rows = Math.max(1, Math.min(20, parseInt(document.getElementById('tblRows').value) || 3));
   const stripe = document.getElementById('tblStripe').checked ? ' stripe' : '';
   const border = document.getElementById('tblBorder').checked ? ' border' : '';
-  const hdr = '| ' + Array.from({length: cols}, (_, i) => `見出し${i + 1}`).join(' | ') + ' |';
+  const th = LANGS[currentLang]?.tblHeaderDefault || 'Header';
+  const tc = LANGS[currentLang]?.tblCellDefault || 'Cell';
+  const hdr = '| ' + Array.from({length: cols}, (_, i) => `${th}${i + 1}`).join(' | ') + ' |';
   const dataRows = Array.from({length: rows}, (_, r) =>
-    '| ' + Array.from({length: cols}, (_, c) => `セル${r + 1}-${c + 1}`).join(' | ') + ' |'
+    '| ' + Array.from({length: cols}, (_, c) => `${tc}${r + 1}-${c + 1}`).join(' | ') + ' |'
   );
   const snippet = `:::table${stripe}${border}\n${hdr}\n${dataRows.join('\n')}\n:::\n`;
   const {s, e} = {s: ed.selectionStart, e: ed.selectionEnd};
@@ -4009,16 +4038,68 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeTblDialog();
 });
 
-const AI_BACKEND = 'gemini'; // допустимые значения: 'gemini' | 'anthropic'
+const AI_BACKEND = 'anthropic'; // допустимые значения: 'gemini' | 'anthropic'
 const GEMINI_MODEL   = 'gemini-2.0-flash';
 // функции AI-ассистента.
 // чтобы перейти на боевой режим, смените AI_BACKEND на 'anthropic'
 // и просто впишите API-ключ Anthropic — этого достаточно
-const ANTHROPIC_MODEL = 'claude-sonnet-4-20250514';
+const ANTHROPIC_MODEL = 'claude-sonnet-5';
 function _aiSystem() { return (LANGS[currentLang] || LANGS['en']).aiSystemPrompt; }
 
 let _aiKey = '';
 let _aiLastResponse = '';
+let _aiConvHistory = []; // { role: 'user'|'model', text }
+
+function _loadAiHistory() {
+  try {
+    const raw = localStorage.getItem('zmd_ai_history');
+    if (raw) _aiConvHistory = JSON.parse(raw) || [];
+  } catch(_) { _aiConvHistory = []; }
+}
+function _saveAiHistory() {
+  try { localStorage.setItem('zmd_ai_history', JSON.stringify(_aiConvHistory)); } catch(_) {}
+}
+_loadAiHistory();
+
+function _renderAiHistory() {
+  if (!_aiConvHistory.length) return;
+  const msgs = document.getElementById('aiMsgs');
+  const welcome = document.getElementById('aiWelcomeMsg');
+  if (welcome) welcome.remove();
+  _aiConvHistory.forEach(m => {
+    const d = document.createElement('div');
+    d.className = 'ai-bubble ' + (m.role === 'user' ? 'u' : 'a');
+    d.textContent = m.text;
+    msgs.appendChild(d);
+  });
+  const last = _aiConvHistory[_aiConvHistory.length - 1];
+  if (last && last.role === 'model') {
+    _aiLastResponse = last.text;
+    document.getElementById('aiInsertBtn').style.display = 'block';
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+document.addEventListener('DOMContentLoaded', _renderAiHistory);
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  setTimeout(_renderAiHistory, 0);
+}
+
+function resetAiConversation() {
+  const t = LANGS[currentLang] || LANGS['en'];
+  if (_aiConvHistory.length && !confirm(t.aiResetConfirm)) return;
+  _aiConvHistory = [];
+  _aiLastResponse = '';
+  try { localStorage.removeItem('zmd_ai_history'); } catch(_) {}
+  const msgs = document.getElementById('aiMsgs');
+  msgs.innerHTML = '';
+  const welcome = document.createElement('div');
+  welcome.className = 'ai-bubble a';
+  welcome.id = 'aiWelcomeMsg';
+  welcome.setAttribute('data-i18n-html', 'aiWelcome');
+  welcome.innerHTML = t.aiWelcome;
+  msgs.appendChild(welcome);
+  document.getElementById('aiInsertBtn').style.display = 'none';
+}
 
 (function loadAiKey() {
   try {
@@ -4063,12 +4144,14 @@ function aiPreset(prompt) {
 
 async function _callGemini(fullPrompt) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${_aiKey}`;
+  const contents = _aiConvHistory.map(m => ({ role: m.role === 'user' ? 'user' : 'model', parts: [{ text: m.text }] }));
+  contents.push({ role: 'user', parts: [{ text: fullPrompt }] });
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       system_instruction: { parts: [{ text: _aiSystem() }] },
-      contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
+      contents,
       generationConfig: { maxOutputTokens: 1024 }
     })
   });
@@ -4082,6 +4165,8 @@ async function _callGemini(fullPrompt) {
 }
 
 async function _callAnthropic(fullPrompt) {
+  const messages = _aiConvHistory.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text }));
+  messages.push({ role: 'user', content: fullPrompt });
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -4094,7 +4179,7 @@ async function _callAnthropic(fullPrompt) {
       model: ANTHROPIC_MODEL,
       max_tokens: 1024,
       system: _aiSystem(),
-      messages: [{ role: 'user', content: fullPrompt }]
+      messages
     })
   });
   if (!res.ok) {
@@ -4138,6 +4223,9 @@ async function sendAi() {
     thinking.remove();
     _aiLastResponse = text;
     _aiAddMsg(text, 'a');
+    _aiConvHistory.push({ role: 'user', text: fullPrompt });
+    _aiConvHistory.push({ role: 'model', text });
+    _saveAiHistory();
     document.getElementById('aiInsertBtn').style.display = 'block';
   } catch (err) {
     thinking.remove();
