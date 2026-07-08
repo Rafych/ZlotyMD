@@ -378,13 +378,12 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   display:none;position:fixed;
   top:calc(var(--hh) + 10px);right:var(--s21);
   width:min(360px, calc(100vw - 2 * var(--s21)));
-  max-height:calc(100vh - var(--hh) - 20px);overflow-y:auto;
-  scrollbar-width:none;-ms-overflow-style:none;
+  max-height:calc(100vh - var(--hh) - 20px);
+  flex-direction:column;
   background:var(--bg);border:1.5px solid var(--bord);border-radius:var(--r21);
-  box-shadow:0 8px 32px rgba(32,33,36,.18);z-index:101
+  box-shadow:0 8px 32px rgba(32,33,36,.18);z-index:101;overflow:hidden
 }
-.about-modal::-webkit-scrollbar{display:none}
-.about-modal.open{display:block}
+.about-modal.open{display:flex}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 .about-overlay.open{animation:fadeIn .18s ease}
@@ -393,7 +392,8 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .about-header{
   display:flex;align-items:center;justify-content:space-between;
   padding:var(--s13) var(--s21);
-  border-bottom:1px solid var(--bord)
+  border-bottom:1px solid var(--bord);
+  flex-shrink:0
 }
 .about-logo{display:flex;align-items:center;gap:var(--s8)}
 .about-app-name{font-size:var(--f21);font-weight:800;letter-spacing:-0.8px}
@@ -405,7 +405,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .about-close:hover{background:var(--grt);color:var(--gr)}
 .about-close svg{width:14px;height:14px}
 
-.about-body{padding:var(--s13) var(--s21) var(--s21)}
+.about-body{padding:var(--s13) var(--s21) var(--s21);display:flex;flex-direction:column;flex:1;min-height:0}
 .about-row{
   display:flex;align-items:center;justify-content:space-between;
   padding:var(--s8) 0;border-bottom:1px solid var(--surf)
@@ -420,7 +420,12 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .about-desc{font-size:12px;color:var(--mut);line-height:1.7}
 
 .about-libs-head{padding-bottom:var(--s5)}
-.about-lib-list{list-style:none;display:flex;flex-direction:column;gap:var(--s5)}
+.about-lib-list{
+  list-style:none;display:flex;flex-direction:column;gap:var(--s5);
+  overflow-y:auto;min-height:0;max-height:200px;
+  scrollbar-width:none;-ms-overflow-style:none
+}
+.about-lib-list::-webkit-scrollbar{display:none}
 .about-lib-item{
   padding:var(--s8);border-radius:var(--r8);background:var(--surf);
   border:1px solid var(--surf)
