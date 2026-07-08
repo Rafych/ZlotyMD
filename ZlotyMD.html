@@ -16,11 +16,13 @@
     Copyright (c) 2014-2023 Knut Sveidqvist and contributors
     MIT License — https://github.com/mermaid-js/mermaid/blob/develop/LICENSE
 
-  Google Fonts: Google Sans, JetBrains Mono
-    Google Sans: proprietary, served under Google Fonts Terms of Service
-      https://developers.google.com/fonts/terms
-    JetBrains Mono: Copyright (c) 2020 JetBrains s.r.o.
-      SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
+  Google Sans
+    Copyright (c) Google Inc.
+    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
+
+  JetBrains Mono v2020
+    Copyright (c) 2020 JetBrains s.r.o.
+    SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
 -->
 <html lang="en">
 <head>
@@ -375,11 +377,13 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .about-modal{
   display:none;position:fixed;
   top:calc(var(--hh) + 10px);right:var(--s21);
-  width:min(320px, calc(100vw - 2 * var(--s21)));
+  width:min(360px, calc(100vw - 2 * var(--s21)));
   max-height:calc(100vh - var(--hh) - 20px);overflow-y:auto;
+  scrollbar-width:none;-ms-overflow-style:none;
   background:var(--bg);border:1.5px solid var(--bord);border-radius:var(--r21);
   box-shadow:0 8px 32px rgba(32,33,36,.18);z-index:101
 }
+.about-modal::-webkit-scrollbar{display:none}
 .about-modal.open{display:block}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
@@ -414,6 +418,22 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 }
 .about-divider{height:1px;background:var(--bord);margin:var(--s13) 0}
 .about-desc{font-size:12px;color:var(--mut);line-height:1.7}
+
+.about-libs-head{padding-bottom:var(--s5)}
+.about-lib-list{list-style:none;display:flex;flex-direction:column;gap:var(--s5)}
+.about-lib-item{
+  padding:var(--s8);border-radius:var(--r8);background:var(--surf);
+  border:1px solid var(--surf)
+}
+.about-lib-top{display:flex;align-items:center;justify-content:space-between;gap:var(--s8)}
+.about-lib-name{font-size:12px;font-weight:700;color:var(--txt)}
+.about-lib-ver{font-weight:500;color:var(--mut);font-size:11px}
+.about-lib-badge{
+  flex-shrink:0;padding:2px var(--s8);border-radius:var(--r34);
+  background:var(--ggt);color:var(--gg);font-size:10px;font-weight:700;white-space:nowrap
+}
+.about-lib-badge-alt{background:var(--gbt);color:var(--gb)}
+.about-lib-copy{display:block;margin-top:2px;font-size:11px;color:var(--mut);line-height:1.5}
 
 .lang-wrap{position:relative;flex-shrink:0}
 .lang-btn{
@@ -487,6 +507,8 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 }
 .font-modal::-webkit-scrollbar{width:4px}
 .font-modal::-webkit-scrollbar-thumb{background:var(--bord);border-radius:99px}
+#settingsModal{scrollbar-width:none}
+#settingsModal::-webkit-scrollbar{display:none}
 .font-modal.open{display:block;animation:slideDown .2s cubic-bezier(.34,1.56,.64,1)}
 .font-modal-header{
   display:flex;align-items:center;justify-content:space-between;
@@ -608,7 +630,45 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 }
 .settings-preview-output p{margin-bottom:0!important;font-size:12px!important}
 
-/* Download menu */
+.new-doc-btn{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:var(--s8);
+  height:38px;border-radius:var(--r8);border:1.5px dashed var(--bord);
+  background:var(--surf);color:var(--mut);font-family:var(--font);font-size:var(--f13);font-weight:700;
+  cursor:pointer;margin-bottom:var(--s13);transition:border-color .15s,color .15s,background .15s,transform .1s
+}
+.new-doc-btn:hover{border-color:var(--gb);color:var(--gb);background:var(--gbt)}
+.new-doc-btn:active{transform:scale(.98)}
+.new-doc-btn svg{width:15px;height:15px;flex-shrink:0}
+.doc-list{display:flex;flex-direction:column;gap:var(--s8);max-height:50vh;overflow-y:auto}
+.doc-list::-webkit-scrollbar{width:4px}
+.doc-list::-webkit-scrollbar-thumb{background:var(--bord);border-radius:99px}
+.doc-item{
+  display:flex;align-items:center;gap:var(--s8);
+  padding:var(--s8) var(--s8) var(--s8) var(--s13);border-radius:var(--r8);
+  border:1.5px solid var(--bord);background:var(--bg);cursor:pointer;
+  transition:border-color .15s,background .15s
+}
+.doc-item:hover{border-color:var(--gb);background:var(--gbt)}
+.doc-item.active{border-color:var(--gg);background:var(--ggt)}
+.doc-item-main{flex:1;min-width:0}
+.doc-item-name{
+  font-size:var(--f13);font-weight:700;color:var(--txt);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  background:transparent;border:none;border-bottom:1.5px solid transparent;outline:none;
+  width:100%;font-family:var(--font);padding:2px 0;cursor:text
+}
+.doc-item-name:focus{border-bottom-color:var(--gb)}
+.doc-item-meta{font-size:10px;color:var(--sub);margin-top:2px}
+.doc-item-actions{display:flex;gap:var(--s3);flex-shrink:0}
+.doc-item-btn{
+  width:26px;height:26px;border:none;border-radius:var(--r5);background:transparent;
+  color:var(--mut);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .12s,color .12s,transform .1s;flex-shrink:0
+}
+.doc-item-btn:hover{transform:scale(1.08)}
+.doc-item-btn.del:hover{background:var(--grt);color:var(--gr)}
+.doc-item-empty{font-size:12px;color:var(--sub);text-align:center;padding:var(--s21) 0}
+
 .dl-overlay{
   display:none;position:fixed;inset:0;background:rgba(32,33,36,.35);
   backdrop-filter:blur(2px);z-index:200
@@ -645,7 +705,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 #dlOptPdf:hover svg,#dlOptPdf:hover .dl-opt-label{color:var(--gr)}
 .dl-opt:active{transform:scale(.95)}
 
-/* PDF info modal */
 .dl-modal--pdf{width:min(320px, calc(100vw - 2 * var(--s21)));padding:var(--s21)}
 .pdf-field{margin-bottom:var(--s13)}
 .pdf-label{
@@ -676,7 +735,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .pdf-ok-btn:hover{background:#1a73e8}
 .pdf-ok-btn:active{transform:scale(.96)}
 
-/* ── AI Panel ─────────────────────────────────────── */
 .ai-panel{
   width:0;flex-shrink:0;overflow:hidden;
   display:flex;flex-direction:column;
@@ -729,9 +787,17 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .ai-btn:active{transform:scale(.93)}
 .ai-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .ai-btn.on{background:var(--gbt);color:var(--gb)}
-@media(max-width:768px){.ai-panel.open{width:0;border-left-width:0}}
+@media(max-width:768px){
+  .ai-panel{
+    position:fixed;top:0;right:0;bottom:0;z-index:150;
+    width:0;box-shadow:none;
+  }
+  .ai-panel.open{
+    width:100%;border-left-width:0;
+    box-shadow:-4px 0 24px rgba(32,33,36,.18);
+  }
+}
 
-/* ── Table Insert Dialog ──────────────────────────── */
 .tbl-overlay{display:none;position:fixed;inset:0;background:rgba(32,33,36,.35);backdrop-filter:blur(2px);z-index:200;align-items:center;justify-content:center}
 .tbl-overlay.open{display:flex}
 .tbl-dlg{background:var(--bg);border:1.5px solid var(--bord);border-radius:var(--r21);box-shadow:0 8px 32px rgba(32,33,36,.18);width:340px;animation:slideDown .2s cubic-bezier(.34,1.56,.64,1)}
@@ -751,7 +817,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .tbl-ok{padding:var(--s8) var(--s13);border-radius:var(--r8);border:none;background:var(--gb);color:#fff;font-family:var(--font);font-size:var(--f13);font-weight:700;cursor:pointer;transition:opacity .12s,transform .1s}
 .tbl-ok:hover{opacity:.88;transform:translateY(-1px)}
 
-/* ── Print ────────────────────────────────────────── */
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   .doodle,.hd,.ep,.rz,.tabbar,.restore-toast,.about-overlay,.about-modal,.font-overlay,.font-modal,.dl-overlay,.dl-modal,.tbl-overlay,.ai-panel{display:none!important}
@@ -907,9 +972,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       <div class="tsep"></div>
       <div class="tg">
         <button class="btn b" title="カスタムテーブルを挿入" data-i18n-title="ttTable" onclick="openTblDialog()" style="font-family:var(--mono);font-size:10px;font-weight:700">tbl</button>
-        <button class="btn y" title="印刷" data-i18n-title="ttPrint" onclick="printDoc()" style="font-size:11px">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4V2h8v2"/><rect x="1" y="4" width="14" height="7" rx="1.5"/><path d="M4 8v6h8V8"/><circle cx="12.5" cy="7.5" r=".8" fill="currentColor" stroke="none"/></svg>
-        </button>
       </div>
     </div>
 
@@ -932,6 +994,12 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
         <path d="M8 2v8M5 7l3 3 3-3"/>
         <path d="M2 12h12"/>
+      </svg>
+    </button>
+
+    <button class="about-btn" id="docsBtn" title="Documents" data-i18n-title="docsBtnTitle" onclick="toggleDocsPanel()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 3.5A1.5 1.5 0 0 1 3.5 2h2.6l1 1.3H12.5A1.5 1.5 0 0 1 14 4.8v7.7a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5v-9Z"/>
       </svg>
     </button>
 
@@ -961,9 +1029,9 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       </button>
       <div class="lang-drop" id="langDrop">
         <button class="lang-opt" data-lang="en" onclick="setLang('en')">🇬🇧 English</button>
+        <button class="lang-opt" data-lang="ru" onclick="setLang('ru')">🇷🇺 Русский</button>
         <button class="lang-opt" data-lang="ja" onclick="setLang('ja')">🇯🇵 日本語</button>
         <button class="lang-opt" data-lang="de" onclick="setLang('de')">🇩🇪 Deutsch</button>
-        <button class="lang-opt" data-lang="ru" onclick="setLang('ru')">🇷🇺 Русский</button>
         <button class="lang-opt" data-lang="pl" onclick="setLang('pl')">🇵🇱 Polski</button>
         <button class="lang-opt" data-lang="el" onclick="setLang('el')">🇬🇷 Ελληνικά</button>
       </div>
@@ -1017,6 +1085,47 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       </div>
       <div class="about-divider"></div>
       <p class="about-desc" data-i18n="aboutDesc">A Markdown editor with golden-ratio proportions and a Google-inspired color palette.</p>
+      <div class="about-divider"></div>
+      <div class="about-libs-head">
+        <span class="about-label" data-i18n="aboutLibraries">Libraries</span>
+      </div>
+      <ul class="about-lib-list">
+        <li class="about-lib-item">
+          <div class="about-lib-top">
+            <span class="about-lib-name">marked <span class="about-lib-ver">v9.1.6</span></span>
+            <span class="about-lib-badge">MIT</span>
+          </div>
+          <span class="about-lib-copy">© 2011–2018 Christopher Jeffrey</span>
+        </li>
+        <li class="about-lib-item">
+          <div class="about-lib-top">
+            <span class="about-lib-name">KaTeX <span class="about-lib-ver">v0.16.9</span></span>
+            <span class="about-lib-badge">MIT</span>
+          </div>
+          <span class="about-lib-copy" data-i18n="aboutLibKatexCopy">© 2013–2020 Khan Academy and contributors</span>
+        </li>
+        <li class="about-lib-item">
+          <div class="about-lib-top">
+            <span class="about-lib-name">Mermaid <span class="about-lib-ver">v10.6.1</span></span>
+            <span class="about-lib-badge">MIT</span>
+          </div>
+          <span class="about-lib-copy" data-i18n="aboutLibMermaidCopy">© 2014–2023 Knut Sveidqvist and contributors</span>
+        </li>
+        <li class="about-lib-item">
+          <div class="about-lib-top">
+            <span class="about-lib-name">Google Sans</span>
+            <span class="about-lib-badge about-lib-badge-alt" data-i18n="aboutLibGoogleFontsBadge">SIL OFL 1.1</span>
+          </div>
+          <span class="about-lib-copy" data-i18n="aboutLibGoogleSansCopy">© Google Inc. — SIL Open Font License 1.1</span>
+        </li>
+        <li class="about-lib-item">
+          <div class="about-lib-top">
+            <span class="about-lib-name">JetBrains Mono</span>
+            <span class="about-lib-badge about-lib-badge-alt">SIL OFL 1.1</span>
+          </div>
+          <span class="about-lib-copy">© 2020 JetBrains s.r.o.</span>
+        </li>
+      </ul>
     </div>
   </div>
 
@@ -1094,16 +1203,6 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
     </div>
     <div class="font-modal-body">
 
-      <div class="settings-section-title" data-i18n="settingsDocTitle">Document</div>
-
-      <div class="settings-row" style="align-items:center">
-        <div class="settings-row-text">
-          <div class="settings-row-label" data-i18n="settingsDocNameLabel">Document Name</div>
-          <div class="settings-row-desc" data-i18n="settingsDocNameDesc">Used as the title for HTML and PDF downloads.</div>
-        </div>
-      </div>
-      <input class="pdf-input" id="docTitleInput" type="text" autocomplete="off" style="margin-bottom:var(--s21)" oninput="onDocTitleInput(this.value)" onkeydown="if(event.key==='Enter')this.blur()">
-
       <div class="settings-section-title" data-i18n="settingsRenderTitle">HTML Rendering</div>
 
       <div class="settings-row">
@@ -1121,6 +1220,23 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
         <div class="settings-preview-output md" id="settingsPreviewOutput"></div>
       </div>
 
+    </div>
+  </div>
+
+  <div class="font-overlay" id="docsOverlay" onclick="closeDocsPanel()"></div>
+  <div class="font-modal" id="docsModal" style="width:min(420px, calc(100vw - 2 * var(--s21)))">
+    <div class="font-modal-header">
+      <span data-i18n="docsPanelTitle">Documents</span>
+      <button class="about-close" onclick="closeDocsPanel()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="font-modal-body">
+      <button class="new-doc-btn" onclick="onNewDocClick()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/></svg>
+        <span data-i18n="docsNewBtn">New Document</span>
+      </button>
+      <div class="doc-list" id="docList"></div>
     </div>
   </div>
 
@@ -1170,38 +1286,38 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       <div class="ai-ph">
         <div class="ai-ph-title">
           <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3.5"/><path d="M2 13.5c0-2.5 2.7-4 6-4s6 1.5 6 4"/><circle cx="12.5" cy="4.5" r="1.5" fill="var(--gb)" stroke="none"/></svg>
-          AI Assistant
+          <span data-i18n="aiBtnTitle">AI Assistant</span>
         </div>
         <button class="ai-close" onclick="toggleAiPanel()">
           <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg>
         </button>
       </div>
       <div class="ai-msgs" id="aiMsgs">
-        <div class="ai-bubble a">👋 こんにちは！MarkdownエディタのAIアシスタントです（Gemini）。<br><br>Google AI Studio のAPIキーを入力して「保存」してから、テキストを選択してプリセットを押すか、自由に質問してください。</div>
+        <div class="ai-bubble a" id="aiWelcomeMsg" data-i18n-html="aiWelcome">👋 こんにちは！MarkdownエディタのAIアシスタントです（Gemini）。<br><br>Google AI Studio のAPIキーを入力して「保存」してから、テキストを選択してプリセットを押すか、自由に質問してください。</div>
       </div>
       <div class="ai-footer">
         <div class="ai-keyrow">
           <svg viewBox="0 0 16 16"><rect x="2" y="4" width="12" height="9" rx="1.5"/><line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="10" x2="9" y2="10"/></svg>
-          <input id="aiKey" type="password" placeholder="Google AI Studio APIキーを入力…">
-          <button class="ai-ksave" onclick="saveApiKey()">保存</button>
+          <input id="aiKey" type="password" placeholder="Google AI Studio APIキーを入力…" data-i18n-placeholder="aiKeyPlaceholder">
+          <button class="ai-ksave" id="aiKsaveBtn" onclick="saveApiKey()" data-i18n="aiSaveBtn">保存</button>
         </div>
         <div class="ai-presets">
-          <button class="ai-preset" onclick="aiPreset('続きを書いて')">続きを書く</button>
-          <button class="ai-preset" onclick="aiPreset('要約して')">要約</button>
-          <button class="ai-preset" onclick="aiPreset('日本語に翻訳して')">和訳</button>
-          <button class="ai-preset" onclick="aiPreset('英語に翻訳して')">英訳</button>
-          <button class="ai-preset" onclick="aiPreset('校正・修正して')">校正</button>
-          <button class="ai-preset" onclick="aiPreset('箇条書きに変換して')">箇条書き</button>
+          <button class="ai-preset" data-i18n="aiPresetContinue" data-i18n-prompt="aiPresetContinuePrompt" onclick="aiPreset(this.dataset.prompt)" data-prompt="続きを書いて">続きを書く</button>
+          <button class="ai-preset" data-i18n="aiPresetSummarize" data-i18n-prompt="aiPresetSummarizePrompt" onclick="aiPreset(this.dataset.prompt)" data-prompt="要約して">要約</button>
+          <button class="ai-preset" data-i18n="aiPresetTranslateJa" data-i18n-prompt="aiPresetTranslateJaPrompt" onclick="aiPreset(this.dataset.prompt)" data-prompt="日本語に翻訳して">和訳</button>
+          <button class="ai-preset" data-i18n="aiPresetTranslateEn" data-i18n-prompt="aiPresetTranslateEnPrompt" onclick="aiPreset(this.dataset.prompt)" data-prompt="英語に翻訳して">英訳</button>
+          <button class="ai-preset" data-i18n="aiPresetProofread" data-i18n-prompt="aiPresetProofreadPrompt" onclick="aiPreset(this.dataset.prompt)" data-prompt="校正・修正して">校正</button>
+          <button class="ai-preset" data-i18n="aiPresetBullet" data-i18n-prompt="aiPresetBulletPrompt" onclick="aiPreset(this.dataset.prompt)" data-prompt="箇条書きに変換して">箇条書き</button>
         </div>
         <div class="ai-irow">
-          <textarea class="ai-tin" id="aiInput" placeholder="質問や指示を入力…" rows="1"
+          <textarea class="ai-tin" id="aiInput" placeholder="質問や指示を入力…" data-i18n-placeholder="aiInputPlaceholder" rows="1"
             onkeydown="if((e=event).key==='Enter'&&!e.shiftKey){e.preventDefault();sendAi()}"
             oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
           <button class="ai-send" id="aiSendBtn" onclick="sendAi()">
             <svg viewBox="0 0 16 16"><line x1="14" y1="2" x2="2" y2="8"/><line x1="14" y1="2" x2="6" y2="14"/><line x1="2" y1="8" x2="6" y2="14"/></svg>
           </button>
         </div>
-        <button class="ai-insert vis" id="aiInsertBtn" style="display:none" onclick="insertAiResult()">⬇ エディタに挿入</button>
+        <button class="ai-insert vis" id="aiInsertBtn" style="display:none" onclick="insertAiResult()" data-i18n="aiInsertBtn">⬇ エディタに挿入</button>
       </div>
     </div>
 
@@ -1271,10 +1387,10 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 </div>
 
 <script>
-const ed=document.getElementById('ed'),mo=document.getElementById('mo'),emp=document.getElementById('emp');
+const ed=document.getElementById('ed'),mo=document.getElementById('mo'),emp=document.getElementById('emp'),pv=document.getElementById('pv');
 const cc=document.getElementById('cc'),wc=document.getElementById('wc'),lc=document.getElementById('lc');
 
-const SETTINGS_DEFAULTS = { htmlRendering: false, docTitle: '' };
+const SETTINGS_DEFAULTS = { htmlRendering: false };
 let appSettings = {...SETTINGS_DEFAULTS};
 
 const FONT_DEFAULTS = {
@@ -1446,11 +1562,13 @@ function buildPreviewHTML(title){
     Copyright (c) 2014-2023 Knut Sveidqvist and contributors
     MIT License — https://github.com/mermaid-js/mermaid/blob/develop/LICENSE
 
-  Google Fonts: Google Sans, JetBrains Mono
-    Google Sans: proprietary, served under Google Fonts Terms of Service
-      https://developers.google.com/fonts/terms
-    JetBrains Mono: Copyright (c) 2020 JetBrains s.r.o.
-      SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
+  Google Sans
+    Copyright (c) Google Inc.
+    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
+
+  JetBrains Mono v2020
+    Copyright (c) 2020 JetBrains s.r.o.
+    SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
 -->
 <html lang="${currentLang}">
 <head>
@@ -1543,9 +1661,13 @@ function dlChoosePDF(){
   executePdfDownload();
 }
 function getDocTitle(){
-  return appSettings.docTitle.trim()
-    || (ed.value.match(/^#\s+(.+)/m) || [])[1]?.trim()
-    || 'document';
+  // считаем название "неозаглавленным" (и берём заголовок H1) только если
+  // документ ещё не был явно переименован пользователем — даже если новое
+  // имя случайно совпадает с "Untitled Document"
+  const name = ((currentDocMeta && currentDocMeta.name) || '').trim();
+  const isDefaultName = !name || (currentDocMeta && currentDocMeta.isDefaultName);
+  if (!isDefaultName) return name;
+  return (ed.value.match(/^#\s+(.+)/m) || [])[1]?.trim() || name || 'document';
 }
 function downloadHTML(){
   if(!ed.value.trim()) return;
@@ -2047,9 +2169,21 @@ const LANGS = {
     emptyDesc:'Type Markdown in the editor to see a live preview',
     aboutBtnTitle:'Credits & Copyright',
     aiBtnTitle:'AI Assistant',
+    aiWelcome:'👋 Hi! I\'m the AI Assistant (Gemini) for this Markdown editor.<br><br>Enter your Google AI Studio API key and press "Save", then select text and click a preset, or ask anything freely.',
+    aiKeyPlaceholder:'Enter Google AI Studio API key…', aiSaveBtn:'Save', aiSavedBtn:'Saved ✓',
+    aiPresetContinue:'Continue', aiPresetSummarize:'Summarize', aiPresetTranslateJa:'To Japanese', aiPresetTranslateEn:'To English', aiPresetProofread:'Proofread', aiPresetBullet:'Bulletize',
+    aiPresetContinuePrompt:'Continue writing', aiPresetSummarizePrompt:'Summarize this', aiPresetTranslateJaPrompt:'Translate to Japanese', aiPresetTranslateEnPrompt:'Translate to English', aiPresetProofreadPrompt:'Proofread and correct this', aiPresetBulletPrompt:'Convert to a bullet list',
+    aiInputPlaceholder:'Ask a question or give an instruction…', aiInsertBtn:'⬇ Insert into editor',
+    aiKeyWarning:'⚠ Please enter your {backend} API key and press "Save".', aiThinking:'● Thinking…', aiErrorPrefix:'⚠ Error: ', aiSelectedSuffix:' (selected text: {n} chars)', aiEmptyResponse:'(empty response)',
+    aiSystemPrompt:'You are an AI assistant that helps write and edit Markdown documents. Use Markdown syntax appropriately and give helpful answers. Keep responses concise and practical.',
     aboutAuthor:'Author', aboutCopyright:'Copyright',
     aboutVersion:'Version', aboutLicense:'License',
     aboutDesc:'A Markdown editor with golden-ratio proportions and a Google-inspired color palette.',
+    aboutLibraries:'Libraries',
+    aboutLibKatexCopy:'© 2013–2020 Khan Academy and contributors',
+    aboutLibMermaidCopy:'© 2014–2023 Knut Sveidqvist and contributors',
+    aboutLibGoogleFontsBadge:'SIL OFL 1.1',
+    aboutLibGoogleSansCopy:'© Google Inc. — SIL Open Font License 1.1',
     placeholder:'Type Markdown here…\n\n# Heading\n**bold** *italic* `code`',
     defaultText:'text', defaultLink:'link', defaultImgAlt:'alt text',
     savedLabel:'Saved', unsavedLabel:'Unsaved',
@@ -2062,6 +2196,15 @@ const LANGS = {
     settingsDocTitle:'Document',
     settingsDocNameLabel:'Document Name',
     settingsDocNameDesc:'Used as the title for HTML and PDF downloads. Leave blank to use the first heading.',
+    docsBtnTitle:'Documents',
+    docsPanelTitle:'Documents',
+    docsNewBtn:'New Document',
+    docsEmpty:'No documents yet',
+    docsDelete:'Delete',
+    docsConfirmDelete:'Delete this document? This cannot be undone.',
+    docsCantDeleteLast:'You must have at least one document.',
+    untitledDoc:'Untitled Document',
+    docsOpenedMsg:'Opened "{name}"',
     openWindow:'Open',
     diffPrompt:'Enter language name (leave blank for plain diff):',
     diffDefault:'- removed line\n+ added line',
@@ -2071,7 +2214,7 @@ const LANGS = {
     ttMathInline:'Inline math ($...$)', ttMathBlock:'Block math ($$...$$)',
     ttDiff:'Diff block (diff / diff_lang)',
     ttMermaid: 'Mermaid diagram (%%%...%%%)',
-    ttTable:'Insert custom table', ttPrint:'Print',
+    ttTable:'Insert custom table',
     fontSizeBtnTitle:'Font size settings',
     fontPanelTitle:'Font Sizes',
     fontH1:'H1', fontH2:'H2', fontH3:'H3',
@@ -2175,6 +2318,155 @@ sequenceDiagram
 *Start writing your document!*
 `
   },
+  ru: {
+    chars:'симв.', words:'слов', lines:'строк',
+    editorLabel:'Редактор', previewLabel:'Просмотр',
+    tabEdit:'Редактировать', tabPreview:'Просмотр',
+    codeCopy:'Копировать', codeCopied:'Скопировано',
+    emptyTitle:'Область просмотра',
+    emptyDesc:'Введите Markdown в редактор для просмотра в реальном времени',
+    aboutBtnTitle:'Авторство и права',
+    aiBtnTitle:'ИИ-помощник',
+    aiWelcome:'👋 Привет! Я ИИ-ассистент (Gemini) для этого Markdown-редактора.<br><br>Введите ключ API Google AI Studio и нажмите «Сохранить», затем выделите текст и нажмите шаблон или просто задайте вопрос.',
+    aiKeyPlaceholder:'Введите ключ API Google AI Studio…', aiSaveBtn:'Сохранить', aiSavedBtn:'Сохранено ✓',
+    aiPresetContinue:'Продолжить', aiPresetSummarize:'Резюме', aiPresetTranslateJa:'На японский', aiPresetTranslateEn:'На английский', aiPresetProofread:'Правка', aiPresetBullet:'В список',
+    aiPresetContinuePrompt:'Продолжи текст', aiPresetSummarizePrompt:'Сделай резюме', aiPresetTranslateJaPrompt:'Переведи на японский', aiPresetTranslateEnPrompt:'Переведи на английский', aiPresetProofreadPrompt:'Проверь и исправь текст', aiPresetBulletPrompt:'Преобразуй в маркированный список',
+    aiInputPlaceholder:'Введите вопрос или инструкцию…', aiInsertBtn:'⬇ Вставить в редактор',
+    aiKeyWarning:'⚠ Введите ключ API {backend} и нажмите «Сохранить».', aiThinking:'● Думаю…', aiErrorPrefix:'⚠ Ошибка: ', aiSelectedSuffix:' (выделено символов: {n})', aiEmptyResponse:'(пустой ответ)',
+    aiSystemPrompt:'Вы — ИИ-ассистент, помогающий писать и редактировать документы в формате Markdown. Используйте синтаксис Markdown уместно и давайте полезные ответы. Отвечайте кратко и по делу.',
+    aboutAuthor:'Автор', aboutCopyright:'Авторское право',
+    aboutVersion:'Версия', aboutLicense:'Лицензия',
+    aboutDesc:'Редактор Markdown с пропорциями золотого сечения и цветовой палитрой в стиле Google.',
+    aboutLibraries:'Библиотеки',
+    aboutLibKatexCopy:'© 2013–2020 Khan Academy и соавторы',
+    aboutLibMermaidCopy:'© 2014–2023 Knut Sveidqvist и соавторы',
+    aboutLibGoogleFontsBadge:'SIL OFL 1.1',
+    aboutLibGoogleSansCopy:'© Google Inc. — SIL Open Font License 1.1',
+    placeholder:'Введите Markdown здесь…\n\n# Заголовок\n**жирный** *курсив* `код`',
+    defaultText:'текст', defaultLink:'ссылка', defaultImgAlt:'описание',
+    savedLabel:'Сохранено', unsavedLabel:'Не сохранено',
+    restoredMsg:'Содержимое восстановлено из сохранённой сессии',
+    tooLargeMsg:'Содержимое слишком большое для cookie',
+    downloadBtnTitle:'Скачать',
+    dlTitle:'Скачать как…',
+    dlHtmlDesc:'Автономный HTML-файл',
+    dlPdfDesc:'Сохранить через диалог печати',
+    settingsDocTitle:'Документ',
+    settingsDocNameLabel:'Название документа',
+    settingsDocNameDesc:'Используется как заголовок при скачивании HTML и PDF. Оставьте пустым, чтобы использовать первый заголовок.',
+    openWindow:'Открыть',
+    diffPrompt:'Введите название языка (оставьте пустым для обычного diff):',
+    diffDefault:'- удалённая строка\n+ добавленная строка',
+    ttBold:'Жирный', ttItalic:'Курсив', ttStrike:'Зачёркнутый', ttCode:'Встроенный код',
+    ttLink:'Ссылка', ttImage:'Изображение', ttQuote:'Цитата', ttHr:'Горизонтальная линия',
+    ttBullet:'Маркированный список', ttOrdered:'Нумерованный список', ttTask:'Список задач', ttCodeBlock:'Блок кода',
+    ttMathInline:'Встроенная формула ($...$)', ttMathBlock:'Блочная формула ($$...$$)',
+    ttDiff:'Блок diff (diff / diff_язык)',
+    ttMermaid: 'Диаграмма Mermaid (%%%...%%%)',
+    ttTable:'Вставить пользовательскую таблицу',
+    fontSizeBtnTitle:'Настройки размера шрифта',
+    fontPanelTitle:'Размеры шрифтов',
+    fontH1:'H1', fontH2:'H2', fontH3:'H3',
+    fontBody:'Текст', fontLatex:'LaTeX', fontMermaid:'Mermaid', fontCode:'Код',
+    fontReset:'Сбросить до умолчаний',
+    settingsBtnTitle:'Настройки',
+    settingsTitle:'Настройки',
+    settingsRenderTitle:'Рендеринг HTML',
+    settingsHtmlLabel:'Встроенный HTML',
+    settingsHtmlDesc:'Рендерить все HTML-теги прямо в Markdown (например <div>, <span>, <table>, <iframe>…). При отключении все теги отображаются как обычный текст.',
+    settingsPreviewLabel:'Предпросмотр',
+    init:`# Добро пожаловать в Złoty MD 🎨
+
+**Пропорции золотого сечения** и **цветовая палитра в стиле Google** — Markdown-редактор с чувством стиля.
+
+## ✦ Математика с LaTeX
+
+Золотое сечение $\\phi = \\dfrac{1+\\sqrt{5}}{2} \\approx 1{,}618$ удовлетворяет уравнению $\\phi^2 = \\phi + 1$.
+
+Тождество Эйлера — одна из красивейших формул в математике:
+
+$$e^{i\\pi} + 1 = 0$$
+
+Золотое сечение в виде непрерывной дроби:
+
+$$\\phi = 1 + \\cfrac{1}{1 + \\cfrac{1}{1 + \\cfrac{1}{1 + \\cdots}}}$$
+
+Интеграл Гаусса и формула Фибоначчи:
+
+$$\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi} \\qquad F_n = \\frac{\\phi^n - \\psi^n}{\\sqrt{5}}$$
+
+## Система золотого сечения
+
+| Элемент | Значение |
+|---------|----------|
+| Соотношение макета | **61,8 %** / **38,2 %** |
+| Отступы | 3, 5, 8, 13, 21, 34, 55, 89 px |
+| Высота шапки | **55 px** (число Фибоначчи) |
+| Размеры шрифта | 13, 21, 34 px |
+
+## Пример кода
+
+\`\`\`javascript
+// Золотое сечение
+const φ = (1 + Math.sqrt(5)) / 2; // 1,6180339887…
+const fib = n => n <= 1 ? n : fib(n-1) + fib(n-2);
+console.log([...Array(8)].map((_,i) => fib(i))); // [0,1,1,2,3,5,8,13]
+\`\`\`
+
+## Пример diff
+
+\`\`\`diff
+--- a/ratio.js
++++ b/ratio.js
+@@ -1,6 +1,8 @@
+ const φ = (1 + Math.sqrt(5)) / 2;
+-const ratio = 0.5;
++const ratio = 1 / φ;           // золотое дополнение 0,618…
++const inverse = φ - 1;         // то же значение, другая форма
+ 
+ function layout(total) {
+-  return { main: total * 0.5, side: total * 0.5 };
++  return { main: total * ratio, side: total * (1 - ratio) };
+ }
+\`\`\`
+
+## Контрольный список
+
+- [x] Макет по золотому сечению (61,8 / 38,2)
+- [x] Палитра Google из 4 цветов
+- [x] Просмотр в реальном времени · Изменяемый разделитель
+- [x] Языковой бейдж на блоках кода (30+ языков)
+- [x] Подсветка diff через \`\`\`diff\`\`\`
+- [x] Диаграммы Mermaid через \`%%%...%%%\`
+
+## Диаграмма Mermaid
+
+%%%
+flowchart LR
+  A([Начало]) --> B{Решение}
+  B -- Да   --> C[Процесс A]
+  B -- Нет  --> D[Процесс B]
+  C --> E([Конец])
+  D --> E
+%%%
+
+## Диаграмма последовательности
+
+%%%
+sequenceDiagram
+  participant U as Пользователь
+  participant E as Редактор
+  participant P as Просмотр
+  U->>E: Ввод Markdown
+  E->>P: Рендеринг HTML
+  P-->>U: Предпросмотр
+%%%
+
+---
+
+*Начните писать свой документ!*
+`
+  },
   ja: {
     chars:'文字', words:'単語', lines:'行',
     editorLabel:'エディター', previewLabel:'プレビュー',
@@ -2184,9 +2476,21 @@ sequenceDiagram
     emptyDesc:'左のエディターにMarkdownを入力するとリアルタイムで表示されます',
     aboutBtnTitle:'クレジット・著作権情報',
     aiBtnTitle:'AIアシスタント',
+    aiWelcome:'👋 こんにちは！MarkdownエディタのAIアシスタントです（Gemini）。<br><br>Google AI Studio のAPIキーを入力して「保存」してから、テキストを選択してプリセットを押すか、自由に質問してください。',
+    aiKeyPlaceholder:'Google AI Studio APIキーを入力…', aiSaveBtn:'保存', aiSavedBtn:'保存済 ✓',
+    aiPresetContinue:'続きを書く', aiPresetSummarize:'要約', aiPresetTranslateJa:'和訳', aiPresetTranslateEn:'英訳', aiPresetProofread:'校正', aiPresetBullet:'箇条書き',
+    aiPresetContinuePrompt:'続きを書いて', aiPresetSummarizePrompt:'要約して', aiPresetTranslateJaPrompt:'日本語に翻訳して', aiPresetTranslateEnPrompt:'英語に翻訳して', aiPresetProofreadPrompt:'校正・修正して', aiPresetBulletPrompt:'箇条書きに変換して',
+    aiInputPlaceholder:'質問や指示を入力…', aiInsertBtn:'⬇ エディタに挿入',
+    aiKeyWarning:'⚠ {backend} のAPIキーを入力して「保存」してください。', aiThinking:'● 考え中…', aiErrorPrefix:'⚠ エラー: ', aiSelectedSuffix:' (選択テキスト: {n}文字)', aiEmptyResponse:'(空の返答)',
+    aiSystemPrompt:'あなたはMarkdownドキュメントの執筆・編集を支援するAIアシスタントです。Markdown記法を適切に使用して、役立つ回答を提供してください。返答は簡潔かつ実用的にしてください。',
     aboutAuthor:'作者', aboutCopyright:'著作権',
     aboutVersion:'バージョン', aboutLicense:'ライセンス',
     aboutDesc:'黄金比のプロポーションと Google インスパイアドなカラーパレットを持つ Markdown エディター。',
+    aboutLibraries:'使用ライブラリ',
+    aboutLibKatexCopy:'© 2013–2020 Khan Academy 他',
+    aboutLibMermaidCopy:'© 2014–2023 Knut Sveidqvist 他',
+    aboutLibGoogleFontsBadge:'SIL OFL 1.1',
+    aboutLibGoogleSansCopy:'© Google Inc. — SIL Open Font License 1.1',
     placeholder:'ここにMarkdownを入力…\n\n# 見出し\n**太字** *斜体* `コード`',
     defaultText:'テキスト', defaultLink:'リンク', defaultImgAlt:'説明',
     savedLabel:'保存済み', unsavedLabel:'未保存',
@@ -2199,6 +2503,15 @@ sequenceDiagram
     settingsDocTitle:'ドキュメント',
     settingsDocNameLabel:'ドキュメント名',
     settingsDocNameDesc:'HTML・PDF ダウンロード時のタイトルに使われます。空欄の場合は最初の見出しを使用します。',
+    docsBtnTitle:'ドキュメント管理',
+    docsPanelTitle:'ドキュメント',
+    docsNewBtn:'新規ドキュメント',
+    docsEmpty:'ドキュメントがまだありません',
+    docsDelete:'削除',
+    docsConfirmDelete:'このドキュメントを削除しますか？元に戻せません。',
+    docsCantDeleteLast:'ドキュメントは最低1つ必要です。',
+    untitledDoc:'無題のドキュメント',
+    docsOpenedMsg:'「{name}」を開きました',
     openWindow:'開く',
     diffPrompt:'言語名を入力（空欄なら diff のみ）:',
     diffDefault:'- 削除された行\n+ 追加された行',
@@ -2208,7 +2521,7 @@ sequenceDiagram
     ttMathInline:'インライン数式 ($...$)', ttMathBlock:'ブロック数式 ($$...$$)',
     ttDiff:'diff ブロック (diff / diff_言語名)',
     ttMermaid:'Mermaid ダイアグラム (%%%...%%%)',
-    ttTable:'カスタムテーブルを挿入', ttPrint:'印刷',
+    ttTable:'カスタムテーブルを挿入',
     fontSizeBtnTitle:'文字サイズ設定',
     fontPanelTitle:'文字サイズ',
     fontH1:'H1', fontH2:'H2', fontH3:'H3',
@@ -2321,9 +2634,21 @@ sequenceDiagram
     emptyDesc:'Gib Markdown im Editor ein, um eine Live-Vorschau zu sehen',
     aboutBtnTitle:'Credits & Copyright',
     aiBtnTitle:'KI-Assistent',
+    aiWelcome:'👋 Hallo! Ich bin der KI-Assistent (Gemini) für diesen Markdown-Editor.<br><br>Gib deinen Google AI Studio API-Schlüssel ein und klicke auf „Speichern“, wähle dann Text aus und klicke auf eine Vorlage oder stelle einfach eine Frage.',
+    aiKeyPlaceholder:'Google AI Studio API-Schlüssel eingeben…', aiSaveBtn:'Speichern', aiSavedBtn:'Gespeichert ✓',
+    aiPresetContinue:'Weiterschreiben', aiPresetSummarize:'Zusammenfassen', aiPresetTranslateJa:'Ins Japanische', aiPresetTranslateEn:'Ins Englische', aiPresetProofread:'Korrigieren', aiPresetBullet:'Aufzählung',
+    aiPresetContinuePrompt:'Schreibe weiter', aiPresetSummarizePrompt:'Fasse dies zusammen', aiPresetTranslateJaPrompt:'Übersetze ins Japanische', aiPresetTranslateEnPrompt:'Übersetze ins Englische', aiPresetProofreadPrompt:'Korrigiere und verbessere dies', aiPresetBulletPrompt:'Wandle dies in eine Aufzählung um',
+    aiInputPlaceholder:'Frage oder Anweisung eingeben…', aiInsertBtn:'⬇ In Editor einfügen',
+    aiKeyWarning:'⚠ Bitte gib deinen {backend} API-Schlüssel ein und klicke auf „Speichern“.', aiThinking:'● Denke nach…', aiErrorPrefix:'⚠ Fehler: ', aiSelectedSuffix:' (ausgewählter Text: {n} Zeichen)', aiEmptyResponse:'(leere Antwort)',
+    aiSystemPrompt:'Du bist ein KI-Assistent, der beim Schreiben und Bearbeiten von Markdown-Dokumenten hilft. Verwende die Markdown-Syntax angemessen und gib hilfreiche Antworten. Halte die Antworten prägnant und praktisch.',
     aboutAuthor:'Autor', aboutCopyright:'Urheberrecht',
     aboutVersion:'Version', aboutLicense:'Lizenz',
     aboutDesc:'Ein Markdown-Editor mit Proportionen des Goldenen Schnitts und einer von Google inspirierten Farbpalette.',
+    aboutLibraries:'Bibliotheken',
+    aboutLibKatexCopy:'© 2013–2020 Khan Academy und Mitwirkende',
+    aboutLibMermaidCopy:'© 2014–2023 Knut Sveidqvist und Mitwirkende',
+    aboutLibGoogleFontsBadge:'SIL OFL 1.1',
+    aboutLibGoogleSansCopy:'© Google Inc. — SIL Open Font License 1.1',
     placeholder:'Markdown hier eingeben…\n\n# Überschrift\n**fett** *kursiv* `Code`',
     defaultText:'Text', defaultLink:'Link', defaultImgAlt:'Bildbeschreibung',
     savedLabel:'Gespeichert', unsavedLabel:'Ungespeichert',
@@ -2345,7 +2670,7 @@ sequenceDiagram
     ttMathInline:'Inline-Formel ($...$)', ttMathBlock:'Blockformel ($$...$$)',
     ttDiff:'Diff-Block (diff / diff_Sprache)',
     ttMermaid: 'Mermaid-Diagramm (%%%...%%%)',
-    ttTable:'Benutzerdefinierte Tabelle einfügen', ttPrint:'Drucken',
+    ttTable:'Benutzerdefinierte Tabelle einfügen',
     fontSizeBtnTitle:'Schriftgrößen-Einstellungen',
     fontPanelTitle:'Schriftgrößen',
     fontH1:'H1', fontH2:'H2', fontH3:'H3',
@@ -2449,143 +2774,6 @@ sequenceDiagram
 *Beginne jetzt mit deinem Dokument!*
 `
   },
-  ru: {
-    chars:'симв.', words:'слов', lines:'строк',
-    editorLabel:'Редактор', previewLabel:'Просмотр',
-    tabEdit:'Редактировать', tabPreview:'Просмотр',
-    codeCopy:'Копировать', codeCopied:'Скопировано',
-    emptyTitle:'Область просмотра',
-    emptyDesc:'Введите Markdown в редактор для просмотра в реальном времени',
-    aboutBtnTitle:'Авторство и права',
-    aiBtnTitle:'ИИ-помощник',
-    aboutAuthor:'Автор', aboutCopyright:'Авторское право',
-    aboutVersion:'Версия', aboutLicense:'Лицензия',
-    aboutDesc:'Редактор Markdown с пропорциями золотого сечения и цветовой палитрой в стиле Google.',
-    placeholder:'Введите Markdown здесь…\n\n# Заголовок\n**жирный** *курсив* `код`',
-    defaultText:'текст', defaultLink:'ссылка', defaultImgAlt:'описание',
-    savedLabel:'Сохранено', unsavedLabel:'Не сохранено',
-    restoredMsg:'Содержимое восстановлено из сохранённой сессии',
-    tooLargeMsg:'Содержимое слишком большое для cookie',
-    downloadBtnTitle:'Скачать',
-    dlTitle:'Скачать как…',
-    dlHtmlDesc:'Автономный HTML-файл',
-    dlPdfDesc:'Сохранить через диалог печати',
-    settingsDocTitle:'Документ',
-    settingsDocNameLabel:'Название документа',
-    settingsDocNameDesc:'Используется как заголовок при скачивании HTML и PDF. Оставьте пустым, чтобы использовать первый заголовок.',
-    openWindow:'Открыть',
-    diffPrompt:'Введите название языка (оставьте пустым для обычного diff):',
-    diffDefault:'- удалённая строка\n+ добавленная строка',
-    ttBold:'Жирный', ttItalic:'Курсив', ttStrike:'Зачёркнутый', ttCode:'Встроенный код',
-    ttLink:'Ссылка', ttImage:'Изображение', ttQuote:'Цитата', ttHr:'Горизонтальная линия',
-    ttBullet:'Маркированный список', ttOrdered:'Нумерованный список', ttTask:'Список задач', ttCodeBlock:'Блок кода',
-    ttMathInline:'Встроенная формула ($...$)', ttMathBlock:'Блочная формула ($$...$$)',
-    ttDiff:'Блок diff (diff / diff_язык)',
-    ttMermaid: 'Диаграмма Mermaid (%%%...%%%)',
-    ttTable:'Вставить пользовательскую таблицу', ttPrint:'Печать',
-    fontSizeBtnTitle:'Настройки размера шрифта',
-    fontPanelTitle:'Размеры шрифтов',
-    fontH1:'H1', fontH2:'H2', fontH3:'H3',
-    fontBody:'Текст', fontLatex:'LaTeX', fontMermaid:'Mermaid', fontCode:'Код',
-    fontReset:'Сбросить до умолчаний',
-    settingsBtnTitle:'Настройки',
-    settingsTitle:'Настройки',
-    settingsRenderTitle:'Рендеринг HTML',
-    settingsHtmlLabel:'Встроенный HTML',
-    settingsHtmlDesc:'Рендерить все HTML-теги прямо в Markdown (например <div>, <span>, <table>, <iframe>…). При отключении все теги отображаются как обычный текст.',
-    settingsPreviewLabel:'Предпросмотр',
-    init:`# Добро пожаловать в Złoty MD 🎨
-
-**Пропорции золотого сечения** и **цветовая палитра в стиле Google** — Markdown-редактор с чувством стиля.
-
-## ✦ Математика с LaTeX
-
-Золотое сечение $\\phi = \\dfrac{1+\\sqrt{5}}{2} \\approx 1{,}618$ удовлетворяет уравнению $\\phi^2 = \\phi + 1$.
-
-Тождество Эйлера — одна из красивейших формул в математике:
-
-$$e^{i\\pi} + 1 = 0$$
-
-Золотое сечение в виде непрерывной дроби:
-
-$$\\phi = 1 + \\cfrac{1}{1 + \\cfrac{1}{1 + \\cfrac{1}{1 + \\cdots}}}$$
-
-Интеграл Гаусса и формула Фибоначчи:
-
-$$\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi} \\qquad F_n = \\frac{\\phi^n - \\psi^n}{\\sqrt{5}}$$
-
-## Система золотого сечения
-
-| Элемент | Значение |
-|---------|----------|
-| Соотношение макета | **61,8 %** / **38,2 %** |
-| Отступы | 3, 5, 8, 13, 21, 34, 55, 89 px |
-| Высота шапки | **55 px** (число Фибоначчи) |
-| Размеры шрифта | 13, 21, 34 px |
-
-## Пример кода
-
-\`\`\`javascript
-// Золотое сечение
-const φ = (1 + Math.sqrt(5)) / 2; // 1,6180339887…
-const fib = n => n <= 1 ? n : fib(n-1) + fib(n-2);
-console.log([...Array(8)].map((_,i) => fib(i))); // [0,1,1,2,3,5,8,13]
-\`\`\`
-
-## Пример diff
-
-\`\`\`diff
---- a/ratio.js
-+++ b/ratio.js
-@@ -1,6 +1,8 @@
- const φ = (1 + Math.sqrt(5)) / 2;
--const ratio = 0.5;
-+const ratio = 1 / φ;           // золотое дополнение 0,618…
-+const inverse = φ - 1;         // то же значение, другая форма
- 
- function layout(total) {
--  return { main: total * 0.5, side: total * 0.5 };
-+  return { main: total * ratio, side: total * (1 - ratio) };
- }
-\`\`\`
-
-## Контрольный список
-
-- [x] Макет по золотому сечению (61,8 / 38,2)
-- [x] Палитра Google из 4 цветов
-- [x] Просмотр в реальном времени · Изменяемый разделитель
-- [x] Языковой бейдж на блоках кода (30+ языков)
-- [x] Подсветка diff через \`\`\`diff\`\`\`
-- [x] Диаграммы Mermaid через \`%%%...%%%\`
-
-## Диаграмма Mermaid
-
-%%%
-flowchart LR
-  A([Начало]) --> B{Решение}
-  B -- Да   --> C[Процесс A]
-  B -- Нет  --> D[Процесс B]
-  C --> E([Конец])
-  D --> E
-%%%
-
-## Диаграмма последовательности
-
-%%%
-sequenceDiagram
-  participant U as Пользователь
-  participant E as Редактор
-  participant P as Просмотр
-  U->>E: Ввод Markdown
-  E->>P: Рендеринг HTML
-  P-->>U: Предпросмотр
-%%%
-
----
-
-*Начните писать свой документ!*
-`
-  },
   pl: {
     chars:'znaki', words:'słowa', lines:'linie',
     editorLabel:'Edytor', previewLabel:'Podgląd',
@@ -2595,9 +2783,21 @@ sequenceDiagram
     emptyDesc:'Wpisz Markdown w edytorze, aby zobaczyć podgląd na żywo',
     aboutBtnTitle:'Autorzy i prawa autorskie',
     aiBtnTitle:'Asystent AI',
+    aiWelcome:'👋 Cześć! Jestem asystentem AI (Gemini) dla tego edytora Markdown.<br><br>Wpisz klucz API Google AI Studio i kliknij „Zapisz”, następnie zaznacz tekst i wybierz szablon lub po prostu zadaj pytanie.',
+    aiKeyPlaceholder:'Wpisz klucz API Google AI Studio…', aiSaveBtn:'Zapisz', aiSavedBtn:'Zapisano ✓',
+    aiPresetContinue:'Kontynuuj', aiPresetSummarize:'Streść', aiPresetTranslateJa:'Na japoński', aiPresetTranslateEn:'Na angielski', aiPresetProofread:'Korekta', aiPresetBullet:'Lista',
+    aiPresetContinuePrompt:'Kontynuuj pisanie', aiPresetSummarizePrompt:'Streść ten tekst', aiPresetTranslateJaPrompt:'Przetłumacz na japoński', aiPresetTranslateEnPrompt:'Przetłumacz na angielski', aiPresetProofreadPrompt:'Popraw i skoryguj ten tekst', aiPresetBulletPrompt:'Zamień na listę punktowaną',
+    aiInputPlaceholder:'Wpisz pytanie lub polecenie…', aiInsertBtn:'⬇ Wstaw do edytora',
+    aiKeyWarning:'⚠ Wprowadź klucz API {backend} i kliknij „Zapisz”.', aiThinking:'● Myślę…', aiErrorPrefix:'⚠ Błąd: ', aiSelectedSuffix:' (zaznaczony tekst: {n} znaków)', aiEmptyResponse:'(pusta odpowiedź)',
+    aiSystemPrompt:'Jesteś asystentem AI pomagającym pisać i edytować dokumenty Markdown. Używaj odpowiednio składni Markdown i udzielaj pomocnych odpowiedzi. Odpowiadaj zwięźle i praktycznie.',
     aboutAuthor:'Autor', aboutCopyright:'Prawa autorskie',
     aboutVersion:'Wersja', aboutLicense:'Licencja',
     aboutDesc:'Edytor Markdown z proporcjami złotego podziału i paletą barw inspirowaną Google.',
+    aboutLibraries:'Biblioteki',
+    aboutLibKatexCopy:'© 2013–2020 Khan Academy i współtwórcy',
+    aboutLibMermaidCopy:'© 2014–2023 Knut Sveidqvist i współtwórcy',
+    aboutLibGoogleFontsBadge:'SIL OFL 1.1',
+    aboutLibGoogleSansCopy:'© Google Inc. — SIL Open Font License 1.1',
     placeholder:'Wpisz Markdown tutaj…\n\n# Nagłówek\n**pogrubiony** *kursywa* `kod`',
     defaultText:'tekst', defaultLink:'odnośnik', defaultImgAlt:'tekst alternatywny',
     savedLabel:'Zapisano', unsavedLabel:'Niezapisane',
@@ -2619,7 +2819,7 @@ sequenceDiagram
     ttMathInline:'Matematyka inline ($...$)', ttMathBlock:'Blok matematyczny ($$...$$)',
     ttDiff:'Blok diff (diff / diff_język)',
     ttMermaid: 'Diagram Mermaid (%%%...%%%)',
-    ttTable:'Wstaw niestandardową tabelę', ttPrint:'Drukuj',
+    ttTable:'Wstaw niestandardową tabelę',
     fontSizeBtnTitle:'Ustawienia rozmiaru czcionki',
     fontPanelTitle:'Rozmiary czcionek',
     fontH1:'H1', fontH2:'H2', fontH3:'H3',
@@ -2732,9 +2932,21 @@ sequenceDiagram
     emptyDesc:'Πληκτρολογήστε Markdown στον επεξεργαστή για να δείτε ζωντανή προεπισκόπηση',
     aboutBtnTitle:'Συντελεστές & Πνευματικά Δικαιώματα',
     aiBtnTitle:'Βοηθός AI',
+    aiWelcome:'👋 Γεια σου! Είμαι ο βοηθός AI (Gemini) για αυτόν τον επεξεργαστή Markdown.<br><br>Εισάγετε το κλειδί API του Google AI Studio και πατήστε «Αποθήκευση», έπειτα επιλέξτε κείμενο και πατήστε ένα πρότυπο ή απλώς κάντε μια ερώτηση.',
+    aiKeyPlaceholder:'Εισαγάγετε το κλειδί API του Google AI Studio…', aiSaveBtn:'Αποθήκευση', aiSavedBtn:'Αποθηκεύτηκε ✓',
+    aiPresetContinue:'Συνέχεια', aiPresetSummarize:'Περίληψη', aiPresetTranslateJa:'Στα Ιαπωνικά', aiPresetTranslateEn:'Στα Αγγλικά', aiPresetProofread:'Διόρθωση', aiPresetBullet:'Λίστα',
+    aiPresetContinuePrompt:'Συνέχισε το κείμενο', aiPresetSummarizePrompt:'Κάνε περίληψη αυτού', aiPresetTranslateJaPrompt:'Μετάφρασε στα Ιαπωνικά', aiPresetTranslateEnPrompt:'Μετάφρασε στα Αγγλικά', aiPresetProofreadPrompt:'Διόρθωσε και βελτίωσε αυτό το κείμενο', aiPresetBulletPrompt:'Μετέτρεψέ το σε λίστα με κουκκίδες',
+    aiInputPlaceholder:'Πληκτρολογήστε ερώτηση ή εντολή…', aiInsertBtn:'⬇ Εισαγωγή στον επεξεργαστή',
+    aiKeyWarning:'⚠ Εισαγάγετε το κλειδί API {backend} και πατήστε «Αποθήκευση».', aiThinking:'● Σκέφτομαι…', aiErrorPrefix:'⚠ Σφάλμα: ', aiSelectedSuffix:' (επιλεγμένο κείμενο: {n} χαρακτήρες)', aiEmptyResponse:'(κενή απάντηση)',
+    aiSystemPrompt:'Είσαι ένας βοηθός AI που βοηθά στη συγγραφή και επεξεργασία εγγράφων Markdown. Χρησιμοποίησε κατάλληλα τη σύνταξη Markdown και δώσε χρήσιμες απαντήσεις. Κράτησε τις απαντήσεις σύντομες και πρακτικές.',
     aboutAuthor:'Συγγραφέας', aboutCopyright:'Πνευματικά Δικαιώματα',
     aboutVersion:'Έκδοση', aboutLicense:'Άδεια',
     aboutDesc:'Ένας επεξεργαστής Markdown με αναλογίες χρυσής τομής και παλέτα χρωμάτων εμπνευσμένη από τη Google.',
+    aboutLibraries:'Βιβλιοθήκες',
+    aboutLibKatexCopy:'© 2013–2020 Khan Academy και συνεργάτες',
+    aboutLibMermaidCopy:'© 2014–2023 Knut Sveidqvist και συνεργάτες',
+    aboutLibGoogleFontsBadge:'SIL OFL 1.1',
+    aboutLibGoogleSansCopy:'© Google Inc. — SIL Open Font License 1.1',
     placeholder:'Πληκτρολογήστε Markdown εδώ…\n\n# Επικεφαλίδα\n**έντονα** *πλάγια* `κώδικας`',
     defaultText:'κείμενο', defaultLink:'σύνδεσμος', defaultImgAlt:'εναλλακτικό κείμενο',
     savedLabel:'Αποθηκευμένο', unsavedLabel:'Μη αποθηκευμένο',
@@ -2756,7 +2968,7 @@ sequenceDiagram
     ttMathInline:'Ενσωματωμένα μαθηματικά ($...$)', ttMathBlock:'Μπλοκ μαθηματικών ($$...$$)',
     ttDiff:'Μπλοκ diff (diff / diff_lang)',
     ttMermaid: 'Διάγραμμα Mermaid (%%%...%%%)',
-    ttTable:'Εισαγωγή προσαρμοσμένου πίνακα', ttPrint:'Εκτύπωση',
+    ttTable:'Εισαγωγή προσαρμοσμένου πίνακα',
     fontSizeBtnTitle:'Ρυθμίσεις μεγέθους γραμματοσειράς',
     fontPanelTitle:'Μεγέθη γραμματοσειράς',
     fontH1:'H1', fontH2:'H2', fontH3:'H3',
@@ -2878,6 +3090,21 @@ function applyLang(code) {
     if (t[key] !== undefined) el.title = t[key];
   });
 
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.getAttribute('data-i18n-html');
+    if (t[key] !== undefined) el.innerHTML = t[key];
+  });
+
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (t[key] !== undefined) el.placeholder = t[key];
+  });
+
+  document.querySelectorAll('[data-i18n-prompt]').forEach(el => {
+    const key = el.getAttribute('data-i18n-prompt');
+    if (t[key] !== undefined) el.dataset.prompt = t[key];
+  });
+
   ed.placeholder = t.placeholder;
 
   document.getElementById('langCurrent').textContent = code.toUpperCase();
@@ -2904,9 +3131,23 @@ function applyLang(code) {
   }
 }
 
+// язык интерфейса — это настройка всего приложения (как API-ключ):
+// сохраняется/загружается глобально, а не для каждого документа отдельно
+const IDB_LANG_KEY = 'zmd_lang';
+async function saveLangSetting() {
+  try { await idbSet(IDB_LANG_KEY, currentLang); } catch(e) {}
+}
+async function loadLangSetting() {
+  try {
+    const raw = await idbGet(IDB_LANG_KEY);
+    if (raw && LANGS[raw]) applyLang(raw);
+  } catch(e) {}
+}
+
 function setLang(code) {
   applyLang(code);
   closeLang();
+  saveLangSetting();
   if (typeof saveContent === 'function') saveContent();
 }
 function toggleLang() {
@@ -3065,6 +3306,16 @@ async function idbGet(key) {
   });
 }
 
+async function idbDelete(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx  = db.transaction(IDB_STORE, 'readwrite');
+    const req = tx.objectStore(IDB_STORE).delete(key);
+    req.onsuccess = () => resolve();
+    req.onerror   = e => reject(e.target.error);
+  });
+}
+
 function setSaveStatus(state) {
   const chip  = document.getElementById('saveChip');
   const label = document.getElementById('saveLabel');
@@ -3175,21 +3426,32 @@ function closeFontPanel() {
   document.getElementById('fontModal').classList.remove('open');
   document.getElementById('fontSizeBtn').style.color = '';
 }
-document.addEventListener('keydown', e => { if(e.key === 'Escape') { closeFontPanel(); closeAbout(); closeSettings(); closeDownloadMenu(); } });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') { closeFontPanel(); closeAbout(); closeSettings(); closeDownloadMenu(); closeDocsPanel(); } });
 
 const IDB_FONT_KEY = 'zmd_fontsizes';
-async function saveFontSizes() {
-  try { await idbSet(IDB_FONT_KEY, JSON.stringify(fontSizes)); } catch(e) {}
-}
-async function loadFontSizes() {
+let legacyFontSizes = null;
+async function loadLegacyFontSizes() {
   try {
     const raw = await idbGet(IDB_FONT_KEY);
-    if (raw) {
-      const saved = JSON.parse(raw);
-      fontSizes = Object.assign({...FONT_DEFAULTS}, saved);
-    }
+    if (raw) legacyFontSizes = JSON.parse(raw);
   } catch(e) {}
-  applyFontSizesToDOM();
+}
+// размеры шрифтов относятся к конкретному документу ("данные документа"):
+// у каждой записи есть свой набор fontSizes; старые (legacy) размеры
+// пользователя используются как начальные для его первых новых документов
+function defaultFontSizesForNewDoc() {
+  return Object.assign({...FONT_DEFAULTS}, legacyFontSizes || {});
+}
+// сохраняет текущие размеры шрифтов из памяти в запись *текущего* документа
+// (а не в глобальный ключ)
+async function saveFontSizes() {
+  if (!currentDocId) return;
+  try {
+    const data = await loadDocRecord(currentDocId);
+    if (!data) return;
+    data.fontSizes = {...fontSizes};
+    await persistDocRecord(currentDocId, data);
+  } catch(e) {}
 }
 
 const IDB_SETTINGS_KEY = 'zmd_settings';
@@ -3198,8 +3460,6 @@ function applySettings() {
   marked.setOptions({ gfm: true, breaks: true });
   const tog = document.getElementById('htmlToggle');
   if (tog) tog.setAttribute('aria-checked', appSettings.htmlRendering ? 'true' : 'false');
-  const inp = document.getElementById('docTitleInput');
-  if (inp) inp.value = appSettings.docTitle || '';
   updateSettingsPreview();
   if (ed.value) (typeof _render === 'function' ? _render : render)(ed.value);
 }
@@ -3218,11 +3478,6 @@ function updateSettingsPreview() {
 function toggleHtmlRendering() {
   appSettings.htmlRendering = !appSettings.htmlRendering;
   applySettings();
-  saveSettings();
-}
-
-function onDocTitleInput(val) {
-  appSettings.docTitle = val;
   saveSettings();
 }
 
@@ -3248,41 +3503,16 @@ function toggleSettings() {
     document.getElementById('settingsBtn').style.color = 'var(--gb)';
     updateSettingsPreview();
     const t = LANGS[currentLang] || LANGS['en'];
-    ['settingsHtmlDesc','settingsDocNameDesc'].forEach(key => {
+    ['settingsHtmlDesc'].forEach(key => {
       const el = document.querySelector(`#settingsModal [data-i18n="${key}"]`);
       if (el && t[key]) el.textContent = t[key];
     });
-    const inp = document.getElementById('docTitleInput');
-    if (inp) inp.value = appSettings.docTitle || '';
   }
 }
 function closeSettings() {
   document.getElementById('settingsOverlay').classList.remove('open');
   document.getElementById('settingsModal').classList.remove('open');
   document.getElementById('settingsBtn').style.color = '';
-}
-
-async function saveContent() {
-  const payload = JSON.stringify({ content: ed.value, lang: currentLang });
-  try {
-    await idbSet(IDB_KEY, payload);
-    setSaveStatus('saved');
-  } catch(e) {
-    setSaveStatus('error');
-  }
-}
-
-async function loadContent() {
-  try {
-    const raw = await idbGet(IDB_KEY);
-    if (!raw) { setSaveStatus('unsaved'); return false; }
-    const data = JSON.parse(raw);
-    if (data.content && data.content !== LANGS[data.lang || 'en']?.init) {
-      return data;
-    }
-  } catch(e) {}
-  setSaveStatus('unsaved');
-  return false;
 }
 
 function showRestoreToast(msg) {
@@ -3292,13 +3522,152 @@ function showRestoreToast(msg) {
   setTimeout(() => toast.classList.remove('show'), 4000);
 }
 
-let saveTimer = null;
+const IDB_DOC_PREFIX  = 'zmd_doc_';
+const IDB_INDEX_KEY   = 'zmd_doc_index';
+const IDB_CURRENT_KEY = 'zmd_current_doc';
 
+let docIndex = [];               // список документов: [{id,name,createdAt,updatedAt}]
+let currentDocId = null;
+let currentDocMeta = null;       // метаданные открытого документа: {name, createdAt}
+let switchingDoc = false;        // блокирует автосохранение/сохранение прокрутки во время переключения документа
+
+function genDocId() {
+  return 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+
+function escapeAttr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+async function loadDocIndex() {
+  try {
+    const raw = await idbGet(IDB_INDEX_KEY);
+    docIndex = raw ? JSON.parse(raw) : [];
+  } catch (e) { docIndex = []; }
+  return docIndex;
+}
+async function persistDocIndex() {
+  try { await idbSet(IDB_INDEX_KEY, JSON.stringify(docIndex)); } catch (e) {}
+}
+async function loadDocRecord(id) {
+  try {
+    const raw = await idbGet(IDB_DOC_PREFIX + id);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+async function persistDocRecord(id, data) {
+  await idbSet(IDB_DOC_PREFIX + id, JSON.stringify(data));
+}
+async function removeDocRecord(id) {
+  try { await idbDelete(IDB_DOC_PREFIX + id); } catch (e) {}
+}
+async function setCurrentDocId(id) {
+  currentDocId = id;
+  try { await idbSet(IDB_CURRENT_KEY, id); } catch (e) {}
+}
+async function getStoredCurrentDocId() {
+  try { return await idbGet(IDB_CURRENT_KEY); } catch (e) { return null; }
+}
+
+function untitledDocName() {
+  const t = LANGS[currentLang] || LANGS['en'];
+  return t.untitledDoc || 'Untitled Document';
+}
+
+async function createNewDoc(name) {
+  const t = LANGS[currentLang] || LANGS['en'];
+  const now = Date.now();
+  const id = genDocId();
+  const data = {
+    name: name || untitledDocName(),
+    isDefaultName: !name,
+    content: t.init,
+    lang: currentLang,
+    fontSizes: defaultFontSizesForNewDoc(),
+    scrollEd: 0,
+    scrollPv: 0,
+    createdAt: now,
+    updatedAt: now
+  };
+  await persistDocRecord(id, data);
+  docIndex.unshift({ id, name: data.name, isDefaultName: data.isDefaultName, createdAt: now, updatedAt: now });
+  await persistDocIndex();
+  return id;
+}
+
+// немедленно сбрасывает отложенные таймеры автосохранения/прокрутки,
+// записывая актуальное содержимое и позиции прокрутки открытого документа
+async function flushCurrentDocSave() {
+  clearTimeout(saveTimer);
+  clearTimeout(scrollSaveTimer);
+  if (!currentDocId) return;
+  await saveContent();
+}
+
+async function saveContent() {
+  if (!currentDocId || switchingDoc) return;
+  try {
+    const now = Date.now();
+    const data = {
+      name: (currentDocMeta && currentDocMeta.name) || untitledDocName(),
+      isDefaultName: currentDocMeta ? !!currentDocMeta.isDefaultName : true,
+      content: ed.value,
+      lang: currentLang,
+      fontSizes: {...fontSizes},
+      scrollEd: ed.scrollTop,
+      scrollPv: pv.scrollTop,
+      createdAt: (currentDocMeta && currentDocMeta.createdAt) || now,
+      updatedAt: now
+    };
+    await persistDocRecord(currentDocId, data);
+    const idxItem = docIndex.find(d => d.id === currentDocId);
+    if (idxItem) { idxItem.updatedAt = now; }
+    await persistDocIndex();
+    setSaveStatus('saved');
+  } catch (e) {
+    setSaveStatus('error');
+  }
+}
+
+let saveTimer = null;
 function scheduleAutosave() {
+  if (switchingDoc) return;
   setSaveStatus('unsaved');
   clearTimeout(saveTimer);
   saveTimer = setTimeout(saveContent, 1500);
 }
+
+// позиции прокрутки сохраняются отдельным лёгким debounce, чтобы обычная
+// прокрутка сама по себе не переключала статус в "не сохранено"
+let scrollSaveTimer = null;
+function scheduleScrollSave() {
+  if (switchingDoc || !currentDocId) return;
+  clearTimeout(scrollSaveTimer);
+  scrollSaveTimer = setTimeout(async () => {
+    const data = await loadDocRecord(currentDocId);
+    if (!data) return;
+    data.scrollEd = ed.scrollTop;
+    data.scrollPv = pv.scrollTop;
+    await persistDocRecord(currentDocId, data);
+  }, 400);
+}
+ed.addEventListener('scroll', scheduleScrollSave);
+pv.addEventListener('scroll', scheduleScrollSave);
+
+// синхронизация прокрутки: прокрутка одной панели двигает другую примерно
+// к той же относительной позиции документа
+let syncingScroll = false;
+function syncScroll(source, target) {
+  if (switchingDoc || syncingScroll) return;
+  syncingScroll = true;
+  const sMax = Math.max(1, source.scrollHeight - source.clientHeight);
+  const ratio = source.scrollTop / sMax;
+  const tMax = Math.max(0, target.scrollHeight - target.clientHeight);
+  target.scrollTop = ratio * tMax;
+  requestAnimationFrame(() => { syncingScroll = false; });
+}
+ed.addEventListener('scroll', () => syncScroll(ed, pv));
+pv.addEventListener('scroll', () => syncScroll(pv, ed));
 
 var _render = render;
 render = function(v) {
@@ -3314,31 +3683,192 @@ document.addEventListener('keydown', e => {
   }
 });
 
-(async function initSave() {
-  await loadFontSizes();
-  await loadSettings();
-  const saved = await loadContent();
-  if (saved) {
-    const t = LANGS[saved.lang] || LANGS['en'];
-    ed.value = saved.content;
-    _render(saved.content);
-    if (saved.lang && saved.lang !== currentLang) {
-      applyLang(saved.lang);
-    }
-    setSaveStatus('saved');
-    showRestoreToast(t.restoredMsg || 'Content restored from saved session');
-  } else {
-    setSaveStatus('unsaved');
+// переключает редактор/предпросмотр на другой сохранённый документ,
+// восстанавливая его собственные позиции прокрутки после стабилизации DOM
+async function switchToDoc(id) {
+  const data = await loadDocRecord(id);
+  if (!data) return false;
+  switchingDoc = true;
+  await setCurrentDocId(id);
+  currentDocMeta = { name: data.name, isDefaultName: !!data.isDefaultName, createdAt: data.createdAt };
+  ed.value = data.content;
+  fontSizes = Object.assign({...FONT_DEFAULTS}, legacyFontSizes || {}, data.fontSizes || {});
+  applyFontSizesToDOM();
+  _render(data.content);
+  setSaveStatus('saved');
+  requestAnimationFrame(() => {
+    ed.scrollTop = data.scrollEd || 0;
+    pv.scrollTop = data.scrollPv || 0;
+    switchingDoc = false;
+  });
+  renderDocList();
+  return true;
+}
+
+async function renameDoc(id, newName) {
+  const name = newName.trim();
+  if (!name) return;
+  const data = await loadDocRecord(id);
+  if (!data) return;
+  data.name = name;
+  data.isDefaultName = false; // явное переименование всегда намеренное, даже если название совпадает с "Untitled Document"
+  data.updatedAt = Date.now();
+  await persistDocRecord(id, data);
+  const idxItem = docIndex.find(d => d.id === id);
+  if (idxItem) { idxItem.name = name; idxItem.isDefaultName = false; }
+  await persistDocIndex();
+  if (id === currentDocId && currentDocMeta) { currentDocMeta.name = name; currentDocMeta.isDefaultName = false; }
+  renderDocList();
+}
+
+function renderDocList() {
+  const listEl = document.getElementById('docList');
+  if (!listEl) return;
+  const t = LANGS[currentLang] || LANGS['en'];
+  if (!docIndex.length) {
+    listEl.innerHTML = `<div class="doc-item-empty">${t.docsEmpty || 'No documents yet'}</div>`;
+    return;
   }
+  const sorted = [...docIndex].sort((a, b) => b.updatedAt - a.updatedAt);
+  listEl.innerHTML = sorted.map(d => {
+    const active = d.id === currentDocId ? ' active' : '';
+    const dateStr = new Date(d.updatedAt).toLocaleString();
+    return `
+      <div class="doc-item${active}" data-id="${d.id}" onclick="onDocItemClick(event,'${d.id}')">
+        <div class="doc-item-main">
+          <input class="doc-item-name" value="${escapeAttr(d.name)}"
+            onclick="event.stopPropagation()"
+            onkeydown="onDocNameKeydown(event,'${d.id}')"
+            onblur="onDocNameBlur(event,'${d.id}')">
+          <div class="doc-item-meta">${dateStr}</div>
+        </div>
+        <div class="doc-item-actions">
+          <button class="doc-item-btn del" title="${escapeAttr(t.docsDelete || 'Delete')}" onclick="onDocDeleteClick(event,'${d.id}')">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h10M6.5 4V2.5h3V4M4.5 4l.5 9.5a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1L11.5 4"/></svg>
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function onDocItemClick(event, id) {
+  if (id === currentDocId) { closeDocsPanel(); return; }
+  await flushCurrentDocSave();
+  await switchToDoc(id);
+  closeDocsPanel();
+}
+
+function onDocNameKeydown(event, id) {
+  if (event.key === 'Enter') { event.preventDefault(); event.target.blur(); }
+  if (event.key === 'Escape') {
+    const item = docIndex.find(d => d.id === id);
+    event.target.value = item ? item.name : '';
+    event.target.blur();
+  }
+}
+function onDocNameBlur(event, id) {
+  const item = docIndex.find(d => d.id === id);
+  const val = event.target.value.trim();
+  if (!val) { event.target.value = item ? item.name : ''; return; }
+  if (item && val === item.name) return;
+  renameDoc(id, val);
+}
+
+async function onDocDeleteClick(event, id) {
+  event.stopPropagation();
+  const t = LANGS[currentLang] || LANGS['en'];
+  if (docIndex.length <= 1) {
+    alert(t.docsCantDeleteLast || 'You must have at least one document.');
+    return;
+  }
+  if (!confirm(t.docsConfirmDelete || 'Delete this document? This cannot be undone.')) return;
+  await removeDocRecord(id);
+  docIndex = docIndex.filter(d => d.id !== id);
+  await persistDocIndex();
+  if (id === currentDocId) {
+    const next = [...docIndex].sort((a, b) => b.updatedAt - a.updatedAt)[0];
+    if (next) await switchToDoc(next.id);
+  } else {
+    renderDocList();
+  }
+}
+
+async function onNewDocClick() {
+  await flushCurrentDocSave();
+  const id = await createNewDoc();
+  await switchToDoc(id);
+}
+
+function toggleDocsPanel() {
+  const overlay = document.getElementById('docsOverlay');
+  const modal = document.getElementById('docsModal');
+  const isOpen = modal.classList.contains('open');
+  if (isOpen) { closeDocsPanel(); } else {
+    renderDocList();
+    overlay.classList.add('open');
+    modal.classList.add('open');
+    document.getElementById('docsBtn').style.color = 'var(--gb)';
+  }
+}
+function closeDocsPanel() {
+  document.getElementById('docsOverlay').classList.remove('open');
+  document.getElementById('docsModal').classList.remove('open');
+  document.getElementById('docsBtn').style.color = '';
+}
+
+// загрузка (boot): загружает список документов, при необходимости
+// переносит старое одиночное сохранение (legacy), создаёт документ по
+// умолчанию, если их ещё нет, и открывает последний открытый документ
+async function initDocuments() {
+  await loadDocIndex();
+
+  if (!docIndex.length) {
+    try {
+      const raw = await idbGet(IDB_KEY);
+      if (raw) {
+        const old = JSON.parse(raw);
+        const oldLangTpl = LANGS[old.lang]?.init;
+        if (old && old.content && old.content !== oldLangTpl) {
+          const now = Date.now();
+          const id = genDocId();
+          const data = {
+            name: untitledDocName(),
+            content: old.content,
+            lang: old.lang || currentLang,
+            fontSizes: defaultFontSizesForNewDoc(),
+            scrollEd: 0,
+            scrollPv: 0,
+            createdAt: now,
+            updatedAt: now
+          };
+          await persistDocRecord(id, data);
+          docIndex.push({ id, name: data.name, createdAt: now, updatedAt: now });
+          await persistDocIndex();
+          await setCurrentDocId(id);
+        }
+      }
+    } catch (e) {}
+  }
+
+  if (!docIndex.length) {
+    const id = await createNewDoc();
+    await setCurrentDocId(id);
+  }
+
+  let curId = await getStoredCurrentDocId();
+  if (!curId || !docIndex.some(d => d.id === curId)) {
+    curId = [...docIndex].sort((a, b) => b.updatedAt - a.updatedAt)[0]?.id;
+  }
+  await switchToDoc(curId);
+}
+
+(async function initSave() {
+  await loadLangSetting();
+  await loadLegacyFontSizes();
+  await loadSettings();
+  await initDocuments();
 })();
 
-/* ══════════════════════════════════════════════════
-   ------------custom table syntax------------------
-   構文: :::table stripe border
-         | 見出し1 | 見出し2 {bg=b} | 見出し3 {ac} |
-         | セル1   | セル2          | セル3 {fw}   |
-         :::
-   ══════════════════════════════════════════════════ */
 function _processCustomTables(v) {
   return v.replace(/:::table([^\n]*)\n([\s\S]*?):::/g, (_, opts, body) => {
     const stripe = /stripe/.test(opts) ? ' stripe' : '';
@@ -3379,7 +3909,7 @@ function _processCustomTables(v) {
   });
 }
 
-/* -----table dialog functions----- */
+// функции диалога вставки таблицы
 function openTblDialog() {
   document.getElementById('tblOverlay').classList.add('open');
   document.getElementById('tblCols').focus();
@@ -3408,19 +3938,13 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeTblDialog();
 });
 
-/*------print function------*/
-function printDoc() {
-  window.print();
-}
-
-/*-------ai assistant functions-------
-   正式版に切り替える場合は AI_BACKEND を 'anthropic' に変更し
-   Anthropic APIキーを入力するだけでOK。--------------
-   ══════════════════════════════════════════════════ */
-const AI_BACKEND = 'gemini'; // 'gemini' | 'anthropic'
+const AI_BACKEND = 'gemini'; // допустимые значения: 'gemini' | 'anthropic'
 const GEMINI_MODEL   = 'gemini-2.0-flash';
+// функции AI-ассистента.
+// чтобы перейти на боевой режим, смените AI_BACKEND на 'anthropic'
+// и просто впишите API-ключ Anthropic — этого достаточно
 const ANTHROPIC_MODEL = 'claude-sonnet-4-20250514';
-const AI_SYSTEM = 'あなたはMarkdownドキュメントの執筆・編集を支援するAIアシスタントです。Markdown記法を適切に使用して、役立つ回答を提供してください。返答は簡潔かつ実用的にしてください。';
+function _aiSystem() { return (LANGS[currentLang] || LANGS['en']).aiSystemPrompt; }
 
 let _aiKey = '';
 let _aiLastResponse = '';
@@ -3438,8 +3962,9 @@ function saveApiKey() {
   _aiKey = k;
   try { localStorage.setItem('zmd_ai_key_' + AI_BACKEND, k); } catch(_) {}
   const btn = document.querySelector('.ai-ksave');
-  btn.textContent = '保存済 ✓';
-  setTimeout(() => { btn.textContent = '保存'; }, 1500);
+  const t = LANGS[currentLang] || LANGS['en'];
+  btn.textContent = t.aiSavedBtn;
+  setTimeout(() => { btn.textContent = t.aiSaveBtn; }, 1500);
 }
 
 function toggleAiPanel() {
@@ -3471,7 +3996,7 @@ async function _callGemini(fullPrompt) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      system_instruction: { parts: [{ text: AI_SYSTEM }] },
+      system_instruction: { parts: [{ text: _aiSystem() }] },
       contents: [{ role: 'user', parts: [{ text: fullPrompt }] }],
       generationConfig: { maxOutputTokens: 1024 }
     })
@@ -3481,7 +4006,8 @@ async function _callGemini(fullPrompt) {
     throw new Error(err?.error?.message || `HTTP ${res.status}`);
   }
   const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '(空の返答)';
+  const t = LANGS[currentLang] || LANGS['en'];
+  return data.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || t.aiEmptyResponse;
 }
 
 async function _callAnthropic(fullPrompt) {
@@ -3496,7 +4022,7 @@ async function _callAnthropic(fullPrompt) {
     body: JSON.stringify({
       model: ANTHROPIC_MODEL,
       max_tokens: 1024,
-      system: AI_SYSTEM,
+      system: _aiSystem(),
       messages: [{ role: 'user', content: fullPrompt }]
     })
   });
@@ -3505,7 +4031,8 @@ async function _callAnthropic(fullPrompt) {
     throw new Error(err?.error?.message || `HTTP ${res.status}`);
   }
   const data = await res.json();
-  return data.content?.map(c => c.text || '').join('') || '(空の返答)';
+  const t = LANGS[currentLang] || LANGS['en'];
+  return data.content?.map(c => c.text || '').join('') || t.aiEmptyResponse;
 }
 
 async function sendAi() {
@@ -3513,22 +4040,25 @@ async function sendAi() {
   const prompt = input.value.trim();
   if (!prompt) return;
 
+  const t = LANGS[currentLang] || LANGS['en'];
+
   if (!_aiKey) {
-    _aiAddMsg(`⚠ ${AI_BACKEND === 'gemini' ? 'Google AI Studio' : 'Anthropic'} のAPIキーを入力して「保存」してください。`, 'thinking');
+    const backendName = AI_BACKEND === 'gemini' ? 'Google AI Studio' : 'Anthropic';
+    _aiAddMsg(t.aiKeyWarning.replace('{backend}', backendName), 'thinking');
     return;
   }
 
   const selected = ed.value.substring(ed.selectionStart, ed.selectionEnd);
-  const contextNote = selected ? `\n\n以下のテキストを対象としてください:\n"""\n${selected}\n"""` : '';
+  const contextNote = selected ? `\n\n"""\n${selected}\n"""` : '';
   const fullPrompt = prompt + contextNote;
 
   input.value = '';
   input.style.height = '34px';
-  _aiAddMsg(prompt + (selected ? ` (選択テキスト: ${selected.length}文字)` : ''), 'u');
+  _aiAddMsg(prompt + (selected ? t.aiSelectedSuffix.replace('{n}', selected.length) : ''), 'u');
 
   const btn = document.getElementById('aiSendBtn');
   btn.disabled = true;
-  const thinking = _aiAddMsg('● 考え中…', 'thinking');
+  const thinking = _aiAddMsg(t.aiThinking, 'thinking');
 
   try {
     const text = AI_BACKEND === 'gemini'
@@ -3540,7 +4070,7 @@ async function sendAi() {
     document.getElementById('aiInsertBtn').style.display = 'block';
   } catch (err) {
     thinking.remove();
-    _aiAddMsg(`⚠ エラー: ${err.message}`, 'thinking');
+    _aiAddMsg(t.aiErrorPrefix + err.message, 'thinking');
   } finally {
     btn.disabled = false;
     document.getElementById('aiInput').focus();
