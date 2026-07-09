@@ -695,6 +695,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 }
 .dl-options{display:flex;flex-wrap:wrap;gap:var(--s8);padding-top:var(--s8)}
 .dl-opt{
+  position:relative;
   flex:1 1 calc(50% - var(--s8));min-width:100px;display:flex;flex-direction:column;align-items:center;gap:var(--s5);
   padding:var(--s13) var(--s8);border-radius:var(--r13);
   border:1.5px solid var(--bord);background:var(--surf);
@@ -704,6 +705,13 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .dl-opt svg{width:28px;height:28px;color:var(--mut);transition:color .15s;flex-shrink:0}
 .dl-opt-label{font-size:var(--f13);font-weight:700;color:var(--txt)}
 .dl-opt-desc{font-size:10px;color:var(--sub);text-align:center;line-height:1.4}
+.dl-opt-check{
+  position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:5px;
+  border:1.5px solid var(--bord);background:var(--bg);display:flex;align-items:center;justify-content:center;
+  color:#fff;transition:background .15s,border-color .15s
+}
+.dl-opt-check svg{width:12px;height:12px;opacity:0;transition:opacity .1s}
+.dl-opt.selected .dl-opt-check svg{opacity:1}
 #dlOptHtml:hover{border-color:var(--gb);background:var(--gbt)}
 #dlOptHtml:hover svg,#dlOptHtml:hover .dl-opt-label{color:var(--gb)}
 #dlOptPdf:hover{border-color:var(--gr);background:var(--grt)}
@@ -713,6 +721,31 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 #dlOptMd:hover{border-color:var(--gg);background:var(--ggt)}
 #dlOptMd:hover svg,#dlOptMd:hover .dl-opt-label{color:var(--gg)}
 .dl-opt:active{transform:scale(.95)}
+#dlOptHtml.selected{border-color:var(--gb);background:var(--gbt)}
+#dlOptHtml.selected svg,#dlOptHtml.selected .dl-opt-label{color:var(--gb)}
+#dlOptHtml.selected .dl-opt-check{background:var(--gb);border-color:var(--gb)}
+#dlOptPdf.selected{border-color:var(--gr);background:var(--grt)}
+#dlOptPdf.selected svg,#dlOptPdf.selected .dl-opt-label{color:var(--gr)}
+#dlOptPdf.selected .dl-opt-check{background:var(--gr);border-color:var(--gr)}
+#dlOptZmd.selected{border-color:var(--gy);background:var(--gyt)}
+#dlOptZmd.selected svg,#dlOptZmd.selected .dl-opt-label{color:var(--gy)}
+#dlOptZmd.selected .dl-opt-check{background:var(--gy);border-color:var(--gy)}
+#dlOptMd.selected{border-color:var(--gg);background:var(--ggt)}
+#dlOptMd.selected svg,#dlOptMd.selected .dl-opt-label{color:var(--gg)}
+#dlOptMd.selected .dl-opt-check{background:var(--gg);border-color:var(--gg)}
+.dl-footer{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s8);
+  margin-top:var(--s13);padding-top:var(--s8);border-top:1px solid var(--bord)
+}
+.dl-hint{font-size:10px;color:var(--sub);flex:1;line-height:1.4}
+.dl-confirm-btn{
+  flex-shrink:0;height:32px;padding:0 var(--s13);border-radius:var(--r8);border:none;
+  background:var(--gb);font-family:var(--font);font-size:12px;font-weight:700;color:#fff;cursor:pointer;
+  transition:background .15s,transform .1s,opacity .15s
+}
+.dl-confirm-btn:hover:not(:disabled){background:#1a73e8}
+.dl-confirm-btn:active:not(:disabled){transform:scale(.96)}
+.dl-confirm-btn:disabled{opacity:.4;cursor:not-allowed}
 
 .dl-modal--pdf{width:min(320px, calc(100vw - 2 * var(--s21)));padding:var(--s21)}
 .pdf-field{margin-bottom:var(--s13)}
@@ -1345,14 +1378,16 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   <div class="dl-modal" id="dlModal">
     <div class="dl-title" data-i18n="dlTitle">Download as…</div>
     <div class="dl-options">
-      <button class="dl-opt" id="dlOptHtml" onclick="dlChooseHTML()">
+      <button class="dl-opt" id="dlOptHtml" type="button" onclick="toggleDlOpt('html')">
+        <span class="dl-opt-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8.5 6.5 12 13 4"/></svg></span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
         </svg>
         <span class="dl-opt-label">HTML</span>
         <span class="dl-opt-desc" data-i18n="dlHtmlDesc">Standalone HTML file</span>
       </button>
-      <button class="dl-opt" id="dlOptPdf" onclick="dlChoosePDF()">
+      <button class="dl-opt" id="dlOptPdf" type="button" onclick="toggleDlOpt('pdf')">
+        <span class="dl-opt-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8.5 6.5 12 13 4"/></svg></span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
@@ -1362,7 +1397,8 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
         <span class="dl-opt-label">PDF</span>
         <span class="dl-opt-desc" data-i18n="dlPdfDesc">Save via print dialog</span>
       </button>
-      <button class="dl-opt" id="dlOptZmd" onclick="dlChooseZMD()">
+      <button class="dl-opt" id="dlOptZmd" type="button" onclick="toggleDlOpt('zmd')">
+        <span class="dl-opt-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8.5 6.5 12 13 4"/></svg></span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
@@ -1372,7 +1408,8 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
         <span class="dl-opt-label">ZMD</span>
         <span class="dl-opt-desc" data-i18n="dlZmdDesc">Markdown + editor metadata</span>
       </button>
-      <button class="dl-opt" id="dlOptMd" onclick="dlChooseMD()">
+      <button class="dl-opt" id="dlOptMd" type="button" onclick="toggleDlOpt('md')">
+        <span class="dl-opt-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8.5 6.5 12 13 4"/></svg></span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
           <polyline points="14 2 14 8 20 8"/>
@@ -1380,6 +1417,10 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
         <span class="dl-opt-label">MD</span>
         <span class="dl-opt-desc" data-i18n="dlMdDesc">Standard Markdown file</span>
       </button>
+    </div>
+    <div class="dl-footer">
+      <span class="dl-hint" id="dlHint" data-i18n="dlHint">Select one or more formats</span>
+      <button class="dl-confirm-btn" id="dlConfirmBtn" type="button" onclick="executeDlDownload()" disabled data-i18n="dlDownloadBtn">Download</button>
     </div>
   </div>
 
@@ -1671,10 +1712,19 @@ function openPreviewWindow(){
   win.document.close();
 }
 
+// 複数フォーマットの同時選択に対応したダウンロードメニュー。
+// dlSelected に選択中のフォーマット('html'|'pdf'|'zmd'|'md')を保持し、
+// 「ダウンロード」ボタン押下時にまとめて実行する。
+let dlSelected = new Set();
+const DL_OPT_IDS = {html:'dlOptHtml', pdf:'dlOptPdf', zmd:'dlOptZmd', md:'dlOptMd'};
+
 function openDownloadMenu(){
   if(!ed.value.trim()) return;
   const overlay = document.getElementById('dlOverlay');
   const modal = document.getElementById('dlModal');
+  dlSelected.clear();
+  document.querySelectorAll('#dlModal .dl-opt').forEach(el => el.classList.remove('selected'));
+  _updateDlConfirmState();
   overlay.classList.add('open');
   modal.classList.add('open');
   _syncDownloadMenuI18n();
@@ -1691,21 +1741,36 @@ function _syncDownloadMenuI18n(){
     if(t[key]) el.textContent = t[key];
   });
 }
-function dlChooseHTML(){
-  closeDownloadMenu();
-  downloadHTML();
+function toggleDlOpt(key){
+  const btn = document.getElementById(DL_OPT_IDS[key]);
+  if(!btn) return;
+  if(dlSelected.has(key)){
+    dlSelected.delete(key);
+    btn.classList.remove('selected');
+  } else {
+    dlSelected.add(key);
+    btn.classList.add('selected');
+  }
+  _updateDlConfirmState();
 }
-function dlChoosePDF(){
-  closeDownloadMenu();
-  executePdfDownload();
+function _updateDlConfirmState(){
+  const btn = document.getElementById('dlConfirmBtn');
+  if(btn) btn.disabled = dlSelected.size === 0;
 }
-function dlChooseZMD(){
+function executeDlDownload(){
+  if(dlSelected.size === 0) return;
+  const queue = ['html', 'md', 'zmd', 'pdf'].filter(k => dlSelected.has(k));
   closeDownloadMenu();
-  downloadZMD();
-}
-function dlChooseMD(){
-  closeDownloadMenu();
-  downloadMD();
+  // ブラウザが複数ダウンロードを一括ブロックしないよう少し間隔を空けて順に実行する。
+  // 印刷ダイアログを開くPDFは他形式のダウンロードを妨げないよう最後に回す。
+  queue.forEach((key, i) => {
+    setTimeout(() => {
+      if(key === 'html') downloadHTML();
+      else if(key === 'md') downloadMD();
+      else if(key === 'zmd') downloadZMD();
+      else if(key === 'pdf') executePdfDownload();
+    }, i * 400);
+  });
 }
 
 // --- ZMD / MD save & load -------------------------------------------------
@@ -2405,6 +2470,8 @@ const LANGS = {
     dlPdfDesc:'Save via print dialog',
     dlZmdDesc:'Markdown + editor metadata',
     dlMdDesc:'Standard Markdown file',
+    dlHint:'Select one or more formats',
+    dlDownloadBtn:'Download',
     settingsDocTitle:'Document',
     settingsDocNameLabel:'Document Name',
     settingsDocNameDesc:'Used as the title for HTML and PDF downloads. Leave blank to use the first heading.',
@@ -2579,6 +2646,10 @@ sequenceDiagram
     dlTitle:'Скачать как…',
     dlHtmlDesc:'Автономный HTML-файл',
     dlPdfDesc:'Сохранить через диалог печати',
+    dlZmdDesc:'Markdown + метаданные редактора',
+    dlMdDesc:'Стандартный файл Markdown',
+    dlHint:'Выберите один или несколько форматов',
+    dlDownloadBtn:'Скачать',
     settingsDocTitle:'Документ',
     settingsDocNameLabel:'Название документа',
     settingsDocNameDesc:'Используется как заголовок при скачивании HTML и PDF. Оставьте пустым, чтобы использовать первый заголовок.',
@@ -2745,6 +2816,8 @@ sequenceDiagram
     dlPdfDesc:'印刷ダイアログ経由で保存',
     dlZmdDesc:'Markdown + エディタメタデータ',
     dlMdDesc:'標準 Markdown ファイル',
+    dlHint:'形式を1つ以上選択してください',
+    dlDownloadBtn:'ダウンロード',
     settingsDocTitle:'ドキュメント',
     settingsDocNameLabel:'ドキュメント名',
     settingsDocNameDesc:'HTML・PDF ダウンロード時のタイトルに使われます。空欄の場合は最初の見出しを使用します。',
@@ -2922,6 +2995,10 @@ sequenceDiagram
     dlTitle:'Herunterladen als…',
     dlHtmlDesc:'Eigenständige HTML-Datei',
     dlPdfDesc:'Über Druckdialog speichern',
+    dlZmdDesc:'Markdown + Editor-Metadaten',
+    dlMdDesc:'Standard-Markdown-Datei',
+    dlHint:'Wählen Sie ein oder mehrere Formate',
+    dlDownloadBtn:'Herunterladen',
     settingsDocTitle:'Dokument',
     settingsDocNameLabel:'Dokumentname',
     settingsDocNameDesc:'Wird als Titel für HTML- und PDF-Downloads verwendet. Leer lassen, um die erste Überschrift zu verwenden.',
@@ -3086,6 +3163,10 @@ sequenceDiagram
     dlTitle:'Pobierz jako…',
     dlHtmlDesc:'Samodzielny plik HTML',
     dlPdfDesc:'Zapisz przez okno drukowania',
+    dlZmdDesc:'Markdown + metadane edytora',
+    dlMdDesc:'Standardowy plik Markdown',
+    dlHint:'Wybierz jeden lub więcej formatów',
+    dlDownloadBtn:'Pobierz',
     settingsDocTitle:'Dokument',
     settingsDocNameLabel:'Nazwa dokumentu',
     settingsDocNameDesc:'Używana jako tytuł podczas pobierania HTML i PDF. Pozostaw puste, aby użyć pierwszego nagłówka.',
@@ -3250,6 +3331,10 @@ sequenceDiagram
     dlTitle:'Λήψη ως…',
     dlHtmlDesc:'Αυτόνομο αρχείο HTML',
     dlPdfDesc:'Αποθήκευση μέσω εκτύπωσης',
+    dlZmdDesc:'Markdown + μεταδεδομένα επεξεργαστή',
+    dlMdDesc:'Τυπικό αρχείο Markdown',
+    dlHint:'Επιλέξτε μία ή περισσότερες μορφές',
+    dlDownloadBtn:'Λήψη',
     settingsDocTitle:'Έγγραφο',
     settingsDocNameLabel:'Όνομα εγγράφου',
     settingsDocNameDesc:'Χρησιμοποιείται ως τίτλος κατά τη λήψη HTML και PDF. Αφήστε κενό για χρήση της πρώτης επικεφαλίδας.',
