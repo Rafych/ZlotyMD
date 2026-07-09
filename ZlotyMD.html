@@ -266,13 +266,13 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 .cpbtn.ok{background:rgba(52,168,83,.25);color:#34A853;border-color:rgba(52,168,83,.4)}
 
 .md blockquote{border-left:3px solid var(--gy);background:var(--gyt);padding:var(--s13) var(--s21);border-radius:0 var(--r8) var(--r8) 0;margin-bottom:var(--s13);color:var(--mut);font-style:italic}
-.md table{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13)}
+.md table{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13);background:#fff}
 .md th{background:var(--gbt);color:var(--gb);padding:var(--s8) var(--s13);font-weight:700;text-align:left}
 .md th:first-child{border-radius:var(--r8) 0 0 0}
 .md th:last-child{border-radius:0 var(--r8) 0 0}
-.md td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord)}
+.md td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord);background:#fff}
 .md tr:last-child td{border-bottom:none}
-.ztbl{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13);overflow:hidden;border-radius:var(--r8)}
+.ztbl{width:100%;border-collapse:separate;border-spacing:0;margin-bottom:var(--s21);font-size:var(--f13);overflow:hidden;border-radius:var(--r8)}
 .ztbl thead tr th{background:var(--gbt);color:var(--gb);padding:var(--s8) var(--s13);font-weight:700;text-align:left;border-bottom:2px solid var(--gb)}
 .ztbl tbody tr td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord)}
 .ztbl tbody tr:last-child td{border-bottom:none}
@@ -693,9 +693,9 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
   color:var(--sub);padding:0 var(--s5) var(--s8);margin-bottom:var(--s5);
   border-bottom:1px solid var(--bord)
 }
-.dl-options{display:flex;gap:var(--s8);padding-top:var(--s8)}
+.dl-options{display:flex;flex-wrap:wrap;gap:var(--s8);padding-top:var(--s8)}
 .dl-opt{
-  flex:1;display:flex;flex-direction:column;align-items:center;gap:var(--s5);
+  flex:1 1 calc(50% - var(--s8));min-width:100px;display:flex;flex-direction:column;align-items:center;gap:var(--s5);
   padding:var(--s13) var(--s8);border-radius:var(--r13);
   border:1.5px solid var(--bord);background:var(--surf);
   cursor:pointer;font-family:var(--font);
@@ -708,6 +708,10 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
 #dlOptHtml:hover svg,#dlOptHtml:hover .dl-opt-label{color:var(--gb)}
 #dlOptPdf:hover{border-color:var(--gr);background:var(--grt)}
 #dlOptPdf:hover svg,#dlOptPdf:hover .dl-opt-label{color:var(--gr)}
+#dlOptZmd:hover{border-color:var(--gy);background:var(--gyt)}
+#dlOptZmd:hover svg,#dlOptZmd:hover .dl-opt-label{color:var(--gy)}
+#dlOptMd:hover{border-color:var(--gg);background:var(--ggt)}
+#dlOptMd:hover svg,#dlOptMd:hover .dl-opt-label{color:var(--gg)}
 .dl-opt:active{transform:scale(.95)}
 
 .dl-modal--pdf{width:min(320px, calc(100vw - 2 * var(--s21)));padding:var(--s21)}
@@ -972,7 +976,7 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       </div>
       <div class="tsep"></div>
       <div class="tg">
-        <button class="btn g" title="Mermaid diagram (%%%...%%%)" data-i18n-title="ttMermaid" onclick="iMermaid()" style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:-.3px">mmd</button>
+        <button class="btn g" title="Mermaid diagram (```mermaid ... ```)" data-i18n-title="ttMermaid" onclick="iMermaid()" style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:-.3px">mmd</button>
       </div>
       <div class="tsep"></div>
       <div class="tg">
@@ -1237,10 +1241,17 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
       </button>
     </div>
     <div class="font-modal-body">
-      <button class="new-doc-btn" onclick="onNewDocClick()">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/></svg>
-        <span data-i18n="docsNewBtn">New Document</span>
-      </button>
+      <div style="display:flex;gap:var(--s8)">
+        <button class="new-doc-btn" style="flex:1" onclick="onNewDocClick()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/></svg>
+          <span data-i18n="docsNewBtn">New Document</span>
+        </button>
+        <button class="new-doc-btn" style="flex:1" onclick="onOpenFileClick()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5A1.5 1.5 0 0 1 3.5 4h3l1.2 1.6h5.3A1.5 1.5 0 0 1 14.5 7v5A1.5 1.5 0 0 1 13 13.5H3A1.5 1.5 0 0 1 1.5 12V5.5z"/></svg>
+          <span data-i18n="docsOpenBtn">Open File</span>
+        </button>
+      </div>
+      <input type="file" id="fileOpenInput" accept=".zmd,.md,.markdown,text/markdown,text/plain" style="display:none" onchange="handleFileOpenInput(event)">
       <div class="doc-list" id="docList"></div>
     </div>
   </div>
@@ -1350,6 +1361,24 @@ html,body{height:100%;font-family:var(--font);background:var(--bg);color:var(--t
         </svg>
         <span class="dl-opt-label">PDF</span>
         <span class="dl-opt-desc" data-i18n="dlPdfDesc">Save via print dialog</span>
+      </button>
+      <button class="dl-opt" id="dlOptZmd" onclick="dlChooseZMD()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="8" y1="13" x2="16" y2="13"/>
+          <line x1="8" y1="17" x2="13" y2="17"/>
+        </svg>
+        <span class="dl-opt-label">ZMD</span>
+        <span class="dl-opt-desc" data-i18n="dlZmdDesc">Markdown + editor metadata</span>
+      </button>
+      <button class="dl-opt" id="dlOptMd" onclick="dlChooseMD()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <span class="dl-opt-label">MD</span>
+        <span class="dl-opt-desc" data-i18n="dlMdDesc">Standard Markdown file</span>
       </button>
     </div>
   </div>
@@ -1471,6 +1500,7 @@ function buildPreviewHTML(title){
     .md code{font-family:var(--mono);font-size:var(--fz-code,12px);background:var(--gbt);color:var(--gb);border-radius:var(--r5);padding:2px var(--s5)}
     .md pre code{font-size:var(--fz-code,12.5px)!important}
     .md a {color: var(--gb);text-decoration: none;border-bottom: 1.5px solid var(--gbt);}
+    .md a:visited{color:var(--gb)}
     .md a:hover{border-bottom-color:var(--gb)}
     .md ul,.md ol{padding-left:var(--s21);margin-bottom:var(--s13)}
     .md li{font-size:var(--f13);line-height:1.85;margin-bottom:var(--s5)}
@@ -1500,19 +1530,19 @@ function buildPreviewHTML(title){
     .diff-ctx::before{color:#5F6368;opacity:.6}
     .md .mermaid-wrap{background:var(--bg);border:1.5px solid var(--gb);border-top:3px solid var(--gb);border-radius:var(--r13);padding:var(--s34) var(--s21) var(--s21);margin-bottom:var(--s21);overflow-x:auto;overflow-y:hidden;text-align:center;position:relative;box-shadow:0 2px 12px rgba(66,133,244,.08)}
     .md .mermaid{display:block;min-width:80px;max-width:100%}
-    .md .mermaid svg{display:block;max-width:100%;height:auto;overflow:hidden;margin:0 auto}
+    .md .mermaid svg{display:block;max-width:100%;height:auto;overflow:hidden;margin:0 auto;font-family:var(--font) !important}
     .md .mermaid svg text,.md .mermaid svg .label{font-family:var(--font) !important}
     .md .mermaid svg .edgePath .path{stroke-width:1.5px}
     .md .mermaid-error{background:var(--grt);border:1px solid var(--gr);border-radius:var(--r8);padding:var(--s13) var(--s21);color:var(--gr);font-size:12px;font-family:var(--mono);text-align:left}
     .md blockquote{border-left:3px solid var(--gy);background:var(--gyt);padding:var(--s13) var(--s21);border-radius:0 var(--r8) var(--r8) 0;margin-bottom:var(--s13);color:var(--mut);font-style:italic}
-    .md table{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13)}
+    .md table{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13);background:#fff}
     .md th{background:var(--gbt);color:var(--gb);padding:var(--s8) var(--s13);font-weight:700;text-align:left}
     .md th:first-child{border-radius:var(--r8) 0 0 0}
     .md th:last-child{border-radius:0 var(--r8) 0 0}
-    .md td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord)}
+    .md td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord);background:#fff}
     .md tr:last-child td{border-bottom:none}
     .md tr:hover td{background:var(--surf)}
-    .ztbl{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13);overflow:hidden;border-radius:var(--r8)}
+    .ztbl{width:100%;border-collapse:separate;border-spacing:0;margin-bottom:var(--s21);font-size:var(--f13);overflow:hidden;border-radius:var(--r8)}
     .ztbl thead tr th{background:var(--gbt);color:var(--gb);padding:var(--s8) var(--s13);font-weight:700;text-align:left;border-bottom:2px solid var(--gb)}
     .ztbl tbody tr td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord)}
     .ztbl tbody tr:last-child td{border-bottom:none}
@@ -1600,6 +1630,7 @@ if(typeof mermaid!=='undefined'){
     themeVariables:{primaryColor:'#E8F0FE',primaryTextColor:'#1a1a2e',primaryBorderColor:'#4285F4',
     secondaryColor:'#E6F4EA',tertiaryColor:'#FEF7E0',background:'#ffffff',
     mainBkg:'#E8F0FE',nodeBorder:'#4285F4',lineColor:'#5F6368',
+    edgeLabelBackground:'#ffffff',
     noteBkgColor:'#FEF7E0',noteBorderColor:'#FBBC04'},
     flowchart:{htmlLabels:true,curve:'basis'},
     pie:{useMaxWidth:true}});
@@ -1667,6 +1698,153 @@ function dlChooseHTML(){
 function dlChoosePDF(){
   closeDownloadMenu();
   executePdfDownload();
+}
+function dlChooseZMD(){
+  closeDownloadMenu();
+  downloadZMD();
+}
+function dlChooseMD(){
+  closeDownloadMenu();
+  downloadMD();
+}
+
+// --- ZMD / MD save & load -------------------------------------------------
+// ZMDファイル: 標準Markdown本文 + コメント形式のメタデータ(ドキュメント名、
+// 言語、フォントサイズなど)を先頭に含む。HTMLコメントなので通常のMarkdown
+// ビューアでは無視され、互換性が保たれる。
+const ZMD_FM_OPEN = '<!--zmd:meta';
+const ZMD_FM_CLOSE = 'zmd:meta-->';
+
+function buildZmdMeta(){
+  return {
+    zmdVersion: 1,
+    name: getDocTitle(),
+    isDefaultName: currentDocMeta ? !!currentDocMeta.isDefaultName : true,
+    lang: currentLang,
+    fontSizes: {...fontSizes},
+    createdAt: (currentDocMeta && currentDocMeta.createdAt) || Date.now(),
+    updatedAt: Date.now()
+  };
+}
+
+function downloadZMD(){
+  if(!ed.value.trim()) return;
+  const title = getDocTitle();
+  const meta = buildZmdMeta();
+  const zmd = `${ZMD_FM_OPEN}\n${JSON.stringify(meta, null, 2)}\n${ZMD_FM_CLOSE}\n\n${ed.value}`;
+  const blob = new Blob([zmd], {type:'text/markdown;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = title.replace(/[\\/:*?"<>|]/g,'_') + '.zmd';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+
+function downloadMD(){
+  if(!ed.value.trim()) return;
+  const title = getDocTitle();
+  const standard = toStandardMarkdown(ed.value);
+  const blob = new Blob([standard], {type:'text/markdown;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = title.replace(/[\\/:*?"<>|]/g,'_') + '.md';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
+
+// --- 標準Markdownへの変換 ---------------------------------------------------
+// .md書き出し専用。Złoty MD独自の記法を、標準Markdown/GFMの範囲で再現できる
+// ものは標準記法に置き換え、再現できない装飾（セル結合・背景色・画像サイズ等）
+// は削って中身のテキストだけを残すことで、他のMarkdownビューアでも崩れずに
+// 読めるようにする。.zmdファイル（アプリ内で再編集する用）はオリジナルの
+// 記法のまま保存するため、この変換はここでしか使わない。
+
+// ![alt](src){width=... height=...} → 標準の ![alt](src)。
+// サイズ指定は標準Markdownに存在しないため単純に削除する。
+function _mdConvertImageAttrs(v){
+  return v.replace(/!\[([^\]]*)\]\(([^)]+)\)\{([^}]+)\}/g, (_, alt, src) => `![${alt}](${src})`);
+}
+
+// :::table [opts]\n|...|\n::: （独自の拡張テーブル）→ 標準GFMパイプテーブル。
+// セル内の {bg=b ac col=2 row=2 ...} のような装飾指定（背景色・結合・配置等）
+// は標準Markdownで表現できないため取り除き、テキスト内容のみを残す。
+function _mdConvertCustomTables(v){
+  return v.replace(/:::table([^\n]*)\n([\s\S]*?):::/g, (_, opts, body) => {
+    const lines = body.trim().split('\n').filter(l => l.trim().startsWith('|'));
+    if(!lines.length) return '';
+    const stripCell = (cell) => cell.replace(/\{[^}]*\}/g, '').trim();
+    const toRow = (line) => {
+      const cells = line.split('|').slice(1, -1).map(stripCell);
+      return '| ' + cells.join(' | ') + ' |';
+    };
+    const colCount = lines[0].split('|').slice(1, -1).length;
+    const header = toRow(lines[0]);
+    const sep = '| ' + Array(colCount).fill('---').join(' | ') + ' |';
+    const bodyRows = lines.slice(1).map(toRow);
+    return [header, sep, ...bodyRows].join('\n');
+  });
+}
+
+function toStandardMarkdown(v){
+  let out = v;
+  out = _mdConvertCustomTables(out);
+  out = _mdConvertImageAttrs(out);
+  return out;
+}
+
+// .zmd本文からメタデータを抽出する。見つからなければ meta:null と本文全体を
+// 返す（＝通常のMarkdownとして扱う）
+function parseZmdText(text){
+  if(text.startsWith(ZMD_FM_OPEN)){
+    const closeIdx = text.indexOf(ZMD_FM_CLOSE);
+    if(closeIdx !== -1){
+      const jsonStr = text.slice(ZMD_FM_OPEN.length, closeIdx).trim();
+      const rest = text.slice(closeIdx + ZMD_FM_CLOSE.length).replace(/^\n+/, '');
+      try {
+        const meta = JSON.parse(jsonStr);
+        return { meta, content: rest };
+      } catch(e){
+        return { meta: null, content: text };
+      }
+    }
+  }
+  return { meta: null, content: text };
+}
+
+function onOpenFileClick(){
+  const input = document.getElementById('fileOpenInput');
+  input.value = '';
+  input.click();
+}
+
+async function handleFileOpenInput(evt){
+  const file = evt.target.files && evt.target.files[0];
+  if(!file) return;
+  const text = await file.text();
+  const { meta, content } = parseZmdText(text);
+  const baseName = file.name.replace(/\.(zmd|md|markdown|txt)$/i, '');
+
+  await flushCurrentDocSave();
+  const now = Date.now();
+  const id = genDocId();
+  const data = {
+    name: (meta && meta.name) || baseName || untitledDocName(),
+    isDefaultName: meta ? !!meta.isDefaultName : false,
+    content: content,
+    lang: (meta && meta.lang) || currentLang,
+    fontSizes: Object.assign({...FONT_DEFAULTS}, (meta && meta.fontSizes) || {}),
+    scrollEd: 0,
+    scrollPv: 0,
+    createdAt: (meta && meta.createdAt) || now,
+    updatedAt: now
+  };
+  await persistDocRecord(id, data);
+  docIndex.unshift({ id, name: data.name, isDefaultName: data.isDefaultName, createdAt: data.createdAt, updatedAt: now });
+  await persistDocIndex();
+  await switchToDoc(id);
+  closeDocsPanel();
 }
 function getDocTitle(){
   // считаем название "неозаглавленным" (и берём заголовок H1) только если
@@ -2021,12 +2199,18 @@ function _renderLatexDoc(v) {
 
 function _mmdEsc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function _protectMermaid(v) {
-  let _mmdIdx = 0;
-  return v.replace(/%%%[ \t]*\n([\s\S]+?)\n?%%%/g, (_, code) => {
-    const uid = 'mmd-' + Date.now() + '-' + (++_mmdIdx);
-    const escaped = _mmdEsc(code.trim());
-    return '\n<div class="mermaid-wrap"><div class="mermaid" id="' + uid + '" data-src="' + escaped + '">' + escaped + '</div></div>\n';
+// 標準の ```mermaid コードフェンス（marked.jsが <pre><code class="language-mermaid">
+// として出力したもの）を、描画用マークアップに変換する。
+function _decodeHtmlEntities(s){
+  return s.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&amp;/g,'&');
+}
+function _convertMermaidFences(html){
+  let idx = 0;
+  return html.replace(/<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g, (_, code) => {
+    const decoded = _decodeHtmlEntities(code).trim();
+    const uid = 'mmd-' + Date.now() + '-' + (++idx) + '-' + Math.random().toString(36).slice(2, 7);
+    const escaped = _mmdEsc(decoded);
+    return '<div class="mermaid-wrap"><div class="mermaid" id="' + uid + '" data-src="' + escaped + '">' + escaped + '</div></div>';
   });
 }
 
@@ -2045,8 +2229,9 @@ function _processImageAttrs(v) {
   return v.replace(/!\[([^\]]*)\]\(([^)]+)\)\{([^}]+)\}/g, (_, alt, src, attrs) => {
     const styleProps = [];
     let hasWidth = false;
-    attrs.split(/[,;]/).forEach(a => {
-      const m = a.trim().match(/^(width|height)\s*=\s*(.+)$/i);
+    // Pandoc形式のスペース区切り属性（例: {width=300px height=200px}）
+    attrs.split(/[,;\s]+/).filter(Boolean).forEach(a => {
+      const m = a.trim().match(/^(width|height)\s*=\s*"?([^"]+?)"?$/i);
       if (!m) return;
       let val = m[2].trim();
       if (/^\d+(\.\d+)?$/.test(val)) val += 'px';
@@ -2072,9 +2257,11 @@ function render(v){
     if (isLatex) {
       mo.innerHTML = _renderLatexDoc(v);
     } else {
-      const hasMmd = /%%%/.test(v);
-      const vv = _processCustomTables(_processImageAttrs(hasMmd ? _protectMermaid(v) : v));
-      mo.innerHTML = _restoreEscapes(_restoreLatex(marked.parse(_protectEscapes(_protectLatex(vv)))));
+      const hasMmd = /```\s*mermaid\b/.test(v);
+      const vv = _processCustomTables(_processImageAttrs(v));
+      let _html = marked.parse(_protectEscapes(_protectLatex(vv)));
+      _html = _convertMermaidFences(_html);
+      mo.innerHTML = _restoreEscapes(_restoreLatex(_html));
       if (hasMmd && typeof mermaid !== 'undefined') {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
@@ -2135,7 +2322,7 @@ const gs=()=>({s:ed.selectionStart,e:ed.selectionEnd,t:ed.value.slice(ed.selecti
 function wr(b,a){const dt=LANGS[currentLang]?.defaultText||'text';const{s,e,t}=gs(),r=b+(t||dt)+a;ed.value=ed.value.slice(0,s)+r+ed.value.slice(e);ed.selectionStart=s+b.length;ed.selectionEnd=s+b.length+(t||dt).length;ed.focus();render(ed.value)}
 function ins(p,sf){const{s,e,t}=gs(),r=p+(t||'')+sf;ed.value=ed.value.slice(0,s)+r+ed.value.slice(e);ed.selectionStart=ed.selectionEnd=s+p.length+(t?t.length:0)+sf.length;ed.focus();render(ed.value)}
 function iLink(){const dl=LANGS[currentLang]?.defaultLink||'link';const{s,e,t}=gs(),l=t||dl,u='https://example.com',r=`[${l}](${u})`;ed.value=ed.value.slice(0,s)+r+ed.value.slice(e);ed.selectionStart=s+l.length+3;ed.selectionEnd=s+l.length+3+u.length;ed.focus();render(ed.value)}
-function iImg(){const da=LANGS[currentLang]?.defaultImgAlt||'alt';const{s,e,t}=gs();const snip=`![${t||da}](https://example.com/img.png){width=300}`;ed.value=ed.value.slice(0,s)+snip+ed.value.slice(e);ed.selectionStart=ed.selectionEnd=s+snip.length;ed.focus();render(ed.value)}
+function iImg(){const da=LANGS[currentLang]?.defaultImgAlt||'alt';const{s,e,t}=gs();const snip=`![${t||da}](https://example.com/img.png){width=300px}`;ed.value=ed.value.slice(0,s)+snip+ed.value.slice(e);ed.selectionStart=ed.selectionEnd=s+snip.length;ed.focus();render(ed.value)}
 function iLatexInline(){const{s,e,t}=gs(),m=t||'x^2';const r=`$${m}$`;ed.value=ed.value.slice(0,s)+r+ed.value.slice(e);ed.selectionStart=s+1;ed.selectionEnd=s+1+m.length;ed.focus();render(ed.value)}
 function iLatexBlock(){const{s,e,t}=gs(),m=t||'\\int_0^\\infty f(x)\\,dx';const r=`$$\n${m}\n$$`;ed.value=ed.value.slice(0,s)+r+ed.value.slice(e);ed.selectionStart=s+3;ed.selectionEnd=s+3+m.length;ed.focus();render(ed.value)}
 function iDiff(){
@@ -2153,10 +2340,10 @@ function iDiff(){
 function iMermaid(){
   const{s,e,t}=gs();
   const body = t || 'flowchart LR\n  A[Start] --> B[End]';
-  const r = '%%%\n'+body+'\n%%%';
+  const r = '```mermaid\n'+body+'\n```';
   ed.value=ed.value.slice(0,s)+r+ed.value.slice(e);
-  ed.selectionStart=s+4;
-  ed.selectionEnd=s+4+body.length;
+  ed.selectionStart=s+10;
+  ed.selectionEnd=s+10+body.length;
   ed.focus();render(ed.value);
 }
 function mTab(tab,btn){document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');document.getElementById('eP').classList.toggle('v',tab==='e');document.getElementById('pP').classList.toggle('v',tab==='p')}
@@ -2216,12 +2403,15 @@ const LANGS = {
     dlTitle:'Download as…',
     dlHtmlDesc:'Standalone HTML file',
     dlPdfDesc:'Save via print dialog',
+    dlZmdDesc:'Markdown + editor metadata',
+    dlMdDesc:'Standard Markdown file',
     settingsDocTitle:'Document',
     settingsDocNameLabel:'Document Name',
     settingsDocNameDesc:'Used as the title for HTML and PDF downloads. Leave blank to use the first heading.',
     docsBtnTitle:'Documents',
     docsPanelTitle:'Documents',
     docsNewBtn:'New Document',
+    docsOpenBtn:'Open File',
     docsEmpty:'No documents yet',
     docsDelete:'Delete',
     docsConfirmDelete:'Delete this document? This cannot be undone.',
@@ -2236,7 +2426,7 @@ const LANGS = {
     ttBullet:'Bullet list', ttOrdered:'Numbered list', ttTask:'Task list', ttCodeBlock:'Code block',
     ttMathInline:'Inline math ($...$)', ttMathBlock:'Block math ($$...$$)',
     ttDiff:'Diff block (diff / diff_lang)',
-    ttMermaid: 'Mermaid diagram (%%%...%%%)',
+    ttMermaid: 'Mermaid diagram (```mermaid...```)',
     ttTable:'Insert custom table',
     fontSizeBtnTitle:'Font size settings',
     fontPanelTitle:'Font Sizes',
@@ -2311,22 +2501,22 @@ console.log([...Array(8)].map((_,i) => fib(i))); // [0,1,1,2,3,5,8,13]
 - [x] Real-time preview · Draggable resizer
 - [x] Language badge on code blocks (30+ languages)
 - [x] Diff highlighting with \`\`\`diff\`\`\`
-- [x] Mermaid diagrams with \`%%%...%%%\`
+- [x] Mermaid diagrams with \`\`\`mermaid...\`\`\`
 
 ## Mermaid Diagram
 
-%%%
+\`\`\`mermaid
 flowchart LR
   A([Start]) --> B{Decision}
   B -- Yes --> C[Process A]
   B -- No  --> D[Process B]
   C --> E([End])
   D --> E
-%%%
+\`\`\`
 
 ## Sequence Diagram
 
-%%%
+\`\`\`mermaid
 sequenceDiagram
   participant U as User
   participant E as Editor
@@ -2334,7 +2524,7 @@ sequenceDiagram
   U->>E: Type Markdown
   E->>P: Render HTML
   P-->>U: Live preview
-%%%
+\`\`\`
 
 ---
 
@@ -2400,7 +2590,7 @@ sequenceDiagram
     ttBullet:'Маркированный список', ttOrdered:'Нумерованный список', ttTask:'Список задач', ttCodeBlock:'Блок кода',
     ttMathInline:'Встроенная формула ($...$)', ttMathBlock:'Блочная формула ($$...$$)',
     ttDiff:'Блок diff (diff / diff_язык)',
-    ttMermaid: 'Диаграмма Mermaid (%%%...%%%)',
+    ttMermaid: 'Диаграмма Mermaid (```mermaid...```)',
     ttTable:'Вставить пользовательскую таблицу',
     fontSizeBtnTitle:'Настройки размера шрифта',
     fontPanelTitle:'Размеры шрифтов',
@@ -2475,22 +2665,22 @@ console.log([...Array(8)].map((_,i) => fib(i))); // [0,1,1,2,3,5,8,13]
 - [x] Просмотр в реальном времени · Изменяемый разделитель
 - [x] Языковой бейдж на блоках кода (30+ языков)
 - [x] Подсветка diff через \`\`\`diff\`\`\`
-- [x] Диаграммы Mermaid через \`%%%...%%%\`
+- [x] Диаграммы Mermaid через \`\`\`mermaid...\`\`\`
 
 ## Диаграмма Mermaid
 
-%%%
+\`\`\`mermaid
 flowchart LR
   A([Начало]) --> B{Решение}
   B -- Да   --> C[Процесс A]
   B -- Нет  --> D[Процесс B]
   C --> E([Конец])
   D --> E
-%%%
+\`\`\`
 
 ## Диаграмма последовательности
 
-%%%
+\`\`\`mermaid
 sequenceDiagram
   participant U as Пользователь
   participant E as Редактор
@@ -2498,7 +2688,7 @@ sequenceDiagram
   U->>E: Ввод Markdown
   E->>P: Рендеринг HTML
   P-->>U: Предпросмотр
-%%%
+\`\`\`
 
 ---
 
@@ -2553,12 +2743,15 @@ sequenceDiagram
     dlTitle:'形式を選択…',
     dlHtmlDesc:'スタンドアロン HTML ファイル',
     dlPdfDesc:'印刷ダイアログ経由で保存',
+    dlZmdDesc:'Markdown + エディタメタデータ',
+    dlMdDesc:'標準 Markdown ファイル',
     settingsDocTitle:'ドキュメント',
     settingsDocNameLabel:'ドキュメント名',
     settingsDocNameDesc:'HTML・PDF ダウンロード時のタイトルに使われます。空欄の場合は最初の見出しを使用します。',
     docsBtnTitle:'ドキュメント管理',
     docsPanelTitle:'ドキュメント',
     docsNewBtn:'新規ドキュメント',
+    docsOpenBtn:'ファイルを開く',
     docsEmpty:'ドキュメントがまだありません',
     docsDelete:'削除',
     docsConfirmDelete:'このドキュメントを削除しますか？元に戻せません。',
@@ -2573,7 +2766,7 @@ sequenceDiagram
     ttBullet:'箇条書き', ttOrdered:'番号リスト', ttTask:'チェックリスト', ttCodeBlock:'コードブロック',
     ttMathInline:'インライン数式 ($...$)', ttMathBlock:'ブロック数式 ($$...$$)',
     ttDiff:'diff ブロック (diff / diff_言語名)',
-    ttMermaid:'Mermaid ダイアグラム (%%%...%%%)',
+    ttMermaid: 'Mermaid ダイアグラム (```mermaid...```)',
     ttTable:'カスタムテーブルを挿入',
     fontSizeBtnTitle:'文字サイズ設定',
     fontPanelTitle:'文字サイズ',
@@ -2608,12 +2801,15 @@ $$\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi} \\qquad F_n = \\frac{\
 
 ## 黄金比システム
 
-| 要素 | 値 |
-|------|-----|
-| レイアウト比 | **61.8 %** / **38.2 %** |
-| スペーシング | 3, 5, 8, 13, 21, 34, 55, 89 px |
-| ヘッダー高さ | **55 px**（フィボナッチ数） |
-| フォントサイズ | 13, 21, 34 px |
+<table class="ztbl border">
+<thead><tr><th>要素</th><th>値</th></tr></thead>
+<tbody>
+<tr><td class="fw bg-b">レイアウト比</td><td><strong>61.8 %</strong> / <strong>38.2 %</strong></td></tr>
+<tr><td class="fw bg-r">スペーシング</td><td>3, 5, 8, 13, 21, 34, 55, 89 px</td></tr>
+<tr><td class="fw bg-y">ヘッダー高さ</td><td><strong>55 px</strong>（フィボナッチ数）</td></tr>
+<tr><td class="fw bg-g">フォントサイズ</td><td>13, 21, 34 px</td></tr>
+</tbody>
+</table>
 
 ## コードの例
 
@@ -2648,22 +2844,22 @@ console.log([...Array(8)].map((_,i) => fib(i))); // [0,1,1,2,3,5,8,13]
 - [x] リアルタイムプレビュー・ドラッグリサイザー
 - [x] コードブロックへの言語バッジ表示（30言語以上）
 - [x] \`\`\`diff\`\`\` によるdiffハイライト
-- [x] \`%%%...%%%\` で Mermaid ダイアグラム
+- [x] \`\`\`mermaid...\`\`\` で Mermaid ダイアグラム
 
 ## Mermaid ダイアグラム
 
-%%%
+\`\`\`mermaid
 flowchart LR
   A([開始]) --> B{判断}
   B -- はい --> C[処理A]
   B -- いいえ --> D[処理B]
   C --> E([終了])
   D --> E
-%%%
+\`\`\`
 
 ## シーケンス図
 
-%%%
+\`\`\`mermaid
 sequenceDiagram
   participant U as ユーザー
   participant E as エディター
@@ -2671,7 +2867,7 @@ sequenceDiagram
   U->>E: Markdownを入力
   E->>P: HTMLをレンダリング
   P-->>U: ライブプレビュー表示
-%%%
+\`\`\`
 
 ---
 
@@ -2737,7 +2933,7 @@ sequenceDiagram
     ttBullet:'Aufzählungsliste', ttOrdered:'Nummerierte Liste', ttTask:'Aufgabenliste', ttCodeBlock:'Codeblock',
     ttMathInline:'Inline-Formel ($...$)', ttMathBlock:'Blockformel ($$...$$)',
     ttDiff:'Diff-Block (diff / diff_Sprache)',
-    ttMermaid: 'Mermaid-Diagramm (%%%...%%%)',
+    ttMermaid: 'Mermaid-Diagramm (```mermaid...```)',
     ttTable:'Benutzerdefinierte Tabelle einfügen',
     fontSizeBtnTitle:'Schriftgrößen-Einstellungen',
     fontPanelTitle:'Schriftgrößen',
@@ -2812,22 +3008,22 @@ console.log([...Array(8)].map((_,i) => fib(i))); // [0,1,1,2,3,5,8,13]
 - [x] Echtzeit-Vorschau · Verschiebbarer Trenner
 - [x] Sprach-Badge auf Codeblöcken (30+ Sprachen)
 - [x] Diff-Hervorhebung mit \`\`\`diff\`\`\`
-- [x] Mermaid-Diagramme mit \`%%%...%%%\`
+- [x] Mermaid-Diagramme mit \`\`\`mermaid...\`\`\`
 
 ## Mermaid-Diagramm
 
-%%%
+\`\`\`mermaid
 flowchart LR
   A([Start]) --> B{Entscheidung}
   B -- Ja  --> C[Prozess A]
   B -- Nein --> D[Prozess B]
   C --> E([Ende])
   D --> E
-%%%
+\`\`\`
 
 ## Sequenzdiagramm
 
-%%%
+\`\`\`mermaid
 sequenceDiagram
   participant U as Benutzer
   participant E as Editor
@@ -2835,7 +3031,7 @@ sequenceDiagram
   U->>E: Markdown eingeben
   E->>P: HTML rendern
   P-->>U: Live-Vorschau
-%%%
+\`\`\`
 
 ---
 
@@ -2901,7 +3097,7 @@ sequenceDiagram
     ttBullet:'Lista punktowana', ttOrdered:'Lista numerowana', ttTask:'Lista zadań', ttCodeBlock:'Blok kodu',
     ttMathInline:'Matematyka inline ($...$)', ttMathBlock:'Blok matematyczny ($$...$$)',
     ttDiff:'Blok diff (diff / diff_język)',
-    ttMermaid: 'Diagram Mermaid (%%%...%%%)',
+    ttMermaid: 'Diagram Mermaid (```mermaid...```)',
     ttTable:'Wstaw niestandardową tabelę',
     fontSizeBtnTitle:'Ustawienia rozmiaru czcionki',
     fontPanelTitle:'Rozmiary czcionek',
@@ -2976,22 +3172,22 @@ console.log([...Array(8)].map((_,i) => fib(i))); // [0,1,1,2,3,5,8,13]
 - [x] Podgląd na żywo · Przeciągany separator
 - [x] Odznaka języka na blokach kodu (30+ języków)
 - [x] Podświetlanie diff przez \`\`\`diff\`\`\`
-- [x] Diagramy Mermaid przez \`%%%...%%%\`
+- [x] Diagramy Mermaid przez \`\`\`mermaid...\`\`\`
 
 ## Diagram Mermaid
 
-%%%
+\`\`\`mermaid
 flowchart LR
   A([Start]) --> B{Decyzja}
   B -- Tak  --> C[Proces A]
   B -- Nie  --> D[Proces B]
   C --> E([Koniec])
   D --> E
-%%%
+\`\`\`
 
 ## Diagram sekwencji
 
-%%%
+\`\`\`mermaid
 sequenceDiagram
   participant U as Użytkownik
   participant E as Edytor
@@ -2999,7 +3195,7 @@ sequenceDiagram
   U->>E: Wpisz Markdown
   E->>P: Renderuj HTML
   P-->>U: Podgląd na żywo
-%%%
+\`\`\`
 
 ---
 
@@ -3065,7 +3261,7 @@ sequenceDiagram
     ttBullet:'Λίστα κουκκίδων', ttOrdered:'Αριθμημένη λίστα', ttTask:'Λίστα εργασιών', ttCodeBlock:'Μπλοκ κώδικα',
     ttMathInline:'Ενσωματωμένα μαθηματικά ($...$)', ttMathBlock:'Μπλοκ μαθηματικών ($$...$$)',
     ttDiff:'Μπλοκ diff (diff / diff_lang)',
-    ttMermaid: 'Διάγραμμα Mermaid (%%%...%%%)',
+    ttMermaid: 'Διάγραμμα Mermaid (```mermaid...```)',
     ttTable:'Εισαγωγή προσαρμοσμένου πίνακα',
     fontSizeBtnTitle:'Ρυθμίσεις μεγέθους γραμματοσειράς',
     fontPanelTitle:'Μεγέθη γραμματοσειράς',
@@ -3140,22 +3336,22 @@ console.log([...Array(8)].map((_,i) => fib(i))); // [0,1,1,2,3,5,8,13]
 - [x] Ζωντανή προεπισκόπηση · Ρυθμιζόμενο διαχωριστικό
 - [x] Ένδειξη γλώσσας σε μπλοκ κώδικα (30+ γλώσσες)
 - [x] Επισήμανση διαφορών με \`\`\`diff\`\`\`
-- [x] Διαγράμματα Mermaid με \`%%%...%%%\`
+- [x] Διαγράμματα Mermaid με \`\`\`mermaid...\`\`\`
 
 ## Διάγραμμα Mermaid
 
-%%%
+\`\`\`mermaid
 flowchart LR
   A([Έναρξη]) --> B{Απόφαση}
   B -- Ναι --> C[Διαδικασία A]
   B -- Όχι --> D[Διαδικασία B]
   C --> E([Τέλος])
   D --> E
-%%%
+\`\`\`
 
 ## Διάγραμμα Ακολουθίας
 
-%%%
+\`\`\`mermaid
 sequenceDiagram
   participant U as Χρήστης
   participant E as Επεξεργαστής
@@ -3163,7 +3359,7 @@ sequenceDiagram
   U->>E: Πληκτρολόγηση Markdown
   E->>P: Απόδοση HTML
   P-->>U: Ζωντανή προεπισκόπηση
-%%%
+\`\`\`
 
 ---
 
@@ -3538,7 +3734,7 @@ async function loadLegacyFontSizes() {
 // у каждой записи есть свой набор fontSizes; старые (legacy) размеры
 // пользователя используются как начальные для его первых новых документов
 function defaultFontSizesForNewDoc() {
-  return Object.assign({...FONT_DEFAULTS}, legacyFontSizes || {});
+  return {...FONT_DEFAULTS};
 }
 // сохраняет текущие размеры шрифтов из памяти в запись *текущего* документа
 // (а не в глобальный ключ)
