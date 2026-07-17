@@ -1,4 +1,6 @@
 # Złoty MD
+### [For desktop](https://github.com/Rafych/ZlotyMD-desktop)
+
 ## English
 A Markdown editor with golden-ratio proportions and a Google-inspired color palette.
 
@@ -16,8 +18,6 @@ Edytor Markdown z proporcjami złotego podziału i paletą kolorów w stylu Goog
 
 ## ελληνικά
 Ένας επεξεργαστής Markdown με αναλογίες χρυσής τομής και παλέτα χρωμάτων εμπνευσμένη από τη Google.
-
-### [For desktop](https://github.com/Rafych/ZlotyMD-desktop)
 
 # Screenshot
 
