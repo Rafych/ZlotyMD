@@ -17,6 +17,6 @@ Edytor Markdown z proporcjami złotego podziału i paletą kolorów w stylu Goog
 ## ελληνικά
 Ένας επεξεργαστής Markdown με αναλογίες χρυσής τομής και παλέτα χρωμάτων εμπνευσμένη από τη Google.
 
-# (For desktop)[https://github.com/Rafych/ZlotyMD-desktop]
+# [For desktop](https://github.com/Rafych/ZlotyMD-desktop)
 
 ![Снимок экрана](./Снимок%20экрана%202026-07-10%20001608.png)
