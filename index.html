@@ -16,13 +16,15 @@
     Copyright (c) 2014-2023 Knut Sveidqvist and contributors
     MIT License — https://github.com/mermaid-js/mermaid/blob/develop/LICENSE
 
-  Google Fonts: Google Sans, JetBrains Mono
-    Google Sans: proprietary, served under Google Fonts Terms of Service
-      https://developers.google.com/fonts/terms
-    JetBrains Mono: Copyright (c) 2020 JetBrains s.r.o.
-      SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
+  Google Sans
+    Copyright (c) Google Inc.
+    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
+
+  JetBrains Mono v2020
+    Copyright (c) 2020 JetBrains s.r.o.
+    SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
 -->
-<html lang="en">
+<html lang="ru">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -64,6 +66,7 @@
     .md code{font-family:var(--mono);font-size:var(--fz-code,12px);background:var(--gbt);color:var(--gb);border-radius:var(--r5);padding:2px var(--s5)}
     .md pre code{font-size:var(--fz-code,12.5px)!important}
     .md a {color: var(--gb);text-decoration: none;border-bottom: 1.5px solid var(--gbt);}
+    .md a:visited{color:var(--gb)}
     .md a:hover{border-bottom-color:var(--gb)}
     .md ul,.md ol{padding-left:var(--s21);margin-bottom:var(--s13)}
     .md li{font-size:var(--f13);line-height:1.85;margin-bottom:var(--s5)}
@@ -93,18 +96,33 @@
     .diff-ctx::before{color:#5F6368;opacity:.6}
     .md .mermaid-wrap{background:var(--bg);border:1.5px solid var(--gb);border-top:3px solid var(--gb);border-radius:var(--r13);padding:var(--s34) var(--s21) var(--s21);margin-bottom:var(--s21);overflow-x:auto;overflow-y:hidden;text-align:center;position:relative;box-shadow:0 2px 12px rgba(66,133,244,.08)}
     .md .mermaid{display:block;min-width:80px;max-width:100%}
-    .md .mermaid svg{display:block;max-width:100%;height:auto;overflow:hidden;margin:0 auto}
+    .md .mermaid svg{display:block;max-width:100%;height:auto;overflow:hidden;margin:0 auto;font-family:var(--font) !important}
     .md .mermaid svg text,.md .mermaid svg .label{font-family:var(--font) !important}
     .md .mermaid svg .edgePath .path{stroke-width:1.5px}
     .md .mermaid-error{background:var(--grt);border:1px solid var(--gr);border-radius:var(--r8);padding:var(--s13) var(--s21);color:var(--gr);font-size:12px;font-family:var(--mono);text-align:left}
     .md blockquote{border-left:3px solid var(--gy);background:var(--gyt);padding:var(--s13) var(--s21);border-radius:0 var(--r8) var(--r8) 0;margin-bottom:var(--s13);color:var(--mut);font-style:italic}
-    .md table{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13)}
+    .md table{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13);background:#fff}
     .md th{background:var(--gbt);color:var(--gb);padding:var(--s8) var(--s13);font-weight:700;text-align:left}
     .md th:first-child{border-radius:var(--r8) 0 0 0}
     .md th:last-child{border-radius:0 var(--r8) 0 0}
-    .md td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord)}
+    .md td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord);background:#fff}
     .md tr:last-child td{border-bottom:none}
     .md tr:hover td{background:var(--surf)}
+    .ztbl{width:100%;border-collapse:separate;border-spacing:0;margin-bottom:var(--s21);font-size:var(--f13);overflow:hidden;border-radius:var(--r8)}
+    .ztbl thead tr th{background:var(--gbt);color:var(--gb);padding:var(--s8) var(--s13);font-weight:700;text-align:left;border-bottom:2px solid var(--gb)}
+    .ztbl tbody tr td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord)}
+    .ztbl tbody tr:last-child td{border-bottom:none}
+    .ztbl.stripe tbody tr:nth-child(even) td{background:var(--surf)}
+    .ztbl.border td,.ztbl.border th{border:1px solid var(--bord)}
+    .ztbl tbody tr:hover td{background:rgba(66,133,244,.05)}
+    .ztbl td.bg-b,.ztbl th.bg-b{background:var(--gbt)!important;color:var(--gb)!important}
+    .ztbl td.bg-r,.ztbl th.bg-r{background:var(--grt)!important;color:var(--gr)!important}
+    .ztbl td.bg-y,.ztbl th.bg-y{background:var(--gyt)!important;color:#7A4F00!important}
+    .ztbl td.bg-g,.ztbl th.bg-g{background:var(--ggt)!important;color:var(--gg)!important}
+    .ztbl td.al,.ztbl th.al{text-align:left}
+    .ztbl td.ac,.ztbl th.ac{text-align:center}
+    .ztbl td.ar,.ztbl th.ar{text-align:right}
+    .ztbl td.fw,.ztbl th.fw{font-weight:700}
     .md hr{border:none;height:1.5px;background:var(--bord);margin:var(--s34) 0}
     .md strong{font-weight:700}
     .md img{max-width:100%;border-radius:var(--r13)}
@@ -123,42 +141,43 @@
 <body>
 <div class="md" id="mo" style="display: block;"><h1>Złoty MD</h1>
 <blockquote>
-<p><strong>A Markdown editor with golden ratio proportions and a Google-style color palette.</strong></p>
+<p>A Markdown editor with golden ratio proportions and a Google-style color palette.</p>
 </blockquote>
-<h1><a href="./ZlotyMD.html">Open web editor</a></h1>
+<h1><a href="https://rafych.github.io/ZlotyMD/ZlotyMD.html">Open web editor</a></h1>
+<h1><a href="https://github.com/Rafych/ZlotyMD-desktop/releases/latest">Download</a></h1>
 <h2>About the project</h2>
 <p><strong>Złoty MD</strong> is a modern web-based Markdown editor that combines writing convenience with the aesthetics of the golden ratio. The interface is inspired by Google’s color palette and is designed for comfortable work with technical documentation, notes, and publications.</p>
 <h2>Features</h2>
-<h3>Markdown</h3>
+<h3><strong>Markdown</strong></h3>
 <p>Standard Markdown syntax is supported:</p>
-<pre><div class="pre-header"><span class="lang-badge">Markdown</span></div><div class="pre-body"><code class="language-md"># Heading
+<pre><div class="pre-header"><span class="lang-badge">Markdown</span></div><div class="pre-body"><code class="language-Markdown"># Heading
 **Bold text**
 *Italic*
 - List
 - Item
 </code></div></pre>
-<h3>LaTeX</h3>
+<h3><strong>LaTeX</strong></h3>
 <p>The editor supports mathematical formulas via LaTeX.</p>
 <p>Inline formulas:</p>
-<pre><div class="pre-header"><span class="lang-badge">LaTeX</span></div><div class="pre-body"><code class="language-latex">E = mc^2
+<pre><div class="pre-header"><span class="lang-badge">LaTeX</span></div><div class="pre-body"><code class="language-LaTeX">E = mc^2
 </code></div></pre>
 <p>Block formulas:</p>
-<pre><div class="pre-header"><span class="lang-badge">LaTeX</span></div><div class="pre-body"><code class="language-latex">\int_{a}^{b} f(x)\,dx
+<pre><div class="pre-header"><span class="lang-badge">LaTeX</span></div><div class="pre-body"><code class="language-LaTeX">\int_{a}^{b} f(x)\,dx
 </code></div></pre>
-<h3>Mermaid</h3>
+<h3><strong>Mermaid</strong></h3>
 <p>Create diagrams directly inside the document.</p>
-<pre><div class="pre-header"><span class="lang-badge">mermaid</span></div><div class="pre-body"><code class="language-mermaid">flowchart TD
+<pre><div class="pre-header"><span class="lang-badge">Mermeid</span></div><div class="pre-body"><code class="language-Mermeid">flowchart TD
     A[Start] --&gt; B{Check}
     B --&gt;|Yes| C[Continue]
     B --&gt;|No| D[Finish]
 </code></div></pre>
-<h3>Code highlighting</h3>
+<h3><strong>Code highlighting</strong></h3>
 <p>Various programming languages are supported.</p>
 <pre><div class="pre-header"><span class="lang-badge">JavaScript</span></div><div class="pre-body"><code class="language-javascript">function hello() {
     console.log("Hello, world!");
 }
 </code></div></pre>
-<h3>Live preview</h3>
+<h3><strong>Live preview</strong></h3>
 <p>Instant real-time rendering of editing results.</p>
 <h2>Design</h2>
 <ul>
@@ -177,11 +196,10 @@
 </ul>
 <h2>Open source</h2>
 <p>The project is open source and welcomes community contributions.</p>
-<hr>
 <h2>Copyright</h2>
 <p>© 2026 Cybersecurity Department. MIT License.<br>GitHub: <a href="https://github.com/Rafych/ZlotyMD">https://github.com/Rafych/ZlotyMD</a></p>
 <hr>
-<p><em>This page was also created using Złoty MD.</em></p>
+<p>This page was also created using Złoty MD.</p>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
@@ -191,6 +209,7 @@ if(typeof mermaid!=='undefined'){
     themeVariables:{primaryColor:'#E8F0FE',primaryTextColor:'#1a1a2e',primaryBorderColor:'#4285F4',
     secondaryColor:'#E6F4EA',tertiaryColor:'#FEF7E0',background:'#ffffff',
     mainBkg:'#E8F0FE',nodeBorder:'#4285F4',lineColor:'#5F6368',
+    edgeLabelBackground:'#ffffff',
     noteBkgColor:'#FEF7E0',noteBorderColor:'#FBBC04'},
     flowchart:{htmlLabels:true,curve:'basis'},
     pie:{useMaxWidth:true}});
