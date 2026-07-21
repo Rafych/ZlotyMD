@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<!--
+  Złoty MD — Copyright (c) Cybersecurity Department(Отдел кибербезопасности). MIT License.
+
+  Third-party libraries used in this file:
+
+  marked v9.1.6
+    Copyright (c) 2011-2018, Christopher Jeffrey (https://github.com/markedjs/marked)
+    MIT License — https://github.com/markedjs/marked/blob/master/LICENSE
+
+  KaTeX v0.16.9
+    Copyright (c) 2013-2020 Khan Academy and other contributors
+    MIT License — https://github.com/KaTeX/KaTeX/blob/main/LICENSE
+
+  Mermaid v10.6.1
+    Copyright (c) 2014-2023 Knut Sveidqvist and contributors
+    MIT License — https://github.com/mermaid-js/mermaid/blob/develop/LICENSE
+
+  Google Sans
+    Copyright (c) Google Inc.
+    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
+
+  JetBrains Mono v2020
+    Copyright (c) 2020 JetBrains s.r.o.
+    SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Złoty MD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<div class="doodle" aria-hidden="true">
+  <svg style="top:4%;right:2%;animation:fA 6s ease-in-out infinite" width="89" height="89" viewBox="0 0 89 89">
+    <circle cx="44.5" cy="44.5" r="44.5" fill="#4285F4" opacity=".1"/>
+    <circle cx="44.5" cy="44.5" r="30" fill="none" stroke="#4285F4" stroke-width="2" opacity=".2"/>
+  </svg>
+  <svg style="top:19%;right:7%;animation:fB 8s ease-in-out infinite" width="55" height="55" viewBox="0 0 55 55">
+    <polygon points="27.5,4 52,51 3,51" fill="#EA4335" opacity=".13"/>
+    <polygon points="27.5,13 45,48 10,48" fill="none" stroke="#EA4335" stroke-width="1.5" opacity=".25"/>
+  </svg>
+  <svg style="top:38%;right:1%;animation:fC 7s ease-in-out infinite 1s" width="34" height="34" viewBox="0 0 34 34">
+    <rect x="5" y="5" width="24" height="24" rx="3" fill="#FBBC04" opacity=".18" transform="rotate(22 17 17)"/>
+    <rect x="5" y="5" width="24" height="24" rx="3" fill="none" stroke="#FBBC04" stroke-width="1.5" opacity=".3" transform="rotate(22 17 17)"/>
+  </svg>
+  <svg style="top:62%;right:4%;animation:fD 9s ease-in-out infinite .5s" width="55" height="55" viewBox="0 0 55 55">
+    <circle cx="27.5" cy="27.5" r="24" fill="none" stroke="#34A853" stroke-width="8" opacity=".15"/>
+  </svg>
+  <svg style="top:82%;right:2%;animation:fA 6.5s ease-in-out infinite 2s" width="34" height="34" viewBox="0 0 34 34">
+    <circle cx="8" cy="8" r="5" fill="#4285F4" opacity=".22"/>
+    <circle cx="22" cy="8" r="3" fill="#4285F4" opacity=".14"/>
+    <circle cx="8" cy="22" r="3" fill="#4285F4" opacity=".14"/>
+    <circle cx="22" cy="22" r="5" fill="#4285F4" opacity=".18"/>
+  </svg>
+  <svg style="bottom:4%;left:1%;animation:fB 7s ease-in-out infinite 1.5s" width="89" height="55" viewBox="0 0 89 55">
+    <path d="M44.5,0 A44.5,44.5 0 0,1 89,44.5 L0,44.5 Z" fill="#EA4335" opacity=".08"/>
+    <path d="M44.5,10 A34.5,34.5 0 0,1 79,44.5" fill="none" stroke="#EA4335" stroke-width="2" opacity=".18"/>
+  </svg>
+  <svg style="top:28%;left:.5%;animation:fC 8.5s ease-in-out infinite" width="34" height="34" viewBox="0 0 34 34">
+    <circle cx="17" cy="17" r="14" fill="#FBBC04" opacity=".18"/>
+    <circle cx="17" cy="17" r="7" fill="#FBBC04" opacity=".12"/>
+  </svg>
+  <svg style="top:52%;left:2%;animation:fD 6s ease-in-out infinite 3s" width="34" height="34" viewBox="0 0 34 34">
+    <rect x="7" y="7" width="20" height="20" rx="2" fill="#34A853" opacity=".18" transform="rotate(45 17 17)"/>
+  </svg>
+  <svg style="top:7%;left:4%;animation:fA 9s ease-in-out infinite .8s" width="55" height="21" viewBox="0 0 55 21">
+    <circle cx="8"  cy="10.5" r="8"   fill="#4285F4" opacity=".18"/>
+    <circle cx="22" cy="10.5" r="5.5" fill="#EA4335" opacity=".18"/>
+    <circle cx="34" cy="10.5" r="8"   fill="#FBBC04" opacity=".18"/>
+    <circle cx="48" cy="10.5" r="5.5" fill="#34A853" opacity=".18"/>
+  </svg>
+  <svg style="top:73%;right:9%;animation:fB 7.5s ease-in-out infinite 2.5s" width="55" height="55" viewBox="0 0 55 55">
+    <path d="M5,50 Q5,5 50,5" fill="none" stroke="#4285F4" stroke-width="3" stroke-linecap="round" opacity=".18"/>
+    <path d="M12,50 Q12,12 43,12" fill="none" stroke="#34A853" stroke-width="2" stroke-linecap="round" opacity=".13"/>
+  </svg>
+</div>
+
+<div class="app">
+
+  <header class="hd">
+    <div class="logo">
+      <div class="logo-grid">
+        <div class="ld" style="background:var(--gb)"></div>
+        <div class="ld" style="background:var(--gr)"></div>
+        <div class="ld" style="background:var(--gy)"></div>
+        <div class="ld" style="background:var(--gg)"></div>
+      </div>
+      <div class="logo-name">
+        <b>Z</b><b>ł</b><b>o</b><b>t</b><b>y</b><b>&nbsp;</b><b>M</b><b>D</b>
+      </div>
+    </div>
+
+    <div class="hsep"></div>
+
+    <div class="tb">
+      <div class="tg">
+        <button class="btn b" title="H1" onclick="ins('# ','')">H1</button>
+        <button class="btn b" title="H2" onclick="ins('## ','')">H2</button>
+        <button class="btn b" title="H3" onclick="ins('### ','')">H3</button>
+      </div>
+      <div class="tsep"></div>
+      <div class="tg">
+        <button class="btn r" title="Bold" data-i18n-title="ttBold" onclick="wr('**','**')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h5a3 3 0 0 0 0-6H4v6ZM4 8h5.5a3 3 0 0 1 0 6H4V8Z"/></svg>
+        </button>
+        <button class="btn r" title="Italic" data-i18n-title="ttItalic" onclick="wr('*','*')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="10" y1="2" x2="6" y2="14"/><line x1="7" y1="2" x2="12" y2="2"/><line x1="4" y1="14" x2="9" y2="14"/></svg>
+        </button>
+        <button class="btn r" title="Strikethrough" data-i18n-title="ttStrike" onclick="wr('~~','~~')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="8" x2="14" y2="8"/><path d="M5 5c0-1.4 1-2.4 3-2.4s3 1 3 2.4c0 1-.7 1.7-2.4 2"/><path d="M5 11c0 1.4 1 2.4 3 2.4s3-1 3-2.4"/></svg>
+        </button>
+        <button class="btn r" title="Inline code" data-i18n-title="ttCode" onclick="wr('`','`')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 4 1 8 5 12"/><polyline points="11 4 15 8 11 12"/></svg>
+        </button>
+      </div>
+      <div class="tsep"></div>
+      <div class="tg">
+        <button class="btn y" title="Link" data-i18n-title="ttLink" onclick="iLink()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 10.5a4 4 0 0 0 5.657 0l2-2a4 4 0 0 0-5.657-5.657l-1 1"/><path d="M9.5 5.5a4 4 0 0 0-5.657 0l-2 2a4 4 0 0 0 5.657 5.657l1-1"/></svg>
+        </button>
+        <button class="btn y" title="Image" data-i18n-title="ttImage" onclick="iImg()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="12" height="10" rx="2"/><circle cx="5.5" cy="6.5" r="1"/><polyline points="14 10 10 6 5 11"/></svg>
+        </button>
+        <button class="btn y" title="Blockquote" data-i18n-title="ttQuote" onclick="ins('> ','')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="4" x2="3" y2="12"/><line x1="6" y1="6" x2="13" y2="6"/><line x1="6" y1="10" x2="13" y2="10"/></svg>
+        </button>
+        <button class="btn y" title="Horizontal rule" data-i18n-title="ttHr" onclick="ins('\n---\n','')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="8" x2="14" y2="8"/><circle cx="2" cy="8" r="1.5" fill="currentColor" stroke="none"/><circle cx="14" cy="8" r="1.5" fill="currentColor" stroke="none"/></svg>
+        </button>
+      </div>
+      <div class="tsep"></div>
+      <div class="tg">
+        <button class="btn g" title="Bullet list" data-i18n-title="ttBullet" onclick="ins('- ','')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="3" cy="5" r="1.2" fill="currentColor" stroke="none"/><circle cx="3" cy="9" r="1.2" fill="currentColor" stroke="none"/><circle cx="3" cy="13" r="1.2" fill="currentColor" stroke="none"/><line x1="6" y1="5" x2="14" y2="5"/><line x1="6" y1="9" x2="14" y2="9"/><line x1="6" y1="13" x2="14" y2="13"/></svg>
+        </button>
+        <button class="btn g" title="Numbered list" data-i18n-title="ttOrdered" onclick="ins('1. ','')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="7" y1="5" x2="14" y2="5"/><line x1="7" y1="9" x2="14" y2="9"/><line x1="7" y1="13" x2="14" y2="13"/><text x="1.5" y="7" fill="currentColor" stroke="none" font-size="5.5" font-family="monospace" font-weight="bold">1</text><text x="1.5" y="11" fill="currentColor" stroke="none" font-size="5.5" font-family="monospace" font-weight="bold">2</text><text x="1.5" y="15" fill="currentColor" stroke="none" font-size="5.5" font-family="monospace" font-weight="bold">3</text></svg>
+        </button>
+        <button class="btn g" title="Task list" data-i18n-title="ttTask" onclick="ins('- [ ] ','')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="6" height="6" rx="1"/><polyline points="3.5 6.5 5 8 7.5 5"/><line x1="10" y1="6" x2="14" y2="6"/><rect x="2" y="11" width="6" height="4" rx="1" stroke-dasharray="1.5 1"/><line x1="10" y1="13" x2="14" y2="13"/></svg>
+        </button>
+        <button class="btn g" title="Code block" data-i18n-title="ttCodeBlock" onclick="ins('```\n','\n```')">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="10" rx="2"/><circle cx="3.5" cy="5.5" r=".7" fill="currentColor" stroke="none"/><circle cx="5.5" cy="5.5" r=".7" fill="currentColor" stroke="none"/><circle cx="7.5" cy="5.5" r=".7" fill="currentColor" stroke="none"/><line x1="3" y1="8.5" x2="6" y2="8.5"/><line x1="3" y1="10.5" x2="10" y2="10.5"/></svg>
+        </button>
+      </div>
+      <div class="tsep"></div>
+      <div class="tg">
+        <button class="btn b" title="Inline math ($...$)" data-i18n-title="ttMathInline" onclick="iLatexInline()" style="font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:-.5px">$</button>
+        <button class="btn b" title="Block math ($$...$$)" data-i18n-title="ttMathBlock" onclick="iLatexBlock()" style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:-.5px">$$</button>
+      </div>
+      <div class="tsep"></div>
+      <div class="tg">
+        <button class="btn r" title="Diff block (diff / diff_lang)" data-i18n-title="ttDiff" onclick="iDiff()" style="font-family:var(--mono);font-size:10px;font-weight:700">diff</button>
+      </div>
+      <div class="tsep"></div>
+      <div class="tg">
+        <button class="btn g" title="Mermaid diagram (```mermaid ... ```)" data-i18n-title="ttMermaid" onclick="iMermaid()" style="font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:-.3px">mmd</button>
+      </div>
+      <div class="tsep"></div>
+      <div class="tg">
+        <button class="btn b" title="カスタムテーブルを挿入" data-i18n-title="ttTable" onclick="openTblDialog()" style="font-family:var(--mono);font-size:10px;font-weight:700">tbl</button>
+      </div>
+    </div>
+
+    <div class="save-chip" id="saveChip">
+      <svg id="saveIcon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V5l-3-3z"/>
+        <path d="M11 2v3H5V2"/>
+        <rect x="4" y="9" width="8" height="4" rx=".5"/>
+      </svg>
+      <span id="saveLabel">—</span>
+    </div>
+
+    <div class="stats">
+      <div class="chip"><div class="dot" style="background:var(--gb)"></div><strong id="cc">0</strong><span data-i18n="chars">chars</span></div>
+      <div class="chip"><div class="dot" style="background:var(--gg)"></div><strong id="wc">0</strong><span data-i18n="words">words</span></div>
+      <div class="chip"><div class="dot" style="background:var(--gr)"></div><strong id="lc">0</strong><span data-i18n="lines">lines</span></div>
+    </div>
+
+    <button class="about-btn" id="downloadBtn" title="Download as HTML" data-i18n-title="downloadBtnTitle" onclick="openDownloadMenu()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 2v8M5 7l3 3 3-3"/>
+        <path d="M2 12h12"/>
+      </svg>
+    </button>
+
+    <button class="about-btn" id="docsBtn" title="Documents" data-i18n-title="docsBtnTitle" onclick="toggleDocsPanel()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 3.5A1.5 1.5 0 0 1 3.5 2h2.6l1 1.3H12.5A1.5 1.5 0 0 1 14 4.8v7.7a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 12.5v-9Z"/>
+      </svg>
+    </button>
+
+    <button class="about-btn" id="settingsBtn" title="Settings" data-i18n-title="settingsBtnTitle" onclick="toggleSettings()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="8" cy="8" r="2.2"/>
+        <path d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M2.93 2.93l1.06 1.06M12.01 12.01l1.06 1.06M2.93 13.07l1.06-1.06M12.01 3.99l1.06-1.06"/>
+      </svg>
+    </button>
+
+    <button class="about-btn" id="fontSizeBtn" title="Font size settings" data-i18n-title="fontSizeBtnTitle" onclick="toggleFontPanel()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <text x="1" y="12" font-size="9" font-weight="700" fill="currentColor" stroke="none" font-family="sans-serif">A</text>
+        <text x="8" y="14" font-size="7" font-weight="700" fill="currentColor" stroke="none" font-family="sans-serif">A</text>
+      </svg>
+    </button>
+
+    <div class="lang-wrap" id="langWrap">
+      <button class="lang-btn" id="langBtn" onclick="toggleLang()" title="Language" data-i18n-title="langBtnTitle">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="8" cy="8" r="6.5"/>
+          <path d="M8 1.5C8 1.5 5.5 4 5.5 8s2.5 6.5 2.5 6.5"/>
+          <path d="M8 1.5C8 1.5 10.5 4 10.5 8S8 14.5 8 14.5"/>
+          <line x1="1.5" y1="8" x2="14.5" y2="8"/>
+        </svg>
+        <span id="langCurrent">EN</span>
+      </button>
+      <div class="lang-drop" id="langDrop">
+        <button class="lang-opt" data-lang="en" onclick="setLang('en')">🇬🇧 English</button>
+        <button class="lang-opt" data-lang="ru" onclick="setLang('ru')">🇷🇺 Русский</button>
+        <button class="lang-opt" data-lang="ja" onclick="setLang('ja')">🇯🇵 日本語</button>
+        <button class="lang-opt" data-lang="de" onclick="setLang('de')">🇩🇪 Deutsch</button>
+        <button class="lang-opt" data-lang="pl" onclick="setLang('pl')">🇵🇱 Polski</button>
+        <button class="lang-opt" data-lang="el" onclick="setLang('el')">🇬🇷 Ελληνικά</button>
+      </div>
+    </div>
+
+    <button class="ai-btn" id="aiToggleBtn" title="AI Assistant" data-i18n-title="aiBtnTitle" onclick="toggleAiPanel()">
+      <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3.5"/><path d="M2 13.5c0-2.5 2.7-4 6-4s6 1.5 6 4"/><circle cx="12.5" cy="4.5" r="1.5" fill="var(--gb)" stroke="none"/></svg>
+    </button>
+
+    <button class="about-btn" id="aboutBtn" title="Credits &amp; Copyright" data-i18n-title="aboutBtnTitle" onclick="toggleAbout()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="8" cy="8" r="6.5"/>
+        <line x1="8" y1="7" x2="8" y2="11.5"/>
+        <circle cx="8" cy="4.5" r=".8" fill="currentColor" stroke="none"/>
+      </svg>
+    </button>
+  </header>
+
+  <div class="about-overlay" id="aboutOverlay" onclick="closeAbout()"></div>
+  <div class="about-modal" id="aboutModal">
+    <div class="about-header">
+      <div class="about-logo">
+        <div class="logo-grid" style="width:28px;height:28px;gap:4px">
+          <div class="ld" style="background:var(--gb)"></div>
+          <div class="ld" style="background:var(--gr)"></div>
+          <div class="ld" style="background:var(--gy)"></div>
+          <div class="ld" style="background:var(--gg)"></div>
+        </div>
+        <span class="about-app-name"><b style="color:var(--gb)">Z</b><b style="color:var(--gr)">ł</b><b style="color:var(--gy)">o</b><b style="color:var(--gg)">t</b><b style="color:var(--gb)">y</b>&nbsp;<b style="color:var(--mut)">M</b><b style="color:var(--txt)">D</b></span>
+      </div>
+      <button class="about-close" onclick="closeAbout()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="about-body">
+      <div class="about-row">
+        <span class="about-label" data-i18n="aboutAuthor">Author</span>
+        <span class="about-value">Отдел кибербезопасности</span>
+      </div>
+      <div class="about-row">
+        <span class="about-label" data-i18n="aboutCopyright">Copyright</span>
+        <span class="about-value">© <span id="aboutYear"></span> Отдел кибербезопасности</span>
+      </div>
+      <div class="about-row">
+        <span class="about-label" data-i18n="aboutVersion">Version</span>
+        <span class="about-value"><span class="about-ver">1.0.0(Beta)</span></span>
+      </div>
+      <div class="about-row">
+        <span class="about-label" data-i18n="aboutLicense">License</span>
+        <span class="about-value">MIT License</span>
+      </div>
+      <div class="about-divider"></div>
+      <p class="about-desc" data-i18n="aboutDesc">A Markdown editor with golden-ratio proportions and a Google-inspired color palette.</p>
+      <div class="about-divider"></div>
+      <div class="about-libs-head">
+        <span class="about-label" data-i18n="aboutLibraries">Libraries</span>
+      </div>
+      <ul class="about-lib-list">
+        <li class="about-lib-item">
+          <div class="about-lib-top">
+            <span class="about-lib-name">marked <span class="about-lib-ver">v9.1.6</span></span>
+            <span class="about-lib-badge">MIT</span>
+          </div>
+          <span class="about-lib-copy" data-i18n="aboutLibMarkedCopy">© 2011–2018 Christopher Jeffrey</span>
+        </li>
+        <li class="about-lib-item">
+          <div class="about-lib-top">
+            <span class="about-lib-name">KaTeX <span class="about-lib-ver">v0.16.9</span></span>
+            <span class="about-lib-badge">MIT</span>
+          </div>
+          <span class="about-lib-copy" data-i18n="aboutLibKatexCopy">© 2013–2020 Khan Academy and contributors</span>
+        </li>
+        <li class="about-lib-item">
+          <div class="about-lib-top">
+            <span class="about-lib-name">Mermaid <span class="about-lib-ver">v10.6.1</span></span>
+            <span class="about-lib-badge">MIT</span>
+          </div>
+          <span class="about-lib-copy" data-i18n="aboutLibMermaidCopy">© 2014–2023 Knut Sveidqvist and contributors</span>
+        </li>
+        <li class="about-lib-item">
+          <div class="about-lib-top">
+            <span class="about-lib-name">Google Sans</span>
+            <span class="about-lib-badge about-lib-badge-alt" data-i18n="aboutLibGoogleFontsBadge">SIL OFL 1.1</span>
+          </div>
+          <span class="about-lib-copy" data-i18n="aboutLibGoogleSansCopy">© Google Inc. — SIL Open Font License 1.1</span>
+        </li>
+        <li class="about-lib-item">
+          <div class="about-lib-top">
+            <span class="about-lib-name">JetBrains Mono</span>
+            <span class="about-lib-badge about-lib-badge-alt" data-i18n="aboutLibJetbrainsBadge">SIL OFL 1.1</span>
+          </div>
+          <span class="about-lib-copy" data-i18n="aboutLibJetbrainsCopy">© 2020 JetBrains s.r.o.</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="font-overlay" id="fontOverlay" onclick="closeFontPanel()"></div>
+  <div class="font-modal" id="fontModal">
+    <div class="font-modal-header">
+      <span data-i18n="fontPanelTitle">Font Sizes</span>
+      <button class="about-close" onclick="closeFontPanel()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="font-modal-body">
+      <div class="font-row">
+        <span class="font-label" data-i18n="fontH1">H1</span>
+        <div class="font-preview font-preview-h1" id="fp-h1">Aa</div>
+        <input type="range" class="font-slider" id="fs-h1" min="1" max="70" step="1" oninput="onFontSlider('h1',this.value)">
+        <input type="number" class="font-num" id="fn-h1" onchange="onFontNum('h1',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+        <span class="font-unit">px</span>
+      </div>
+      <div class="font-row">
+        <span class="font-label" data-i18n="fontH2">H2</span>
+        <div class="font-preview font-preview-h2" id="fp-h2">Aa</div>
+        <input type="range" class="font-slider" id="fs-h2" min="1" max="70" step="1" oninput="onFontSlider('h2',this.value)">
+        <input type="number" class="font-num" id="fn-h2" onchange="onFontNum('h2',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+        <span class="font-unit">px</span>
+      </div>
+      <div class="font-row">
+        <span class="font-label" data-i18n="fontH3">H3</span>
+        <div class="font-preview font-preview-h3" id="fp-h3">Aa</div>
+        <input type="range" class="font-slider" id="fs-h3" min="1" max="70" step="1" oninput="onFontSlider('h3',this.value)">
+        <input type="number" class="font-num" id="fn-h3" onchange="onFontNum('h3',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+        <span class="font-unit">px</span>
+      </div>
+      <div class="font-row">
+        <span class="font-label" data-i18n="fontBody">Body</span>
+        <div class="font-preview font-preview-body" id="fp-body">Aa</div>
+        <input type="range" class="font-slider" id="fs-body" min="1" max="70" step="1" oninput="onFontSlider('body',this.value)">
+        <input type="number" class="font-num" id="fn-body" onchange="onFontNum('body',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+        <span class="font-unit">px</span>
+      </div>
+      <div class="font-row">
+        <span class="font-label" data-i18n="fontLatex">LaTeX</span>
+        <div class="font-preview font-preview-latex" id="fp-latex" style="font-family:var(--mono)">∑∫</div>
+        <input type="range" class="font-slider" id="fs-latex" min="1" max="70" step="1" oninput="onFontSlider('latex',this.value)">
+        <input type="number" class="font-num" id="fn-latex" onchange="onFontNum('latex',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+        <span class="font-unit">px</span>
+      </div>
+      <div class="font-row">
+        <span class="font-label" data-i18n="fontMermaid">Mermaid</span>
+        <div class="font-preview font-preview-mmd" id="fp-mmd" style="font-family:var(--font)">◇</div>
+        <input type="range" class="font-slider" id="fs-mmd" min="1" max="70" step="1" oninput="onFontSlider('mmd',this.value)">
+        <input type="number" class="font-num" id="fn-mmd" onchange="onFontNum('mmd',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+        <span class="font-unit">px</span>
+      </div>
+      <div class="font-row">
+        <span class="font-label" data-i18n="fontCode">Code</span>
+        <div class="font-preview font-preview-code" id="fp-code" style="font-family:var(--mono)">fn()</div>
+        <input type="range" class="font-slider" id="fs-code" min="1" max="70" step="1" oninput="onFontSlider('code',this.value)">
+        <input type="number" class="font-num" id="fn-code" onchange="onFontNum('code',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+        <span class="font-unit">px</span>
+      </div>
+      <div class="font-actions">
+        <button class="font-reset-btn" onclick="resetFontSizes()" data-i18n="fontReset">Reset to Defaults</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="font-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
+  <div class="font-modal" id="settingsModal">
+    <div class="font-modal-header">
+      <span data-i18n="settingsTitle">Settings</span>
+      <button class="about-close" onclick="closeSettings()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="font-modal-body">
+
+      <div class="settings-section-title" data-i18n="settingsRenderTitle">HTML Rendering</div>
+
+      <div class="settings-row">
+        <div class="settings-row-text">
+          <div class="settings-row-label" data-i18n="settingsHtmlLabel">Inline HTML</div>
+          <div class="settings-row-desc" data-i18n="settingsHtmlDesc">Render all raw HTML tags in Markdown (e.g. &lt;div&gt;, &lt;span&gt;, &lt;table&gt;, &lt;iframe&gt;…). When off, all tags are escaped and shown as plain text.</div>
+        </div>
+        <button class="settings-toggle" id="htmlToggle" onclick="toggleHtmlRendering()" role="switch" aria-checked="false">
+          <span class="settings-toggle-knob"></span>
+        </button>
+      </div>
+
+      <div class="settings-preview-box" id="settingsPreviewBox">
+        <div class="settings-preview-label" data-i18n="settingsPreviewLabel">Preview</div>
+        <div class="settings-preview-output md" id="settingsPreviewOutput"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="font-overlay" id="docsOverlay" onclick="closeDocsPanel()"></div>
+  <div class="font-modal" id="docsModal" style="width:min(420px, calc(100vw - 2 * var(--s21)))">
+    <div class="font-modal-header">
+      <span data-i18n="docsPanelTitle">Documents</span>
+      <button class="about-close" onclick="closeDocsPanel()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="font-modal-body">
+      <div style="display:flex;gap:var(--s8)">
+        <button class="new-doc-btn" style="flex:1" onclick="onNewDocClick()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/></svg>
+          <span data-i18n="docsNewBtn">New Document</span>
+        </button>
+        <button class="new-doc-btn" style="flex:1" onclick="onOpenFileClick()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5.5A1.5 1.5 0 0 1 3.5 4h3l1.2 1.6h5.3A1.5 1.5 0 0 1 14.5 7v5A1.5 1.5 0 0 1 13 13.5H3A1.5 1.5 0 0 1 1.5 12V5.5z"/></svg>
+          <span data-i18n="docsOpenBtn">Open File</span>
+        </button>
+      </div>
+      <input type="file" id="fileOpenInput" accept=".zmd,.md,.markdown,text/markdown,text/plain" style="display:none" onchange="handleFileOpenInput(event)">
+      <div class="doc-list" id="docList"></div>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <div class="tabrow">
+      <button class="tab on" onclick="mTab('e',this)" data-i18n="tabEdit">Edit</button>
+      <button class="tab"    onclick="mTab('p',this)" data-i18n="tabPreview">Preview</button>
+    </div>
+  </div>
+
+  <div class="panes" id="panes">
+    <div class="ep v" id="eP">
+      <div class="pl"><span id="edBadge" class="badge bl">Markdown</span> <span data-i18n="editorLabel">Editor</span></div>
+      <textarea id="ed" placeholder="Type Markdown here…&#10;&#10;# Heading&#10;**bold** *italic* `code`"></textarea>
+    </div>
+    <div class="rz" id="rz"></div>
+    <div class="pp v" id="pP">
+      <div class="pl">
+        <span class="badge gn">HTML</span> <span data-i18n="previewLabel">Preview</span>
+        <button class="pv-pop-btn" id="pvPopBtn" title="Open in new window" data-i18n-title="pvPopBtnTitle" onclick="openPreviewWindow()" style="margin-left:auto">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7 3H3a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V9"/>
+            <polyline points="10 1 15 1 15 6"/>
+            <line x1="15" y1="1" x2="8" y2="8"/>
+          </svg>
+          <span data-i18n="openWindow">Open</span>
+        </button>
+
+      </div>
+      <div id="pv">
+        <div class="empty" id="emp">
+          <div class="ec-row">
+            <div class="ec" style="background:var(--gb)"></div>
+            <div class="ec" style="background:var(--gr)"></div>
+            <div class="ec" style="background:var(--gy)"></div>
+            <div class="ec" style="background:var(--gg)"></div>
+          </div>
+          <h3 data-i18n="emptyTitle">Preview Area</h3>
+          <p data-i18n="emptyDesc">Type Markdown in the editor to see a live preview</p>
+        </div>
+        <div class="md" id="mo" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- AI Panel -->
+    <div class="ai-panel" id="aiPanel">
+      <div class="ai-ph">
+        <div class="ai-ph-title">
+          <svg viewBox="0 0 16 16"><circle cx="8" cy="6" r="3.5"/><path d="M2 13.5c0-2.5 2.7-4 6-4s6 1.5 6 4"/><circle cx="12.5" cy="4.5" r="1.5" fill="var(--gb)" stroke="none"/></svg>
+          <span data-i18n="aiBtnTitle">AI Assistant</span>
+        </div>
+        <button class="ai-close" id="aiResetBtn" title="Reset conversation" data-i18n-title="aiResetBtnTitle" onclick="resetAiConversation()" style="margin-right:4px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        </button>
+        <button class="ai-close" onclick="toggleAiPanel()">
+          <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg>
+        </button>
+      </div>
+      <div class="ai-msgs" id="aiMsgs">
+        <div class="ai-bubble a" id="aiWelcomeMsg" data-i18n-html="aiWelcome">👋 こんにちは！MarkdownエディタのAIアシスタントです（Gemini）。<br><br>Google AI Studio のAPIキーを入力して「保存」してから、テキストを選択してプリセットを押すか、自由に質問してください。</div>
+      </div>
+      <div class="ai-footer">
+        <div class="ai-modelrow">
+          <select id="aiBackendSelect" onchange="onAiBackendChange()"></select>
+          <select id="aiModelSelect" onchange="onAiModelChange()"></select>
+        </div>
+        <div class="ai-keyrow">
+          <svg viewBox="0 0 16 16"><rect x="2" y="4" width="12" height="9" rx="1.5"/><line x1="5" y1="7" x2="11" y2="7"/><line x1="5" y1="10" x2="9" y2="10"/></svg>
+          <input id="aiKey" type="password" placeholder="Anthropic APIキーを入力…" data-i18n-placeholder="aiKeyPlaceholder">
+          <button class="ai-ksave" id="aiKsaveBtn" onclick="saveApiKey()" data-i18n="aiSaveBtn">保存</button>
+        </div>
+        <div class="ai-presets">
+          <button class="ai-preset" data-i18n="aiPresetContinue" data-i18n-prompt="aiPresetContinuePrompt" onclick="aiPreset(this.dataset.prompt,false)" data-prompt="続きを書いて">続きを書く</button>
+          <button class="ai-preset" data-i18n="aiPresetSummarize" data-i18n-prompt="aiPresetSummarizePrompt" onclick="aiPreset(this.dataset.prompt,true)" data-prompt="要約して">要約</button>
+          <button class="ai-preset" data-i18n="aiPresetTranslateNative" data-i18n-prompt="aiPresetTranslateNativePrompt" onclick="aiPreset(this.dataset.prompt,true)" data-prompt="Translate to Russian">To Russian</button>
+          <button class="ai-preset" data-i18n="aiPresetTranslateEn" data-i18n-prompt="aiPresetTranslateEnPrompt" onclick="aiPreset(this.dataset.prompt,true)" data-prompt="英語に翻訳して">英訳</button>
+          <button class="ai-preset" data-i18n="aiPresetProofread" data-i18n-prompt="aiPresetProofreadPrompt" onclick="aiPreset(this.dataset.prompt,true)" data-prompt="校正・修正して">校正</button>
+          <button class="ai-preset" data-i18n="aiPresetBullet" data-i18n-prompt="aiPresetBulletPrompt" onclick="aiPreset(this.dataset.prompt,true)" data-prompt="箇条書きに変換して">箇条書き</button>
+        </div>
+        <div class="ai-irow">
+          <textarea class="ai-tin" id="aiInput" placeholder="質問や指示を入力…" data-i18n-placeholder="aiInputPlaceholder" rows="1"
+            onkeydown="if((e=event).key==='Enter'&&!e.shiftKey){e.preventDefault();sendAi()}"
+            oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,80)+'px'"></textarea>
+          <button class="ai-send" id="aiSendBtn" onclick="sendAi()">
+            <svg viewBox="0 0 16 16"><line x1="14" y1="2" x2="2" y2="8"/><line x1="14" y1="2" x2="6" y2="14"/><line x1="2" y1="8" x2="6" y2="14"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  <!-- Download Format Selection Modal -->
+  <div class="dl-overlay" id="dlOverlay" onclick="closeDownloadMenu()"></div>
+  <div class="dl-modal" id="dlModal">
+    <div class="dl-title" data-i18n="dlTitle">Download as…</div>
+    <div class="dl-options">
+      <button class="dl-opt" id="dlOptHtml" type="button" onclick="toggleDlOpt('html')">
+        <span class="dl-opt-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8.5 6.5 12 13 4"/></svg></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+        </svg>
+        <span class="dl-opt-label">HTML</span>
+        <span class="dl-opt-desc" data-i18n="dlHtmlDesc">Standalone HTML file</span>
+      </button>
+      <button class="dl-opt" id="dlOptPdf" type="button" onclick="toggleDlOpt('pdf')">
+        <span class="dl-opt-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8.5 6.5 12 13 4"/></svg></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="9" y1="13" x2="15" y2="13"/>
+          <line x1="9" y1="17" x2="15" y2="17"/>
+        </svg>
+        <span class="dl-opt-label">PDF</span>
+        <span class="dl-opt-desc" data-i18n="dlPdfDesc">Save via print dialog</span>
+      </button>
+      <button class="dl-opt" id="dlOptZmd" type="button" onclick="toggleDlOpt('zmd')">
+        <span class="dl-opt-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8.5 6.5 12 13 4"/></svg></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="8" y1="13" x2="16" y2="13"/>
+          <line x1="8" y1="17" x2="13" y2="17"/>
+        </svg>
+        <span class="dl-opt-label">ZMD</span>
+        <span class="dl-opt-desc" data-i18n="dlZmdDesc">Markdown + editor metadata</span>
+      </button>
+      <button class="dl-opt" id="dlOptMd" type="button" onclick="toggleDlOpt('md')">
+        <span class="dl-opt-check"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8.5 6.5 12 13 4"/></svg></span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <span class="dl-opt-label">MD</span>
+        <span class="dl-opt-desc" data-i18n="dlMdDesc">Standard Markdown file</span>
+      </button>
+    </div>
+    <div class="dl-footer">
+      <span class="dl-hint" id="dlHint" data-i18n="dlHint">Select one or more formats</span>
+      <button class="dl-confirm-btn" id="dlConfirmBtn" type="button" onclick="executeDlDownload()" disabled data-i18n="dlDownloadBtn">Download</button>
+    </div>
+  </div>
+
+
+  <div class="restore-toast" id="restoreToast">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><polyline points="2 9 6 13 14 4"/></svg>
+    <span id="toastMsg">Content restored from saved session</span>
+    <button onclick="document.getElementById('restoreToast').classList.remove('show')">✕</button>
+  </div>
+</div>
+
+</div>
+
+<!-- Table Insert Dialog -->
+<div class="tbl-overlay" id="tblOverlay" onclick="if(event.target===this)closeTblDialog()">
+  <div class="tbl-dlg">
+    <div class="tbl-dlg-hd">
+      <h3 data-i18n="tblDialogTitle">カスタムテーブルを挿入</h3>
+      <button class="about-close" onclick="closeTblDialog()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="tbl-dlg-bd">
+      <div class="tbl-row">
+        <span class="tbl-lbl" data-i18n="tblColsLabel">列数</span>
+        <input class="tbl-num" id="tblCols" type="number" value="3" min="1" max="10">
+      </div>
+      <div class="tbl-row">
+        <span class="tbl-lbl" data-i18n="tblRowsLabel">行数（ヘッダー除く）</span>
+        <input class="tbl-num" id="tblRows" type="number" value="3" min="1" max="20">
+      </div>
+      <div class="tbl-chks">
+        <label class="tbl-chk"><input type="checkbox" id="tblStripe" checked> <span data-i18n="tblStripeLabel">ストライプ</span></label>
+        <label class="tbl-chk"><input type="checkbox" id="tblBorder"> <span data-i18n="tblBorderLabel">枠線</span></label>
+      </div>
+    </div>
+    <div class="tbl-dlg-ft">
+      <button class="tbl-cancel" onclick="closeTblDialog()" data-i18n="tblCancelBtn">キャンセル</button>
+      <button class="tbl-ok" onclick="insertCustomTable()" data-i18n="tblInsertBtn">挿入</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI Edit Diff Review Modal -->
+<div class="diffm-overlay" id="diffmOverlay" onclick="if(event.target===this)closeDiffModal()">
+  <div class="diffm-dlg">
+    <div class="tbl-dlg-hd">
+      <h3 data-i18n="aiDiffModalTitle">編集内容の確認</h3>
+      <button class="about-close" onclick="closeDiffModal()">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="diffm-body" id="diffmBody"></div>
+    <div class="diff-actions">
+      <button class="diff-btn accept" id="diffmAcceptBtn" data-i18n="aiAcceptBtn">✓ 適用</button>
+      <button class="diff-btn reject" id="diffmRejectBtn" data-i18n="aiRejectBtn">✕ 破棄</button>
+    </div>
+  </div>
+</div>
+
+
+<script src="js/app.js"></script>
+</body>
+</html>
