@@ -1119,6 +1119,19 @@ const rz = document.getElementById('rz'),
 let drag = false,
   sx,
   sw;
+function _aiPanelReservedWidth() {
+  const ai = document.getElementById('aiPanel');
+  return ai && ai.classList.contains('open') ? ai.getBoundingClientRect().width : 0;
+}
+function clampEpFlex() {
+  const full = document.getElementById('panes').getBoundingClientRect().width;
+  const reserved = 5 + _aiPanelReservedWidth();
+  const available = full - reserved;
+  if (available <= 0 || full <= 0) return;
+  const cur = eP.getBoundingClientRect().width;
+  const w = Math.max(200, Math.min(available - 200, cur));
+  eP.style.flex = `0 0 ${((w / full) * 100).toFixed(3)}%`;
+}
 rz.addEventListener('mousedown', e => {
   drag = true;
   sx = e.clientX;
@@ -1129,10 +1142,12 @@ rz.addEventListener('mousedown', e => {
 });
 document.addEventListener('mousemove', e => {
   if (!drag) return;
-  const tot = document.getElementById('panes').getBoundingClientRect().width - 5;
+  const full = document.getElementById('panes').getBoundingClientRect().width;
+  const tot = full - 5 - _aiPanelReservedWidth();
   const w = Math.max(200, Math.min(tot - 200, sw + (e.clientX - sx)));
-  eP.style.flex = `0 0 ${((w / tot) * 100).toFixed(3)}%`;
+  eP.style.flex = `0 0 ${((w / full) * 100).toFixed(3)}%`;
 });
+window.addEventListener('resize', clampEpFlex);
 document.addEventListener('mouseup', () => {
   if (!drag) return;
   drag = false;
@@ -1199,6 +1214,12 @@ const LANGS = {
     aiResetConfirm: 'Clear the conversation history? This cannot be undone.',
     aiSystemPrompt:
       'You are an AI assistant that helps write and edit Markdown documents. Use Markdown syntax appropriately and give helpful answers. Keep responses concise and practical. The user has a deliberate personal notation style, so avoid rewriting it more than necessary — instead improve readability with targeted techniques, such as consolidating math expressions into LaTeX.',
+    aiAttachBtnTitle: 'Attach file',
+    aiRemoveFileTitle: 'Remove file',
+    aiFileTooLarge: '⚠ File "{name}" is too large (max {max}).',
+    aiFileReadError: '⚠ Could not read file "{name}".',
+    aiUnsupportedFile: '⚠ Unsupported file type: "{name}".',
+    aiTooManyFiles: '⚠ Max {max} files per message.',
     aboutAuthor: 'Author',
     aboutCopyright: 'Copyright',
     aboutVersion: 'Version',
@@ -1440,6 +1461,12 @@ sequenceDiagram
     aiResetConfirm: 'Очистить историю диалога? Это действие необратимо.',
     aiSystemPrompt:
       'Вы — ИИ-ассистент, помогающий писать и редактировать документы в формате Markdown. Используйте синтаксис Markdown уместно и давайте полезные ответы. Отвечайте кратко и по делу. У пользователя есть осознанный, свой стиль оформления, поэтому не переписывайте его без необходимости — вместо этого улучшайте читаемость точечными приёмами, например, оформляя формулы в LaTeX.',
+    aiAttachBtnTitle: 'Прикрепить файл',
+    aiRemoveFileTitle: 'Удалить файл',
+    aiFileTooLarge: '⚠ Файл «{name}» слишком большой (макс. {max}).',
+    aiFileReadError: '⚠ Не удалось прочитать файл «{name}».',
+    aiUnsupportedFile: '⚠ Неподдерживаемый тип файла: «{name}».',
+    aiTooManyFiles: '⚠ Не более {max} файлов на одно сообщение.',
     aboutAuthor: 'Автор',
     aboutCopyright: 'Авторское право',
     aboutVersion: 'Версия',
@@ -1671,6 +1698,12 @@ sequenceDiagram
     aiResetConfirm: '会話履歴を削除しますか？この操作は元に戻せません。',
     aiSystemPrompt:
       'あなたはMarkdownドキュメントの執筆・編集を支援するAIアシスタントです。Markdown記法を適切に使用して、役立つ回答を提供してください。返答は簡潔かつ実用的にしてください。ユーザーの記法にはこだわりがあるためあまり変えずに、数式をLaTeXにまとめるなどの手法で見やすくしてください。',
+    aiAttachBtnTitle: 'ファイルを添付',
+    aiRemoveFileTitle: 'ファイルを削除',
+    aiFileTooLarge: '⚠ ファイル「{name}」が大きすぎます（最大 {max}）。',
+    aiFileReadError: '⚠ ファイル「{name}」を読み込めませんでした。',
+    aiUnsupportedFile: '⚠ 対応していないファイル形式です：「{name}」。',
+    aiTooManyFiles: '⚠ 1メッセージにつき最大 {max} 件までです。',
     aboutAuthor: '作者',
     aboutCopyright: '著作権',
     aboutVersion: 'バージョン',
@@ -1915,6 +1948,12 @@ sequenceDiagram
     aiResetConfirm: 'Gesprächsverlauf löschen? Dies kann nicht rückgängig gemacht werden.',
     aiSystemPrompt:
       'Du bist ein KI-Assistent, der beim Schreiben und Bearbeiten von Markdown-Dokumenten hilft. Verwende die Markdown-Syntax angemessen und gib hilfreiche Antworten. Halte die Antworten prägnant und praktisch. Der Nutzer hat einen bewussten eigenen Notationsstil, den du möglichst nicht unnötig veränderst — verbessere die Lesbarkeit stattdessen gezielt, etwa indem du Formeln einheitlich in LaTeX fasst.',
+    aiAttachBtnTitle: 'Datei anhängen',
+    aiRemoveFileTitle: 'Datei entfernen',
+    aiFileTooLarge: '⚠ Datei „{name}" ist zu groß (max. {max}).',
+    aiFileReadError: '⚠ Datei „{name}" konnte nicht gelesen werden.',
+    aiUnsupportedFile: '⚠ Nicht unterstützter Dateityp: „{name}".',
+    aiTooManyFiles: '⚠ Max. {max} Dateien pro Nachricht.',
     aboutAuthor: 'Autor',
     aboutCopyright: 'Urheberrecht',
     aboutVersion: 'Version',
@@ -2146,6 +2185,12 @@ sequenceDiagram
     aiResetConfirm: 'Wyczyścić historię rozmowy? Tej operacji nie można cofnąć.',
     aiSystemPrompt:
       'Jesteś asystentem AI pomagającym pisać i edytować dokumenty Markdown. Używaj odpowiednio składni Markdown i udzielaj pomocnych odpowiedzi. Odpowiadaj zwięźle i praktycznie. Użytkownik ma swój przemyślany styl zapisu, więc nie zmieniaj go bez potrzeby — zamiast tego popraw czytelność punktowymi technikami, np. ujednolicając wzory matematyczne w LaTeX.',
+    aiAttachBtnTitle: 'Załącz plik',
+    aiRemoveFileTitle: 'Usuń plik',
+    aiFileTooLarge: '⚠ Plik „{name}" jest za duży (maks. {max}).',
+    aiFileReadError: '⚠ Nie udało się odczytać pliku „{name}".',
+    aiUnsupportedFile: '⚠ Nieobsługiwany typ pliku: „{name}".',
+    aiTooManyFiles: '⚠ Maks. {max} plików na wiadomość.',
     aboutAuthor: 'Autor',
     aboutCopyright: 'Prawa autorskie',
     aboutVersion: 'Wersja',
@@ -2376,6 +2421,12 @@ sequenceDiagram
     aiResetConfirm: 'Διαγραφή ιστορικού συνομιλίας; Δεν μπορεί να αναιρεθεί.',
     aiSystemPrompt:
       'Είσαι ένας βοηθός AI που βοηθά στη συγγραφή και επεξεργασία εγγράφων Markdown. Χρησιμοποίησε κατάλληλα τη σύνταξη Markdown και δώσε χρήσιμες απαντήσεις. Κράτησε τις απαντήσεις σύντομες και πρακτικές. Ο χρήστης έχει το δικό του σκόπιμο στιλ σημειογραφίας, γι αυτό απόφυγε να το αλλάζεις χωρίς λόγο — αντί αυτού βελτίωσε την αναγνωσιμότητα με στοχευμένες τεχνικές, όπως η ενοποίηση μαθηματικών τύπων σε LaTeX.',
+    aiAttachBtnTitle: 'Επισύναψη αρχείου',
+    aiRemoveFileTitle: 'Αφαίρεση αρχείου',
+    aiFileTooLarge: '⚠ Το αρχείο «{name}» είναι πολύ μεγάλο (μέγ. {max}).',
+    aiFileReadError: '⚠ Δεν ήταν δυνατή η ανάγνωση του αρχείου «{name}».',
+    aiUnsupportedFile: '⚠ Μη υποστηριζόμενος τύπος αρχείου: «{name}».',
+    aiTooManyFiles: '⚠ Έως {max} αρχεία ανά μήνυμα.',
     aboutAuthor: 'Συγγραφέας',
     aboutCopyright: 'Πνευματικά Δικαιώματα',
     aboutVersion: 'Έκδοση',
@@ -2555,15 +2606,15 @@ sequenceDiagram
 // Список доступных ИИ-моделей по бэкендам (Anthropic / Gemini)
 const AI_MODELS = {
   anthropic: [
-    { id: 'claude-sonnet-5', label: 'Claude Sonnet 5' },
-    { id: 'claude-opus-4-8', label: 'Claude Opus 4.8' },
-    { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5' }
+    { id: 'claude-sonnet-5', label: 'Claude Sonnet 5', attach: true },
+    { id: 'claude-opus-4-8', label: 'Claude Opus 4.8', attach: true },
+    { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5', attach: true }
   ],
   gemini: [
-    { id: 'gemini-3.1-pro', label: 'Gemini 3.1 Pro' },
-    { id: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash' },
-    { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-    { id: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite' }
+    { id: 'gemini-3.1-pro', label: 'Gemini 3.1 Pro', attach: true },
+    { id: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash', attach: true },
+    { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', attach: true },
+    { id: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite', attach: false }
   ]
 };
 const AI_BACKEND_LABEL = { anthropic: 'Claude', gemini: 'Gemini' };
@@ -2596,6 +2647,7 @@ function _populateAiSelects() {
   mSel.innerHTML = AI_MODELS[AI_BACKEND].map(
     m => `<option value="${m.id}"${m.id === AI_MODEL ? ' selected' : ''}>${m.label}</option>`
   ).join('');
+  _updateAiAttachAvailability();
 }
 
 // Обновляет приветственный текст ИИ-панели с учётом выбранной модели
@@ -2613,6 +2665,23 @@ function _updateAiWelcomeText() {
       providerName
     );
   }
+}
+
+function _currentAiModelSupportsAttach() {
+  const list = AI_MODELS[AI_BACKEND] || [];
+  const found = list.find(x => x.id === AI_MODEL);
+  return found ? found.attach !== false : true;
+}
+
+function _updateAiAttachAvailability() {
+  const btn = document.getElementById('aiAttachBtn');
+  const input = document.getElementById('aiFileInput');
+  const supported = _currentAiModelSupportsAttach();
+  if (btn) {
+    btn.disabled = !supported;
+    btn.classList.toggle('ai-attach-disabled', !supported);
+  }
+  if (input) input.disabled = !supported;
 }
 
 // Обработчик смены бэкенда ИИ (Anthropic/Gemini) в настройках
@@ -2636,6 +2705,7 @@ function onAiBackendChange() {
   _populateAiSelects();
   _loadAiKeyForBackend();
   _updateAiWelcomeText();
+  _updateAiAttachAvailability();
 }
 
 // Обработчик смены конкретной модели ИИ
@@ -2645,6 +2715,7 @@ function onAiModelChange() {
   try {
     localStorage.setItem('zmd_ai_model_' + AI_BACKEND, AI_MODEL);
   } catch (_) {}
+  _updateAiAttachAvailability();
 }
 
 // Загружает сохранённый API-ключ для текущего выбранного бэкенда (отдельно для Claude и Gemini, хранится в IndexedDB)
@@ -3663,6 +3734,235 @@ function _aiSystem(isEdit) {
 
 let _aiConvHistory = [];
 
+
+let _aiPendingAttachments = [];
+
+const AI_MAX_ATTACHMENTS = 6;
+const AI_MAX_BINARY_SIZE = 10 * 1024 * 1024; // изображения/PDF — до 10 МБ
+const AI_MAX_TEXT_SIZE = 2 * 1024 * 1024; // текстовые файлы — до 2 МБ
+
+const AI_TEXT_EXTENSIONS = new Set([
+  'txt', 'md', 'markdown', 'mdx', 'csv', 'tsv', 'json', 'js', 'ts', 'jsx', 'tsx',
+  'py', 'html', 'htm', 'css', 'scss', 'xml', 'yaml', 'yml', 'log', 'ini', 'conf',
+  'sh', 'c', 'cpp', 'h', 'java', 'go', 'rs', 'rb', 'php', 'sql', 'tex', 'bib'
+]);
+
+function _aiFileKind(file) {
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  if (file.type.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
+    return 'image';
+  }
+  if (file.type === 'application/pdf' || ext === 'pdf') return 'pdf';
+  if (
+    file.type.startsWith('text/') ||
+    file.type === 'application/json' ||
+    AI_TEXT_EXTENSIONS.has(ext)
+  ) {
+    return 'text';
+  }
+  return null;
+}
+
+function _aiFormatSize(bytes) {
+  if (bytes >= 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+  if (bytes >= 1024) return Math.round(bytes / 1024) + ' KB';
+  return bytes + ' B';
+}
+
+function _readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
+function _readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+    r.readAsText(file);
+  });
+}
+
+async function _addAiAttachment(file) {
+  const t = LANGS[currentLang] || LANGS['en'];
+  if (!_currentAiModelSupportsAttach()) return;
+  if (_aiPendingAttachments.length >= AI_MAX_ATTACHMENTS) {
+    _aiAddMsg(t.aiTooManyFiles.replace('{max}', AI_MAX_ATTACHMENTS), 'thinking');
+    return;
+  }
+  const kind = _aiFileKind(file);
+  if (!kind) {
+    _aiAddMsg(t.aiUnsupportedFile.replace('{name}', file.name), 'thinking');
+    return;
+  }
+  const maxSize = kind === 'text' ? AI_MAX_TEXT_SIZE : AI_MAX_BINARY_SIZE;
+  if (file.size > maxSize) {
+    _aiAddMsg(
+      t.aiFileTooLarge.replace('{name}', file.name).replace('{max}', _aiFormatSize(maxSize)),
+      'thinking'
+    );
+    return;
+  }
+  try {
+    let data, mediaType;
+    if (kind === 'text') {
+      data = await _readFileAsText(file);
+      mediaType = 'text/plain';
+    } else {
+      const dataUrl = await _readFileAsDataURL(file);
+      const m = /^data:([^;]+);base64,([\s\S]*)$/.exec(dataUrl || '');
+      mediaType = (m && m[1]) || file.type || (kind === 'pdf' ? 'application/pdf' : 'image/png');
+      data = m ? m[2] : '';
+    }
+    _aiPendingAttachments.push({
+      id: 'f' + Date.now() + Math.random().toString(36).slice(2),
+      name: file.name,
+      size: file.size,
+      kind,
+      mediaType,
+      data
+    });
+    _renderAiPendingAttachments();
+  } catch (_) {
+    _aiAddMsg(t.aiFileReadError.replace('{name}', file.name), 'thinking');
+  }
+}
+
+async function handleAiFileSelect(event) {
+  const files = Array.from(event.target.files || []);
+  event.target.value = '';
+  for (const file of files) {
+    await _addAiAttachment(file);
+  }
+}
+
+async function handleAiInputPaste(event) {
+  const items = Array.from(event.clipboardData?.items || []);
+  const files = items
+    .filter(it => it.kind === 'file')
+    .map(it => it.getAsFile())
+    .filter(Boolean);
+  if (!files.length) return;
+  event.preventDefault();
+  for (const file of files) {
+    await _addAiAttachment(file);
+  }
+}
+
+function handleAiDragOver(event) {
+  event.preventDefault();
+  if (!_currentAiModelSupportsAttach()) return;
+  document.getElementById('aiPanel')?.classList.add('ai-dragover');
+}
+function handleAiDragLeave(event) {
+  if (event.target.id === 'aiPanel') {
+    document.getElementById('aiPanel')?.classList.remove('ai-dragover');
+  }
+}
+async function handleAiDrop(event) {
+  event.preventDefault();
+  document.getElementById('aiPanel')?.classList.remove('ai-dragover');
+  const files = Array.from(event.dataTransfer?.files || []);
+  for (const file of files) {
+    await _addAiAttachment(file);
+  }
+}
+
+function removeAiAttachment(id) {
+  _aiPendingAttachments = _aiPendingAttachments.filter(a => a.id !== id);
+  _renderAiPendingAttachments();
+}
+
+function _clearAiAttachments() {
+  _aiPendingAttachments = [];
+  _renderAiPendingAttachments();
+}
+
+function _buildAiAttachmentChip(a, removable) {
+  const t = LANGS[currentLang] || LANGS['en'];
+  const chip = document.createElement('div');
+  chip.className = 'ai-chip';
+  if (a.kind === 'image') {
+    const img = document.createElement('img');
+    img.className = 'ai-chip-thumb';
+    img.src = `data:${a.mediaType};base64,${a.data}`;
+    img.alt = a.name;
+    chip.appendChild(img);
+  } else {
+    const icon = document.createElement('span');
+    icon.className = 'ai-chip-icon';
+    icon.textContent = a.kind === 'pdf' ? '📄' : '📝';
+    chip.appendChild(icon);
+  }
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'ai-chip-name';
+  nameSpan.textContent = a.name;
+  nameSpan.title = `${a.name} (${_aiFormatSize(a.size || 0)})`;
+  chip.appendChild(nameSpan);
+  if (removable) {
+    const rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'ai-chip-rm';
+    rm.title = t.aiRemoveFileTitle;
+    rm.textContent = '×';
+    rm.onclick = () => removeAiAttachment(a.id);
+    chip.appendChild(rm);
+  }
+  return chip;
+}
+
+function _renderAiPendingAttachments() {
+  const wrap = document.getElementById('aiAttachments');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  if (!_aiPendingAttachments.length) {
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = 'flex';
+  _aiPendingAttachments.forEach(a => wrap.appendChild(_buildAiAttachmentChip(a, true)));
+}
+
+function _aiBuildAnthropicContent(text, attachments) {
+  if (!attachments || !attachments.length) return text;
+  const blocks = attachments.map(a => {
+    if (a.kind === 'image') {
+      return { type: 'image', source: { type: 'base64', media_type: a.mediaType, data: a.data } };
+    }
+    if (a.kind === 'pdf') {
+      return {
+        type: 'document',
+        source: { type: 'base64', media_type: 'application/pdf', data: a.data },
+        title: a.name
+      };
+    }
+    return {
+      type: 'document',
+      source: { type: 'text', media_type: 'text/plain', data: a.data },
+      title: a.name
+    };
+  });
+  if (text) blocks.push({ type: 'text', text });
+  return blocks;
+}
+
+function _aiBuildGeminiParts(text, attachments) {
+  const parts = [];
+  (attachments || []).forEach(a => {
+    if (a.kind === 'image' || a.kind === 'pdf') {
+      parts.push({ inlineData: { mimeType: a.mediaType, data: a.data } });
+    } else {
+      parts.push({ text: `[Attached file: ${a.name}]\n\`\`\`\n${a.data}\n\`\`\`` });
+    }
+  });
+  if (text) parts.push({ text });
+  return parts;
+}
+
 // Префикс ключа истории переписки с ИИ — своя история для каждого документа
 const AI_HISTORY_PREFIX = 'zmd_ai_history_';
 
@@ -3701,7 +4001,18 @@ function _refreshAiChatPanel() {
     _aiConvHistory.forEach(m => {
       const d = document.createElement('div');
       d.className = 'ai-bubble ' + (m.role === 'user' ? 'u' : 'a');
-      d.textContent = m.text;
+      if (m.attachments && m.attachments.length) {
+        const row = document.createElement('div');
+        row.className = 'ai-attachments';
+        m.attachments.forEach(a => row.appendChild(_buildAiAttachmentChip(a, false)));
+        d.appendChild(row);
+      }
+      if (m.text) {
+        const textNode = document.createElement('div');
+        textNode.style.whiteSpace = 'pre-wrap';
+        textNode.textContent = m.text;
+        d.appendChild(textNode);
+      }
       msgs.appendChild(d);
     });
     msgs.scrollTop = msgs.scrollHeight;
@@ -3905,13 +4216,25 @@ function toggleAiPanel() {
   const open = p.classList.toggle('open');
   b.classList.toggle('on', open);
   if (open) document.getElementById('aiInput').focus();
+  setTimeout(clampEpFlex, 260);
 }
 
-function _aiAddMsg(text, role) {
+function _aiAddMsg(text, role, attachments) {
   const msgs = document.getElementById('aiMsgs');
   const d = document.createElement('div');
   d.className = 'ai-bubble ' + role;
-  d.textContent = text;
+  if (attachments && attachments.length) {
+    const row = document.createElement('div');
+    row.className = 'ai-attachments';
+    attachments.forEach(a => row.appendChild(_buildAiAttachmentChip(a, false)));
+    d.appendChild(row);
+  }
+  if (text) {
+    const textNode = document.createElement('div');
+    textNode.style.whiteSpace = 'pre-wrap';
+    textNode.textContent = text;
+    d.appendChild(textNode);
+  }
   msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
   return d;
@@ -3958,13 +4281,13 @@ function aiPreset(prompt, isEditPreset) {
 
 
 // Отправляет запрос к Gemini API и возвращает текст ответа
-async function _callGemini(fullPrompt, isEdit) {
+async function _callGemini(fullPrompt, isEdit, attachments) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${_aiKey}`;
   const contents = _aiConvHistory.map(m => ({
     role: m.role === 'user' ? 'user' : 'model',
-    parts: [{ text: m.text }]
+    parts: _aiBuildGeminiParts(m.text, m.attachments)
   }));
-  contents.push({ role: 'user', parts: [{ text: fullPrompt }] });
+  contents.push({ role: 'user', parts: _aiBuildGeminiParts(fullPrompt, attachments) });
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -3987,12 +4310,12 @@ async function _callGemini(fullPrompt, isEdit) {
 }
 
 // Отправляет запрос к Anthropic API и возвращает текст ответа
-async function _callAnthropic(fullPrompt, isEdit) {
+async function _callAnthropic(fullPrompt, isEdit, attachments) {
   const messages = _aiConvHistory.map(m => ({
     role: m.role === 'user' ? 'user' : 'assistant',
-    content: m.text
+    content: _aiBuildAnthropicContent(m.text, m.attachments)
   }));
-  messages.push({ role: 'user', content: fullPrompt });
+  messages.push({ role: 'user', content: _aiBuildAnthropicContent(fullPrompt, attachments) });
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -4021,7 +4344,8 @@ async function _callAnthropic(fullPrompt, isEdit) {
 async function sendAi() {
   const input = document.getElementById('aiInput');
   const prompt = input.value.trim();
-  if (!prompt) return;
+  const attachments = _aiPendingAttachments.slice();
+  if (!prompt && !attachments.length) return;
 
   const t = LANGS[currentLang] || LANGS['en'];
 
@@ -4041,7 +4365,12 @@ async function sendAi() {
 
   input.value = '';
   input.style.height = '34px';
-  _aiAddMsg(prompt + (selected ? t.aiSelectedSuffix.replace('{n}', selected.length) : ''), 'u');
+  _clearAiAttachments();
+  _aiAddMsg(
+    prompt + (selected ? t.aiSelectedSuffix.replace('{n}', selected.length) : ''),
+    'u',
+    attachments
+  );
 
   const btn = document.getElementById('aiSendBtn');
   btn.disabled = true;
@@ -4050,15 +4379,19 @@ async function sendAi() {
   try {
     const text =
       AI_BACKEND === 'gemini'
-        ? await _callGemini(fullPrompt, isEdit)
-        : await _callAnthropic(fullPrompt, isEdit);
+        ? await _callGemini(fullPrompt, isEdit, attachments)
+        : await _callAnthropic(fullPrompt, isEdit, attachments);
     thinking.remove();
     if (isEdit) {
       _aiOfferEdit(selS, selE, selected, text);
     } else {
       _aiAddInsertableMsg(text, selS);
     }
-    _aiConvHistory.push({ role: 'user', text: fullPrompt });
+    _aiConvHistory.push({
+      role: 'user',
+      text: fullPrompt,
+      attachments: attachments.length ? attachments : undefined
+    });
     _aiConvHistory.push({ role: 'model', text });
     _saveAiHistory();
   } catch (err) {
