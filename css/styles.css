@@ -2399,6 +2399,120 @@ body {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+/* Кнопка прикрепления файла рядом с полем ввода */
+.ai-attach {
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid var(--bord);
+  border-radius: var(--r8);
+  background: var(--bg);
+  color: var(--mut);
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color 0.12s,
+    color 0.12s,
+    background 0.12s,
+    transform 0.1s;
+}
+.ai-attach:hover {
+  border-color: var(--gb);
+  color: var(--gb);
+  background: var(--gbt);
+  transform: translateY(-1px);
+}
+.ai-attach:active {
+  transform: scale(0.93);
+}
+.ai-attach:disabled,
+.ai-attach.ai-attach-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  color: var(--mut);
+  pointer-events: none;
+}
+.ai-attach:disabled:hover,
+.ai-attach.ai-attach-disabled:hover {
+  border-color: var(--bord);
+  color: var(--mut);
+  background: var(--bg);
+  transform: none;
+}
+.ai-attach svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ai-panel.ai-dragover .ai-irow {
+  outline: 2px dashed var(--gb);
+  outline-offset: 2px;
+  border-radius: var(--r8);
+}
+/* Чипы прикреплённых файлов (в поле ввода и в пузырях сообщений) */
+.ai-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s5);
+}
+.ai-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 140px;
+  padding: 3px var(--s5) 3px 3px;
+  border: 1px solid var(--bord);
+  border-radius: var(--r34);
+  background: var(--surf);
+  font-size: 10px;
+  color: var(--mut);
+}
+.ai-bubble .ai-chip {
+  background: var(--bg);
+}
+.ai-chip-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r5);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.ai-chip-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+.ai-chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ai-chip-rm {
+  border: none;
+  background: transparent;
+  color: var(--sub);
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+.ai-chip-rm:hover {
+  color: var(--gr);
+}
+.ai-bubble > .ai-attachments {
+  margin-bottom: var(--s5);
+}
 .ai-insert {
   display: none;
   width: 100%;
