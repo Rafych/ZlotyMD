@@ -1245,7 +1245,13 @@
         </div>
 
         <!-- Боковая панель ИИ-ассистента (чат и предложения правок) -->
-        <div class="ai-panel" id="aiPanel">
+        <div
+          class="ai-panel"
+          id="aiPanel"
+          ondragover="handleAiDragOver(event)"
+          ondragleave="handleAiDragLeave(event)"
+          ondrop="handleAiDrop(event)"
+        >
           <div class="ai-ph">
             <div class="ai-ph-title">
               <svg viewBox="0 0 16 16">
@@ -1383,7 +1389,30 @@
                 Fact-check
               </button>
             </div>
+            <div class="ai-attachments" id="aiAttachments" style="display: none"></div>
             <div class="ai-irow">
+              <input
+                type="file"
+                id="aiFileInput"
+                multiple
+                style="display: none"
+                accept="image/png,image/jpeg,image/gif,image/webp,application/pdf,.pdf,.txt,.md,.markdown,.mdx,.csv,.tsv,.json,.js,.ts,.jsx,.tsx,.py,.html,.htm,.css,.scss,.xml,.yaml,.yml,.log,.ini,.conf,.sh,.c,.cpp,.h,.java,.go,.rs,.rb,.php,.sql,.tex"
+                onchange="handleAiFileSelect(event)"
+              />
+              <button
+                class="ai-attach"
+                id="aiAttachBtn"
+                type="button"
+                title="Attach file"
+                data-i18n-title="aiAttachBtnTitle"
+                onclick="document.getElementById('aiFileInput').click()"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path
+                    d="M21 12.5l-8.5 8.5a4.5 4.5 0 0 1-6.36-6.36L14.5 6.28a3 3 0 0 1 4.24 4.24L10.6 18.66a1.5 1.5 0 0 1-2.12-2.12l7.44-7.44"
+                  />
+                </svg>
+              </button>
               <textarea
                 class="ai-tin"
                 id="aiInput"
@@ -1400,6 +1429,7 @@
                   this.style.height = 'auto';
                   this.style.height = Math.min(this.scrollHeight, 80) + 'px';
                 "
+                onpaste="handleAiInputPaste(event)"
               ></textarea>
               <button class="ai-send" id="aiSendBtn" onclick="sendAi()">
                 <svg viewBox="0 0 16 16">
