@@ -417,6 +417,7 @@ function onOpenFileClick() {
 async function handleFileOpenInput(evt) {
   const file = evt.target.files && evt.target.files[0];
   if (!file) return;
+  if (!(await confirmAiNav())) return;
   const text = await file.text();
   const { meta, content } = parseZmdText(text);
   const baseName = file.name.replace(/\.(zmd|md|markdown|txt)$/i, '');
@@ -906,7 +907,12 @@ function _setEditorMode(isLatex) {
 }
 
 // Обрабатывает пользовательские атрибуты изображений {width=...height=...}
+function _figureLabel(n, alt) {
+  return alt ? `${n}. ${alt}` : `${n}.`;
+}
+
 function _processImageAttrs(v) {
+  let figN = 0;
   return v.replace(/!\[([^\]]*)\]\(([^)]+)\)\{([^}]+)\}/g, (_, alt, src, attrs) => {
     const styleProps = [];
     let hasWidth = false;
@@ -924,7 +930,9 @@ function _processImageAttrs(v) {
     if (hasWidth) styleProps.push('max-width:none');
     const styleAttr = styleProps.length ? ` style="${styleProps.join(';')}"` : '';
     const safeAlt = alt.replace(/"/g, '&quot;');
-    return `<img src="${src}" alt="${safeAlt}"${styleAttr}>`;
+    figN++;
+    const caption = _figureLabel(figN, alt).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return `<figure class="md-figure"><img src="${src}" alt="${safeAlt}"${styleAttr}><figcaption>${caption}</figcaption></figure>`;
   });
 }
 
@@ -1205,6 +1213,9 @@ const LANGS = {
     aiErrorPrefix: '⚠ Error: ',
     aiSelectedSuffix: ' (selected text: {n} chars)',
     aiEmptyResponse: '(empty response)',
+    aiNavWarning: 'The AI is still responding. If you leave now, the response will be lost. Continue?',
+    aiNavYes: 'Yes',
+    aiNavNo: 'No',
     aiTruncatedError:
       'Response was cut off (max output length reached) before producing any text. Try a shorter selection, or switch model.',
     aiDiffModalTitle: 'Review edit',
@@ -1452,6 +1463,9 @@ sequenceDiagram
     aiErrorPrefix: '⚠ Ошибка: ',
     aiSelectedSuffix: ' (выделено символов: {n})',
     aiEmptyResponse: '(пустой ответ)',
+    aiNavWarning: 'ИИ ещё отвечает. Если вы уйдёте сейчас, ответ будет потерян. Продолжить?',
+    aiNavYes: 'Да',
+    aiNavNo: 'Нет',
     aiTruncatedError:
       'Ответ был обрезан (достигнут лимит длины) до появления текста. Попробуйте выделить меньший фрагмент или сменить модель.',
     aiDiffModalTitle: 'Просмотр изменений',
@@ -1689,6 +1703,9 @@ sequenceDiagram
     aiErrorPrefix: '⚠ エラー: ',
     aiSelectedSuffix: ' (選択テキスト: {n}文字)',
     aiEmptyResponse: '(空の返答)',
+    aiNavWarning: 'AIがまだ応答中です。今移動すると応答内容が失われます。移動しますか？',
+    aiNavYes: 'はい',
+    aiNavNo: 'いいえ',
     aiTruncatedError:
       '出力上限に達したため、テキストが生成される前に応答が打ち切られました。選択範囲を短くするか、モデルを変更してみてください。',
     aiDiffModalTitle: '編集内容の確認',
@@ -1939,6 +1956,9 @@ sequenceDiagram
     aiErrorPrefix: '⚠ Fehler: ',
     aiSelectedSuffix: ' (ausgewählter Text: {n} Zeichen)',
     aiEmptyResponse: '(leere Antwort)',
+    aiNavWarning: 'Die KI antwortet noch. Wenn du jetzt gehst, geht die Antwort verloren. Fortfahren?',
+    aiNavYes: 'Ja',
+    aiNavNo: 'Nein',
     aiTruncatedError:
       'Die Antwort wurde abgeschnitten (maximale Länge erreicht), bevor Text erzeugt wurde. Wähle einen kürzeren Abschnitt oder wechsle das Modell.',
     aiDiffModalTitle: 'Änderung prüfen',
@@ -2176,6 +2196,9 @@ sequenceDiagram
     aiErrorPrefix: '⚠ Błąd: ',
     aiSelectedSuffix: ' (zaznaczony tekst: {n} znaków)',
     aiEmptyResponse: '(pusta odpowiedź)',
+    aiNavWarning: 'AI wciąż odpowiada. Jeśli teraz wyjdziesz, odpowiedź zostanie utracona. Kontynuować?',
+    aiNavYes: 'Tak',
+    aiNavNo: 'Nie',
     aiTruncatedError:
       'Odpowiedź została przerwana (osiągnięto limit długości) zanim powstał jakikolwiek tekst. Spróbuj krótszego zaznaczenia lub zmień model.',
     aiDiffModalTitle: 'Przegląd zmian',
@@ -2412,6 +2435,9 @@ sequenceDiagram
     aiErrorPrefix: '⚠ Σφάλμα: ',
     aiSelectedSuffix: ' (επιλεγμένο κείμενο: {n} χαρακτήρες)',
     aiEmptyResponse: '(κενή απάντηση)',
+    aiNavWarning: 'Το AI εξακολουθεί να απαντά. Αν φύγετε τώρα, η απάντηση θα χαθεί. Συνέχεια;',
+    aiNavYes: 'Ναι',
+    aiNavNo: 'Όχι',
     aiTruncatedError:
       'Η απόκριση διακόπηκε (όριο μήκους) πριν παραχθεί κείμενο. Δοκιμάστε μικρότερη επιλογή ή αλλάξτε μοντέλο.',
     aiDiffModalTitle: 'Έλεγχος επεξεργασίας',
@@ -3544,6 +3570,7 @@ async function onDocItemClick(event, id) {
     closeDocsPanel();
     return;
   }
+  if (!(await confirmAiNav())) return;
   await flushCurrentDocSave();
   await switchToDoc(id);
   closeDocsPanel();
@@ -3579,6 +3606,7 @@ async function onDocDeleteClick(event, id) {
     return;
   }
   if (!confirm(t.docsConfirmDelete || 'Delete this document? This cannot be undone.')) return;
+  if (!(await confirmAiNav())) return;
   await removeDocRecord(id);
   await _deleteAiHistory(id);
   docIndex = docIndex.filter(d => d.id !== id);
@@ -3592,6 +3620,7 @@ async function onDocDeleteClick(event, id) {
 }
 
 async function onNewDocClick() {
+  if (!(await confirmAiNav())) return;
   await flushCurrentDocSave();
   const id = await createNewDoc();
   await switchToDoc(id);
@@ -3738,6 +3767,68 @@ let _aiConvHistory = [];
 let _aiPendingAttachments = [];
 
 const AI_MAX_ATTACHMENTS = 6;
+
+let _aiResponding = false;
+let _aiAbortController = null;
+
+function confirmAiNav() {
+  if (!_aiResponding) return Promise.resolve(true);
+  return new Promise(resolve => {
+    const overlay = document.getElementById('aiNavOverlay');
+    const modal = document.getElementById('aiNavModal');
+    const msgEl = document.getElementById('aiNavMsg');
+    const yesBtn = document.getElementById('aiNavYesBtn');
+    const noBtn = document.getElementById('aiNavNoBtn');
+    const t = LANGS[currentLang] || LANGS['en'];
+    msgEl.textContent = t.aiNavWarning;
+    yesBtn.textContent = t.aiNavYes;
+    noBtn.textContent = t.aiNavNo;
+    overlay.classList.add('open');
+    modal.classList.add('open');
+    const cleanup = result => {
+      overlay.classList.remove('open');
+      modal.classList.remove('open');
+      yesBtn.removeEventListener('click', onYes);
+      noBtn.removeEventListener('click', onNo);
+      overlay.removeEventListener('click', onNo);
+      resolve(result);
+    };
+    const onYes = () => cleanup(true);
+    const onNo = () => cleanup(false);
+    yesBtn.addEventListener('click', onYes);
+    noBtn.addEventListener('click', onNo);
+    overlay.addEventListener('click', onNo);
+  });
+}
+
+function setAiResponding(state) {
+  _aiResponding = state;
+  const btn = document.getElementById('aiSendBtn');
+  if (!btn) return;
+  if (state) {
+    btn.classList.add('ai-send-stop');
+    btn.innerHTML =
+      '<svg viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="10" rx="1.5"/></svg>';
+  } else {
+    btn.classList.remove('ai-send-stop');
+    btn.innerHTML =
+      '<svg viewBox="0 0 16 16"><line x1="14" y1="2" x2="2" y2="8"/><line x1="14" y1="2" x2="6" y2="14"/><line x1="2" y1="8" x2="6" y2="14"/></svg>';
+  }
+}
+
+function onAiSendBtnClick() {
+  if (_aiResponding) {
+    if (_aiAbortController) _aiAbortController.abort();
+    return;
+  }
+  sendAi();
+}
+
+window.addEventListener('beforeunload', e => {
+  if (!_aiResponding) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
 const AI_MAX_BINARY_SIZE = 10 * 1024 * 1024; // изображения/PDF — до 10 МБ
 const AI_MAX_TEXT_SIZE = 2 * 1024 * 1024; // текстовые файлы — до 2 МБ
 
@@ -4270,6 +4361,7 @@ function _aiAddInsertableMsg(text, pos) {
 }
 
 function aiPreset(prompt, isEditPreset) {
+  if (_aiResponding) return;
   document.getElementById('aiInput').value = prompt;
   if (isEditPreset && ed.selectionStart === ed.selectionEnd && ed.value) {
     ed.selectionStart = 0;
@@ -4291,6 +4383,7 @@ async function _callGemini(fullPrompt, isEdit, attachments) {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    signal: _aiAbortController ? _aiAbortController.signal : undefined,
     body: JSON.stringify({
       system_instruction: { parts: [{ text: _aiSystem(isEdit) }] },
       contents,
@@ -4324,6 +4417,7 @@ async function _callAnthropic(fullPrompt, isEdit, attachments) {
       'anthropic-version': '2023-06-01',
       'anthropic-dangerous-direct-browser-access': 'true'
     },
+    signal: _aiAbortController ? _aiAbortController.signal : undefined,
     body: JSON.stringify({
       model: AI_MODEL,
       max_tokens: 8192,
@@ -4342,6 +4436,7 @@ async function _callAnthropic(fullPrompt, isEdit, attachments) {
 
 // Основной обработчик отправки сообщения ИИ-ассистенту (чат или правка)
 async function sendAi() {
+  if (_aiResponding) return;
   const input = document.getElementById('aiInput');
   const prompt = input.value.trim();
   const attachments = _aiPendingAttachments.slice();
@@ -4372,8 +4467,8 @@ async function sendAi() {
     attachments
   );
 
-  const btn = document.getElementById('aiSendBtn');
-  btn.disabled = true;
+  setAiResponding(true);
+  _aiAbortController = new AbortController();
   const thinking = _aiAddMsg(t.aiThinking, 'thinking');
 
   try {
@@ -4396,9 +4491,12 @@ async function sendAi() {
     _saveAiHistory();
   } catch (err) {
     thinking.remove();
-    _aiAddMsg(t.aiErrorPrefix + err.message, 'thinking');
+    if (err.name !== 'AbortError') {
+      _aiAddMsg(t.aiErrorPrefix + err.message, 'thinking');
+    }
   } finally {
-    btn.disabled = false;
+    _aiAbortController = null;
+    setAiResponding(false);
     document.getElementById('aiInput').focus();
   }
 }
