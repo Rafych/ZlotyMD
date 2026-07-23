@@ -1420,7 +1420,7 @@
                 onkeydown="
                   if ((e = event).key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    sendAi();
+                    onAiSendBtnClick();
                   }
                 "
                 oninput="
@@ -1429,7 +1429,7 @@
                 "
                 onpaste="handleAiInputPaste(event)"
               ></textarea>
-              <button class="ai-send" id="aiSendBtn" onclick="sendAi()">
+              <button class="ai-send" id="aiSendBtn" onclick="onAiSendBtnClick()">
                 <svg viewBox="0 0 16 16">
                   <line x1="14" y1="2" x2="2" y2="8" />
                   <line x1="14" y1="2" x2="6" y2="14" />
@@ -1566,6 +1566,15 @@
             >
               Download
             </button>
+          </div>
+        </div>
+
+        <div class="ai-nav-overlay" id="aiNavOverlay"></div>
+        <div class="ai-nav-modal" id="aiNavModal">
+          <div class="ai-nav-msg" id="aiNavMsg"></div>
+          <div class="ai-nav-actions">
+            <button class="ai-nav-btn ai-nav-btn-no" id="aiNavNoBtn" type="button"></button>
+            <button class="ai-nav-btn ai-nav-btn-yes" id="aiNavYesBtn" type="button"></button>
           </div>
         </div>
 
