@@ -853,6 +853,21 @@ body {
   max-width: 100%;
   border-radius: var(--r13);
 }
+.md .md-figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: var(--s21) 0;
+}
+.md .md-figure img {
+  margin: 0;
+}
+.md .md-figure figcaption {
+  margin-top: var(--s8);
+  font-size: 12.5px;
+  color: var(--mut);
+  text-align: center;
+}
 .md input[type='checkbox'] {
   accent-color: var(--gg);
 }
@@ -2399,7 +2414,71 @@ body {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-/* Кнопка прикрепления файла рядом с полем ввода */
+.ai-send-stop {
+  background: var(--gr);
+}
+.ai-send-stop svg {
+  fill: #fff;
+  stroke: none;
+}
+.ai-nav-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(32, 33, 36, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 500;
+}
+.ai-nav-overlay.open {
+  display: block;
+  animation: fadeIn 0.18s ease;
+}
+.ai-nav-modal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(340px, calc(100vw - 2 * var(--s21)));
+  background: var(--bg);
+  border: 1.5px solid var(--bord);
+  border-radius: var(--r21);
+  box-shadow: 0 8px 32px rgba(32, 33, 36, 0.25);
+  z-index: 501;
+  padding: var(--s21);
+}
+.ai-nav-modal.open {
+  display: block;
+  animation: slideDown 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.ai-nav-msg {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--txt);
+  margin-bottom: var(--s21);
+}
+.ai-nav-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--s8);
+}
+.ai-nav-btn {
+  border: none;
+  border-radius: var(--r8);
+  padding: var(--s8) var(--s13);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ai-nav-btn-no {
+  background: var(--bord);
+  color: var(--txt);
+}
+.ai-nav-btn-yes {
+  background: var(--gr);
+  color: #fff;
+}
+
 .ai-attach {
   width: 34px;
   height: 34px;
