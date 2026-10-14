@@ -1212,6 +1212,13 @@ body {
   font-weight: 600;
   color: var(--txt);
 }
+.about-value a {
+  color: var(--gb);
+  text-decoration: none;
+}
+.about-value a:hover {
+  text-decoration: underline;
+}
 .about-ver {
   display: inline-block;
   padding: 2px var(--s8);
