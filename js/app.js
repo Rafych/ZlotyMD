@@ -4328,7 +4328,61 @@ function toggleAiPanel() {
 
 // Проверяет, находится ли браузер в автономном режиме (без сети)
 function _isOffline() {
-  return typeof navigator !== 'undefined' && navigator.onLine === false;
+  return typeof navigator !== 'undefined' && (navigator.onLine === false || _netReachable === false);
+}
+
+var _netReachable = true;
+var _netProbing = false;
+var _netProbeTimer = null;
+
+function _setNetReachable(v) {
+  if (v === _netReachable) return;
+  _netReachable = v;
+  updateAiOnlineState();
+  _scheduleNetProbe();
+}
+
+async function _probeNetwork() {
+  if (_netProbing) return;
+  if (navigator.onLine === false) {
+    _setNetReachable(false);
+    return;
+  }
+  _netProbing = true;
+  const host =
+    AI_BACKEND === 'gemini'
+      ? 'https://generativelanguage.googleapis.com/'
+      : 'https://api.anthropic.com/';
+  let ok = false;
+  for (let i = 0; i < 2 && !ok; i++) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 6000);
+    try {
+      await fetch(host + '?_=' + Date.now(), {
+        method: 'HEAD',
+        mode: 'no-cors',
+        cache: 'no-store',
+        signal: ctrl.signal
+      });
+      ok = true;
+    } catch (_) {
+      if (navigator.onLine === false) break;
+    }
+    clearTimeout(timer);
+  }
+  _netProbing = false;
+  _setNetReachable(ok);
+}
+
+function _scheduleNetProbe() {
+  clearTimeout(_netProbeTimer);
+  _netProbeTimer = setTimeout(
+    async () => {
+      if (!document.hidden) await _probeNetwork();
+      _scheduleNetProbe();
+    },
+    _netReachable ? 15000 : 4000
+  );
 }
 
 // Включает или отключает функции ИИ в зависимости от состояния сети (вызывается при online/offline)
@@ -4368,9 +4422,24 @@ function updateAiOnlineState() {
   _updateAiAttachAvailability();
 }
 
-window.addEventListener('online', updateAiOnlineState);
-window.addEventListener('offline', updateAiOnlineState);
+window.addEventListener('online', () => {
+  updateAiOnlineState();
+  _probeNetwork();
+});
+window.addEventListener('offline', () => {
+  updateAiOnlineState();
+  _setNetReachable(false);
+});
+window.addEventListener('focus', _probeNetwork);
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) _probeNetwork();
+});
+if (navigator.connection && navigator.connection.addEventListener) {
+  navigator.connection.addEventListener('change', _probeNetwork);
+}
 updateAiOnlineState();
+_probeNetwork();
+_scheduleNetProbe();
 
 function _aiAddMsg(text, role, attachments) {
   const msgs = document.getElementById('aiMsgs');
@@ -4555,6 +4624,7 @@ async function sendAi() {
     thinking.remove();
     if (err.name !== 'AbortError') {
       _aiAddMsg(t.aiErrorPrefix + err.message, 'thinking');
+      if (err instanceof TypeError) _probeNetwork();
     }
   } finally {
     _aiAbortController = null;
