@@ -46,6 +46,10 @@ function escapeHtmlInMarkdown(text) {
 function escapeHtmlTags(str) {
   return str.replace(/<(\/?[a-zA-Z][^>]*)>/g, '&lt;$1&gt;');
 }
+// Favicon (assets/favicon.svg) для автономных HTML: встроен как data URI
+const FAVICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="1" y="1" width="62" height="62" rx="14" fill="#FFFFFF" stroke="#E3E6EA" stroke-width="2"/><g transform="translate(12 12) scale(1.905)"><circle cx="4.5" cy="4.5" r="4.5" fill="#4285F4"/><circle cx="16.5" cy="4.5" r="4.5" fill="#EA4335"/><circle cx="4.5" cy="16.5" r="4.5" fill="#FBBC04"/><circle cx="16.5" cy="16.5" r="4.5" fill="#34A853"/></g></svg>';
+const FAVICON_HREF = 'data:image/svg+xml,' + encodeURIComponent(FAVICON_SVG);
+
 // Сборка полного HTML-документа для экспорта/печати: включает лицензии, шрифты и стили превью
 function buildPreviewHTML(title) {
   title = title || 'Złoty MD Preview';
@@ -194,6 +198,7 @@ function buildPreviewHTML(title) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${title}</title>
+<link rel="icon" type="image/svg+xml" href="${FAVICON_HREF}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
