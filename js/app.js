@@ -250,11 +250,10 @@ if(typeof mermaid!=='undefined'){
 function openPreviewWindow() {
   if (!ed.value.trim()) return;
   const html = buildPreviewHTML();
-  const win = window.open('', '_blank');
-  if (!win) return;
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
+  const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+  const win = window.open(url, '_blank');
+  if (!win) { URL.revokeObjectURL(url); return; }
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
 let dlSelected = new Set();
