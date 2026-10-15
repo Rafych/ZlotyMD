@@ -3059,3 +3059,30 @@ body {
     margin: 20mm 18mm 20mm 18mm;
   }
 }
+
+/* Офлайн-режим: функции ИИ недоступны без сети */
+.ai-btn.ai-offline,
+.ai-btn.ai-offline:hover {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: transparent;
+  color: var(--mut);
+  transform: none;
+}
+.ai-preset:disabled,
+.ai-ksave:disabled,
+.ai-tin:disabled,
+.ai-send:disabled,
+#aiBackendSelect:disabled,
+#aiModelSelect:disabled,
+#aiKey:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.ai-preset:disabled:hover,
+.ai-ksave:disabled:hover {
+  border-color: var(--bord);
+  color: var(--mut);
+  background: var(--bg);
+  transform: none;
+}
