@@ -1,0 +1,18 @@
+{
+  "id": "./ZlotyMD.html",
+  "name": "Złoty MD",
+  "short_name": "Złoty MD",
+  "description": "A Markdown editor with golden-ratio proportions and a Google-inspired color palette.",
+  "start_url": "./ZlotyMD.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
