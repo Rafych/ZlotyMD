@@ -1226,6 +1226,7 @@ const LANGS = {
     aiReviewEditMsg: '✎ Edit proposed',
     aiOpenReviewBtn: 'Review',
     aiResetBtnTitle: 'Reset conversation',
+    aiOfflineTitle: 'AI features are unavailable offline',
     aiResetConfirm: 'Clear the conversation history? This cannot be undone.',
     aiSystemPrompt:
       'You are an AI assistant that helps write and edit Markdown documents. Use Markdown syntax appropriately and give helpful answers. Keep responses concise and practical. The user has a deliberate personal notation style, so avoid rewriting it more than necessary — instead improve readability with targeted techniques, such as consolidating math expressions into LaTeX.',
@@ -1476,6 +1477,7 @@ sequenceDiagram
     aiReviewEditMsg: '✎ Предложено изменение',
     aiOpenReviewBtn: 'Просмотреть',
     aiResetBtnTitle: 'Сбросить диалог',
+    aiOfflineTitle: 'ИИ-функции недоступны без сети',
     aiResetConfirm: 'Очистить историю диалога? Это действие необратимо.',
     aiSystemPrompt:
       'Вы — ИИ-ассистент, помогающий писать и редактировать документы в формате Markdown. Используйте синтаксис Markdown уместно и давайте полезные ответы. Отвечайте кратко и по делу. У пользователя есть осознанный, свой стиль оформления, поэтому не переписывайте его без необходимости — вместо этого улучшайте читаемость точечными приёмами, например, оформляя формулы в LaTeX.',
@@ -1716,6 +1718,7 @@ sequenceDiagram
     aiReviewEditMsg: '✎ 編集を提案しました',
     aiOpenReviewBtn: '確認する',
     aiResetBtnTitle: '会話をリセット',
+    aiOfflineTitle: 'オフライン中はAI機能を利用できません',
     aiResetConfirm: '会話履歴を削除しますか？この操作は元に戻せません。',
     aiSystemPrompt:
       'あなたはMarkdownドキュメントの執筆・編集を支援するAIアシスタントです。Markdown記法を適切に使用して、役立つ回答を提供してください。返答は簡潔かつ実用的にしてください。ユーザーの記法にはこだわりがあるためあまり変えずに、数式をLaTeXにまとめるなどの手法で見やすくしてください。',
@@ -1969,6 +1972,7 @@ sequenceDiagram
     aiReviewEditMsg: '✎ Änderung vorgeschlagen',
     aiOpenReviewBtn: 'Prüfen',
     aiResetBtnTitle: 'Unterhaltung zurücksetzen',
+    aiOfflineTitle: 'KI-Funktionen sind offline nicht verfügbar',
     aiResetConfirm: 'Gesprächsverlauf löschen? Dies kann nicht rückgängig gemacht werden.',
     aiSystemPrompt:
       'Du bist ein KI-Assistent, der beim Schreiben und Bearbeiten von Markdown-Dokumenten hilft. Verwende die Markdown-Syntax angemessen und gib hilfreiche Antworten. Halte die Antworten prägnant und praktisch. Der Nutzer hat einen bewussten eigenen Notationsstil, den du möglichst nicht unnötig veränderst — verbessere die Lesbarkeit stattdessen gezielt, etwa indem du Formeln einheitlich in LaTeX fasst.',
@@ -2209,6 +2213,7 @@ sequenceDiagram
     aiReviewEditMsg: '✎ Zaproponowano zmianę',
     aiOpenReviewBtn: 'Przejrzyj',
     aiResetBtnTitle: 'Zresetuj rozmowę',
+    aiOfflineTitle: 'Funkcje AI są niedostępne offline',
     aiResetConfirm: 'Wyczyścić historię rozmowy? Tej operacji nie można cofnąć.',
     aiSystemPrompt:
       'Jesteś asystentem AI pomagającym pisać i edytować dokumenty Markdown. Używaj odpowiednio składni Markdown i udzielaj pomocnych odpowiedzi. Odpowiadaj zwięźle i praktycznie. Użytkownik ma swój przemyślany styl zapisu, więc nie zmieniaj go bez potrzeby — zamiast tego popraw czytelność punktowymi technikami, np. ujednolicając wzory matematyczne w LaTeX.',
@@ -2448,6 +2453,7 @@ sequenceDiagram
     aiReviewEditMsg: '✎ Προτάθηκε επεξεργασία',
     aiOpenReviewBtn: 'Έλεγχος',
     aiResetBtnTitle: 'Επαναφορά συνομιλίας',
+    aiOfflineTitle: 'Οι λειτουργίες AI δεν είναι διαθέσιμες εκτός σύνδεσης',
     aiResetConfirm: 'Διαγραφή ιστορικού συνομιλίας; Δεν μπορεί να αναιρεθεί.',
     aiSystemPrompt:
       'Είσαι ένας βοηθός AI που βοηθά στη συγγραφή και επεξεργασία εγγράφων Markdown. Χρησιμοποίησε κατάλληλα τη σύνταξη Markdown και δώσε χρήσιμες απαντήσεις. Κράτησε τις απαντήσεις σύντομες και πρακτικές. Ο χρήστης έχει το δικό του σκόπιμο στιλ σημειογραφίας, γι αυτό απόφυγε να το αλλάζεις χωρίς λόγο — αντί αυτού βελτίωσε την αναγνωσιμότητα με στοχευμένες τεχνικές, όπως η ενοποίηση μαθηματικών τύπων σε LaTeX.',
@@ -2706,7 +2712,7 @@ function _currentAiModelSupportsAttach() {
 function _updateAiAttachAvailability() {
   const btn = document.getElementById('aiAttachBtn');
   const input = document.getElementById('aiFileInput');
-  const supported = _currentAiModelSupportsAttach();
+  const supported = _currentAiModelSupportsAttach() && !_isOffline();
   if (btn) {
     btn.disabled = !supported;
     btn.classList.toggle('ai-attach-disabled', !supported);
@@ -2785,6 +2791,10 @@ function applyLang(code) {
     if (t[key] !== undefined) el.placeholder = t[key];
   });
   if (typeof _updateAiWelcomeText === 'function') _updateAiWelcomeText();
+  // applyLang вызывается до объявления части ИИ-переменных, поэтому защищаемся try/catch
+  try {
+    if (typeof updateAiOnlineState === 'function') updateAiOnlineState();
+  } catch (_) {}
 
   document.querySelectorAll('[data-i18n-prompt]').forEach(el => {
     const key = el.getAttribute('data-i18n-prompt');
@@ -4308,11 +4318,59 @@ async function saveApiKey() {
 function toggleAiPanel() {
   const p = document.getElementById('aiPanel');
   const b = document.getElementById('aiToggleBtn');
+  // Без сети панель нельзя открыть (закрыть можно всегда)
+  if (_isOffline() && !p.classList.contains('open')) return;
   const open = p.classList.toggle('open');
   b.classList.toggle('on', open);
   if (open) document.getElementById('aiInput').focus();
   setTimeout(clampEpFlex, 260);
 }
+
+// Проверяет, находится ли браузер в автономном режиме (без сети)
+function _isOffline() {
+  return typeof navigator !== 'undefined' && navigator.onLine === false;
+}
+
+// Включает или отключает функции ИИ в зависимости от состояния сети (вызывается при online/offline)
+function updateAiOnlineState() {
+  const offline = _isOffline();
+  const t = LANGS[currentLang] || LANGS['en'];
+  document.body.classList.toggle('is-offline', offline);
+
+  // Кнопка открытия панели: aria-disabled вместо disabled, чтобы подсказка (title) оставалась видимой
+  const btn = document.getElementById('aiToggleBtn');
+  if (btn) {
+    btn.classList.toggle('ai-offline', offline);
+    btn.setAttribute('aria-disabled', offline ? 'true' : 'false');
+    btn.title = offline ? t.aiOfflineTitle : t.aiBtnTitle;
+  }
+
+  if (offline) {
+    // Прерываем текущий запрос и закрываем панель
+    if (_aiAbortController) _aiAbortController.abort();
+    const p = document.getElementById('aiPanel');
+    if (p && p.classList.contains('open')) toggleAiPanel();
+  }
+
+  // Элементы панели, которым нужна сеть
+  const netSelectors = [
+    '#aiInput',
+    '#aiSendBtn',
+    '#aiKey',
+    '#aiKsaveBtn',
+    '#aiBackendSelect',
+    '#aiModelSelect',
+    '.ai-preset'
+  ];
+  document.querySelectorAll(netSelectors.join(',')).forEach(el => {
+    el.disabled = offline;
+  });
+  _updateAiAttachAvailability();
+}
+
+window.addEventListener('online', updateAiOnlineState);
+window.addEventListener('offline', updateAiOnlineState);
+updateAiOnlineState();
 
 function _aiAddMsg(text, role, attachments) {
   const msgs = document.getElementById('aiMsgs');
@@ -4365,7 +4423,7 @@ function _aiAddInsertableMsg(text, pos) {
 }
 
 function aiPreset(prompt, isEditPreset) {
-  if (_aiResponding) return;
+  if (_aiResponding || _isOffline()) return;
   document.getElementById('aiInput').value = prompt;
   if (isEditPreset && ed.selectionStart === ed.selectionEnd && ed.value) {
     ed.selectionStart = 0;
@@ -4440,7 +4498,7 @@ async function _callAnthropic(fullPrompt, isEdit, attachments) {
 
 // Основной обработчик отправки сообщения ИИ-ассистенту (чат или правка)
 async function sendAi() {
-  if (_aiResponding) return;
+  if (_aiResponding || _isOffline()) return;
   const input = document.getElementById('aiInput');
   const prompt = input.value.trim();
   const attachments = _aiPendingAttachments.slice();
