@@ -1222,6 +1222,16 @@ const LANGS = {
     aiNavWarning: 'The AI is still responding. If you leave now, the response will be lost. Continue?',
     aiNavYes: 'Yes',
     aiNavNo: 'No',
+    errModalTitle: 'Error',
+    errOk: 'OK',
+    errLangInvalid: 'Invalid language code: “{lang}”.',
+    errLangNotFound: 'The language file “{file}” was not found.',
+    errLangHttp: 'Failed to load the language file “{file}” (HTTP {status}).',
+    errLangNetwork:
+      'Could not load the language file “{file}”. Check your internet connection. The file may not be cached for offline use yet.',
+    errLangFile:
+      'The language file “{file}” cannot be loaded when the page is opened directly from disk (file://). Please open it through a web server (http/https).',
+    errLangFormat: 'The language file “{file}” is corrupted or has an invalid format.',
     aiTruncatedError:
       'Response was cut off (max output length reached) before producing any text. Try a shorter selection, or switch model.',
     aiDiffModalTitle: 'Review edit',
@@ -1616,31 +1626,111 @@ function applyLang(code) {
 const LANG_CODE_RE = /^[a-z]{2,3}(-[A-Za-z0-9]+)?$/;
 // Промисы текущих загрузок: повторный запрос того же языка не дублирует fetch
 const _langLoading = {};
+// Создаёт ошибку загрузки языка с типом (kind), по которому выбирается текст сообщения
+function makeLangError(kind, code, status) {
+  const err = new Error('Language load error: ' + kind + ' (' + code + ')');
+  err.kind = kind;
+  err.langCode = code;
+  err.status = status;
+  return err;
+}
+
 // Загружает lang/<код>.json в LANGS (английский встроен, остальные — по требованию).
-// Возвращает true, если язык доступен; false — при ошибке сети/формата.
+// Бросает ошибку с полем kind: invalid | file | network | notfound | http | format
 async function loadLangFile(code) {
   if (LANGS[code]) return true;
-  if (!LANG_CODE_RE.test(code)) return false;
+  if (!LANG_CODE_RE.test(code)) throw makeLangError('invalid', code);
   if (!_langLoading[code]) {
-    _langLoading[code] = fetch('lang/' + code + '.json')
-      .then(res => {
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        return res.json();
-      })
-      .then(data => {
-        if (!data || typeof data !== 'object') throw new Error('invalid language file');
-        LANGS[code] = data;
-        return true;
-      })
-      .catch(err => {
-        console.warn('Language file load failed:', code, err);
-        return false;
-      })
-      .finally(() => {
-        delete _langLoading[code];
-      });
+    _langLoading[code] = (async () => {
+      let res;
+      try {
+        res = await fetch('lang/' + code + '.json');
+      } catch (e) {
+        // При открытии через file:// fetch недоступен — отдельное понятное сообщение
+        throw makeLangError(location.protocol === 'file:' ? 'file' : 'network', code);
+      }
+      if (!res.ok) throw makeLangError(res.status === 404 ? 'notfound' : 'http', code, res.status);
+      let data;
+      try {
+        data = await res.json();
+      } catch (e) {
+        throw makeLangError('format', code);
+      }
+      if (!data || typeof data !== 'object' || Array.isArray(data) || typeof data.init !== 'string') {
+        throw makeLangError('format', code);
+      }
+      LANGS[code] = data;
+      return true;
+    })().finally(() => {
+      delete _langLoading[code];
+    });
   }
   return _langLoading[code];
+}
+
+// Текст интерфейса на текущем языке; если ключа нет (или язык не загружен) — английский
+function tr(key) {
+  return (LANGS[currentLang] && LANGS[currentLang][key]) || LANGS.en[key] || '';
+}
+
+// Показывает модальное окно ошибки по центру экрана (разметка и стили — как у aiNavModal).
+// Возвращает Promise, который выполняется после закрытия окна.
+function showErrorModal(message, title) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('errOverlay');
+    const modal = document.getElementById('errModal');
+    const titleEl = document.getElementById('errTitle');
+    const msgEl = document.getElementById('errMsg');
+    const okBtn = document.getElementById('errOkBtn');
+    if (!overlay || !modal) {
+      alert(message); // запасной вариант, если разметки нет
+      resolve();
+      return;
+    }
+    titleEl.textContent = title || tr('errModalTitle');
+    msgEl.textContent = message;
+    okBtn.textContent = tr('errOk');
+    overlay.classList.add('open');
+    modal.classList.add('open');
+    okBtn.focus();
+    const cleanup = () => {
+      overlay.classList.remove('open');
+      modal.classList.remove('open');
+      okBtn.removeEventListener('click', cleanup);
+      overlay.removeEventListener('click', cleanup);
+      document.removeEventListener('keydown', onKey, true);
+      resolve();
+    };
+    const onKey = e => {
+      if (e.key === 'Escape' || e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        cleanup();
+      }
+    };
+    okBtn.addEventListener('click', cleanup);
+    overlay.addEventListener('click', cleanup);
+    document.addEventListener('keydown', onKey, true);
+  });
+}
+
+// Преобразует ошибку загрузки языка в локализованное сообщение и показывает модальное окно
+function showLangError(err) {
+  console.warn('Language file load failed:', err);
+  const keyByKind = {
+    invalid: 'errLangInvalid',
+    file: 'errLangFile',
+    network: 'errLangNetwork',
+    notfound: 'errLangNotFound',
+    http: 'errLangHttp',
+    format: 'errLangFormat'
+  };
+  const code = err && err.langCode ? err.langCode : '?';
+  const msg = tr(keyByKind[err && err.kind] || 'errLangNetwork')
+    .replace(/\{lang\}/g, code)
+    .replace(/\{file\}/g, 'lang/' + code + '.json')
+    .replace(/\{status\}/g, err && err.status ? err.status : '');
+  return showErrorModal(msg);
 }
 
 const IDB_LANG_KEY = 'zmd_lang';
@@ -1654,7 +1744,15 @@ async function saveLangSetting() {
 async function loadLangSetting() {
   try {
     const raw = await idbGet(IDB_LANG_KEY);
-    if (raw && (await loadLangFile(raw))) applyLang(raw);
+    if (raw) {
+      try {
+        await loadLangFile(raw);
+        applyLang(raw);
+      } catch (err) {
+        // Сохранённый язык недоступен — остаёмся на текущем (английском) и сообщаем об ошибке
+        showLangError(err);
+      }
+    }
   } catch (e) {}
 }
 
@@ -1664,8 +1762,14 @@ async function setLang(code) {
   closeLang();
   // При быстрых кликах применяется только последний выбранный язык
   const token = ++_langSwitchToken;
-  const ok = await loadLangFile(code);
-  if (!ok || token !== _langSwitchToken) return; // файл недоступен (например, офлайн без кэша) — язык не меняем
+  try {
+    await loadLangFile(code);
+  } catch (err) {
+    // Файл недоступен (нет файла, офлайн без кэша, битый JSON) — язык не меняем, показываем ошибку
+    if (token === _langSwitchToken) showLangError(err);
+    return;
+  }
+  if (token !== _langSwitchToken) return;
   applyLang(code);
   saveLangSetting();
   if (typeof saveContent === 'function') saveContent();
