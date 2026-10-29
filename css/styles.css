@@ -215,8 +215,10 @@ body {
   display: flex;
   align-items: center;
   gap: var(--s3);
+  flex-shrink: 0; /* группы кнопок не сжимаются при горизонтальной прокрутке */
 }
 .tsep {
+  flex-shrink: 0;
   width: 1px;
   height: 21px;
   background: var(--bord);
