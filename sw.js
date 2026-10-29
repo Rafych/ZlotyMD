@@ -2,7 +2,7 @@
  * Локальные файлы и CDN-ресурсы (marked, KaTeX, Mermaid, шрифты) кэшируются
  * при установке и при использовании, поэтому редактор работает без сети.
  * При изменении файлов приложения увеличьте CACHE_VERSION. */
-const CACHE_VERSION = 'zmd-v4';
+const CACHE_VERSION = 'zmd-v5';
 const CACHE = CACHE_VERSION;
 
 const LOCAL_ASSETS = [
@@ -12,6 +12,12 @@ const LOCAL_ASSETS = [
   'css/styles.css',
   'js/app.js',
   'js/pwa.js',
+  // Языковые файлы (английский встроен в app.js). Новый язык: добавьте сюда lang/<код>.json
+  'lang/ru.json',
+  'lang/ja.json',
+  'lang/de.json',
+  'lang/pl.json',
+  'lang/el.json',
   'manifest.webmanifest',
   'assets/favicon.svg',
   'icons/icon-192.png',
