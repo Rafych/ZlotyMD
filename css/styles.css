@@ -2492,6 +2492,20 @@ body {
   color: #fff;
 }
 
+/* Модальное окно ошибки: наследует вид ai-nav-modal, выше остальных слоёв */
+.err-overlay {
+  z-index: 900;
+}
+.err-modal {
+  z-index: 901;
+}
+.err-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gr);
+  margin-bottom: var(--s8);
+}
+
 .ai-attach {
   width: 34px;
   height: 34px;
