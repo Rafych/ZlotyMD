@@ -207,6 +207,10 @@ body {
   overflow-y: hidden;
   scrollbar-width: none;
   min-width: 0;
+  /* Запас под hover-эффект кнопок (translateY(-2px) + scale(1.08)),
+     иначе overflow обрезает их края; отрицательный margin сохраняет раскладку */
+  padding: 8px 6px;
+  margin: -8px -6px;
 }
 .tb::-webkit-scrollbar {
   display: none;
