@@ -4632,3 +4632,27 @@ async function sendAi() {
     document.getElementById('aiInput').focus();
   }
 }
+
+// Горизонтальная прокрутка панели инструментов колесом мыши
+(function () {
+  const tb = document.querySelector('.tb');
+  if (!tb) return;
+
+  tb.addEventListener(
+    'wheel',
+    function (e) {
+      // Если панель целиком помещается — ничего не делаем
+      if (tb.scrollWidth <= tb.clientWidth) return;
+
+      // Горизонтальный жест тачпада браузер обработает сам
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+
+      // Нормализация единиц: строки -> пиксели
+      const delta = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+
+      e.preventDefault();
+      tb.scrollLeft += delta;
+    },
+    { passive: false } // passive:false нужен для preventDefault
+  );
+})();
