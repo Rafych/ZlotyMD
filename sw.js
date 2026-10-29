@@ -2,7 +2,7 @@
  * Локальные файлы и CDN-ресурсы (marked, KaTeX, Mermaid, шрифты) кэшируются
  * при установке и при использовании, поэтому редактор работает без сети.
  * При изменении файлов приложения увеличьте CACHE_VERSION. */
-const CACHE_VERSION = 'zmd-v5';
+const CACHE_VERSION = 'zmd-v6';
 const CACHE = CACHE_VERSION;
 
 const LOCAL_ASSETS = [

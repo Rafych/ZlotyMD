@@ -1585,6 +1585,16 @@
           </div>
         </div>
 
+        <!-- Модальное окно ошибки (по центру; стили общие с aiNavModal) -->
+        <div class="ai-nav-overlay err-overlay" id="errOverlay"></div>
+        <div class="ai-nav-modal err-modal" id="errModal" role="alertdialog" aria-modal="true" aria-labelledby="errTitle" aria-describedby="errMsg">
+          <div class="err-title" id="errTitle"></div>
+          <div class="ai-nav-msg" id="errMsg"></div>
+          <div class="ai-nav-actions">
+            <button class="ai-nav-btn ai-nav-btn-yes" id="errOkBtn" type="button"></button>
+          </div>
+        </div>
+
         <div class="restore-toast" id="restoreToast">
           <svg
             viewBox="0 0 16 16"
