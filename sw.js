@@ -2,7 +2,7 @@
  * Локальные файлы и CDN-ресурсы (marked, KaTeX, Mermaid, шрифты) кэшируются
  * при установке и при использовании, поэтому редактор работает без сети.
  * При изменении файлов приложения увеличьте CACHE_VERSION. */
-const CACHE_VERSION = 'zmd-v9';
+const CACHE_VERSION = 'zmd-v10';
 const CACHE = CACHE_VERSION;
 
 const LOCAL_ASSETS = [
@@ -137,6 +137,17 @@ self.addEventListener('fetch', event => {
         return res;
       } catch (e) {
         return Response.error();
+      }
+    }
+
+    // Языковые файлы: сначала сеть (чтобы новые ключи перевода не отставали от кэша), при офлайне — кэш
+    if (url.pathname.includes('/lang/')) {
+      try {
+        const res = await fetch(req, { cache: 'no-cache' });
+        await putSafe(cache, req, res.clone());
+        return res;
+      } catch (e) {
+        return (await cache.match(req, { ignoreSearch: true })) || Response.error();
       }
     }
 
