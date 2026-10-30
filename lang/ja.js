@@ -174,5 +174,7 @@
   "errLangNetwork": "言語ファイル「{file}」を読み込めませんでした。インターネット接続を確認してください。オフライン用にまだキャッシュされていない可能性があります。",
   "errLangFile": "言語ファイル「{file}」は、ページをディスクから直接開いている（file://）場合は読み込めません。Webサーバー（http/https）経由で開いてください。",
   "errLangFormat": "言語ファイル「{file}」が壊れているか、形式が正しくありません。",
-  "fileOpenFailed": "ファイル「{name}」を開けませんでした。"
+  "fileOpenFailed": "ファイル「{name}」を開けませんでした。",
+  "loadingFile": "ファイルを読み込み中…",
+  "loadingLang": "言語を読み込み中…"
 };

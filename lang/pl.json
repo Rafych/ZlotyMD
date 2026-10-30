@@ -162,5 +162,7 @@
   "errLangNetwork": "Nie udało się wczytać pliku językowego „{file}”. Sprawdź połączenie z internetem. Plik może nie być jeszcze zapisany w pamięci podręcznej do użytku offline.",
   "errLangFile": "Plik językowy „{file}” nie może zostać wczytany, gdy strona jest otwarta bezpośrednio z dysku (file://). Otwórz ją przez serwer WWW (http/https).",
   "errLangFormat": "Plik językowy „{file}” jest uszkodzony lub ma nieprawidłowy format.",
-  "fileOpenFailed": "Nie udało się otworzyć pliku „{name}”."
+  "fileOpenFailed": "Nie udało się otworzyć pliku „{name}”.",
+  "loadingFile": "Wczytywanie pliku…",
+  "loadingLang": "Wczytywanie języka…"
 }

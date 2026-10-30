@@ -162,5 +162,7 @@
   "errLangNetwork": "Die Sprachdatei „{file}“ konnte nicht geladen werden. Prüfen Sie Ihre Internetverbindung. Möglicherweise ist die Datei noch nicht für die Offline-Nutzung zwischengespeichert.",
   "errLangFile": "Die Sprachdatei „{file}“ kann nicht geladen werden, wenn die Seite direkt von der Festplatte (file://) geöffnet wird. Bitte öffnen Sie sie über einen Webserver (http/https).",
   "errLangFormat": "Die Sprachdatei „{file}“ ist beschädigt oder hat ein ungültiges Format.",
-  "fileOpenFailed": "Die Datei „{name}“ konnte nicht geöffnet werden."
+  "fileOpenFailed": "Die Datei „{name}“ konnte nicht geöffnet werden.",
+  "loadingFile": "Datei wird geladen …",
+  "loadingLang": "Sprache wird geladen …"
 }
