@@ -1158,6 +1158,24 @@
             </button>
           </div>
 
+          <div class="settings-row">
+            <div class="settings-row-text">
+              <div class="settings-row-label" data-i18n="settingsAiDotLabel">Show the bump</div>
+              <div class="settings-row-desc" data-i18n="settingsAiDotDesc">
+                Show a small purple dot above the head of the AI Assistant icon.
+              </div>
+            </div>
+            <button
+              class="settings-toggle"
+              id="aiDotToggle"
+              onclick="toggleAiDot()"
+              role="switch"
+              aria-checked="false"
+            >
+              <span class="settings-toggle-knob"></span>
+            </button>
+          </div>
+
           <div class="settings-preview-box" id="settingsPreviewBox">
             <div class="settings-preview-label" data-i18n="settingsPreviewLabel">Preview</div>
             <div class="settings-preview-output md" id="settingsPreviewOutput"></div>
