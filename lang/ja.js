@@ -85,6 +85,8 @@
   "aboutLibMarkedCopy": "© 2011–2018 Christopher Jeffrey",
   "aboutLibJetbrainsBadge": "SIL OFL 1.1",
   "aboutLibJetbrainsCopy": "© 2020 JetBrains s.r.o.",
+  "aboutLibTikzjaxBadge": "GPL-3.0-or-later",
+  "aboutLibTikzjaxCopy": "© Jim Fowler、Glenn Rice 他",
   "langBtnTitle": "言語",
   "tblDialogTitle": "カスタムテーブルを挿入",
   "tblColsLabel": "列数",
