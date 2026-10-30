@@ -1464,12 +1464,29 @@ function iMermaid() {
   ed.focus();
   render(ed.value);
 }
+// Шаблон рисунка TikZ по умолчанию: единичная окружность с углом θ, cos θ и sin θ.
+// Только ASCII и математические символы: TeX компилирует их без подмены текста
+const TIKZ_DEFAULT = [
+  '\\begin{tikzpicture}[scale=2, >=stealth, line cap=round, line join=round]',
+  '  \\draw[gray!15, very thin, step=0.25] (-1.25,-1.25) grid (1.25,1.25);',
+  '  \\draw[->, gray!60!black] (-1.4,0) -- (1.5,0) node[right] {$x$};',
+  '  \\draw[->, gray!60!black] (0,-1.4) -- (0,1.5) node[above] {$y$};',
+  '  \\fill[orange!15] (0,0) -- (0.35,0) arc[start angle=0, end angle=40, radius=0.35] -- cycle;',
+  '  \\draw[orange!80!black] (0.35,0) arc[start angle=0, end angle=40, radius=0.35];',
+  '  \\node[orange!80!black] at (20:0.5) {$\\theta$};',
+  '  \\draw[very thick, blue!70!black] (0,0) circle (1);',
+  '  \\draw[gray!60!black] (40:1 |- 0,0) ++(-0.08,0) |- ++(0.08,0.08);',
+  '  \\draw[very thick, teal!70!black] (0,0) -- (40:1 |- 0,0) node[midway, below] {$\\cos\\theta$};',
+  '  \\draw[very thick, red!70!black] (40:1 |- 0,0) -- (40:1) node[midway, right, fill=white, inner sep=2pt] {$\\sin\\theta$};',
+  '  \\draw[thick] (0,0) -- (40:1) node[midway, above left] {$1$};',
+  '  \\fill (40:1) circle (0.035) node[above right] {$P$};',
+  '  \\node[below left, gray!60!black] at (0,0) {$O$};',
+  '\\end{tikzpicture}'
+].join('\n');
 // Вставляет шаблон рисунка TikZ
 function iTikz() {
   const { s, e, t } = gs();
-  const body =
-    t ||
-    '\\begin{tikzpicture}\n  \\draw[->] (0,0) -- (2,1) node[right] {$v$};\n  \\draw (1,0) circle (0.5);\n\\end{tikzpicture}';
+  const body = t || TIKZ_DEFAULT;
   const r = '```tikz\n' + body + '\n```';
   ed.value = ed.value.slice(0, s) + r + ed.value.slice(e);
   ed.selectionStart = s + 8;
