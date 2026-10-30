@@ -444,7 +444,12 @@ async function handleFileOpenInput(evt) {
   const file = evt.target.files && evt.target.files[0];
   if (!file) return;
   if (!(await confirmAiNav())) return;
-  await openFileObject(file);
+  const stopBusy = startBusy('loadingFile'); // индикатор на время чтения и открытия файла
+  try {
+    await openFileObject(file);
+  } finally {
+    stopBusy();
+  }
 }
 
 // Расширения, с которыми приложение регистрируется в ОС (должны совпадать с file_handlers в manifest.webmanifest)
@@ -496,19 +501,30 @@ function initLaunchQueue() {
   window.launchQueue.setConsumer(launchParams => {
     if (!launchParams || !launchParams.files || !launchParams.files.length) return;
     const handles = Array.from(launchParams.files);
+    // Индикатор включаем сразу при получении файлов: приложение может ещё инициализироваться
     _launchFilesChain = _launchFilesChain.then(async () => {
-      await appReady; // ждём, пока загрузятся язык, настройки и список документов
-      for (const handle of handles) {
-        let file = null;
-        try {
-          file = await handle.getFile();
-        } catch (e) {
-          console.warn('Failed to get launched file:', e);
-          await showErrorModal(tr('fileOpenFailed').replace('{name}', handle.name || ''));
-          continue;
+      let stopBusy = startBusy('loadingFile');
+      try {
+        await appReady; // ждём, пока загрузятся язык, настройки и список документов
+        for (const handle of handles) {
+          let file = null;
+          try {
+            file = await handle.getFile();
+          } catch (e) {
+            console.warn('Failed to get launched file:', e);
+            stopBusy(); // не держим индикатор под модальным окном ошибки
+            await showErrorModal(tr('fileOpenFailed').replace('{name}', handle.name || ''));
+            stopBusy = startBusy('loadingFile');
+            continue;
+          }
+          stopBusy(); // и под диалогом подтверждения
+          const proceed = await confirmAiNav();
+          stopBusy = startBusy('loadingFile');
+          if (!proceed) break;
+          await openFileObject(file);
         }
-        if (!(await confirmAiNav())) break;
-        await openFileObject(file);
+      } finally {
+        stopBusy();
       }
     }).catch(err => console.warn('Launch queue error:', err));
   });
@@ -1647,6 +1663,8 @@ const LANGS = {
     aiNavWarning: 'The AI is still responding. If you leave now, the response will be lost. Continue?',
     aiNavYes: 'Yes',
     aiNavNo: 'No',
+    loadingFile: 'Loading file…',
+    loadingLang: 'Loading language…',
     errModalTitle: 'Error',
     errOk: 'OK',
     errLangInvalid: 'Invalid language code: “{lang}”.',
@@ -2224,6 +2242,7 @@ async function loadLangFile(code) {
   if (LANGS[code]) return true;
   if (!LANG_CODE_RE.test(code)) throw makeLangError('invalid', code);
   if (!_langLoading[code]) {
+    const stopBusy = startBusy('loadingLang'); // индикатор на время загрузки файла языка
     _langLoading[code] = (async () => {
       let data;
       if (location.protocol === 'file:') {
@@ -2246,13 +2265,78 @@ async function loadLangFile(code) {
       if (!data || typeof data !== 'object' || Array.isArray(data) || typeof data.init !== 'string') {
         throw makeLangError('format', code);
       }
-      LANGS[code] = data;
+      // Недостающие ключи подставляются из английского (фолбэк по каждому ключу)
+      LANGS[code] = withEnglishFallback(code, data);
       return true;
     })().finally(() => {
       delete _langLoading[code];
+      stopBusy();
     });
   }
   return _langLoading[code];
+}
+
+// Индикатор загрузки: счётчик активных операций. Показывается с небольшой задержкой,
+// чтобы быстрые операции (файл из кэша, мгновенное чтение) не заставляли его мигать.
+const BUSY_SHOW_DELAY_MS = 150;
+const _busyStack = []; // активные операции (ключи строк интерфейса); показывается последняя
+let _busyTimer = null;
+
+// Обновляет видимость и текст индикатора по текущему состоянию стека
+function _renderBusy() {
+  const box = document.getElementById('busyIndicator');
+  const txt = document.getElementById('busyText');
+  if (!box || !txt) return;
+  if (!_busyStack.length) {
+    clearTimeout(_busyTimer);
+    _busyTimer = null;
+    box.classList.remove('show');
+    box.setAttribute('aria-hidden', 'true');
+    document.documentElement.removeAttribute('aria-busy');
+    return;
+  }
+  // Текст берём на момент показа: к этому времени язык мог уже смениться
+  txt.textContent = tr(_busyStack[_busyStack.length - 1].key);
+  if (box.classList.contains('show') || _busyTimer) return;
+  _busyTimer = setTimeout(() => {
+    _busyTimer = null;
+    if (!_busyStack.length) return;
+    txt.textContent = tr(_busyStack[_busyStack.length - 1].key);
+    box.classList.add('show');
+    box.setAttribute('aria-hidden', 'false');
+    document.documentElement.setAttribute('aria-busy', 'true');
+  }, BUSY_SHOW_DELAY_MS);
+}
+
+// Начинает операцию с индикатором. Возвращает функцию остановки (повторный вызов безопасен)
+function startBusy(key) {
+  const entry = { key };
+  _busyStack.push(entry);
+  _renderBusy();
+  return function stopBusy() {
+    const i = _busyStack.indexOf(entry);
+    if (i === -1) return;
+    _busyStack.splice(i, 1);
+    _renderBusy();
+  };
+}
+
+// Дополняет загруженный словарь английскими строками: ключи, которых нет в файле языка
+// (или их значение null/undefined), берутся из встроенного английского, а не остаются от прошлого языка
+function withEnglishFallback(code, data) {
+  const merged = Object.assign({}, LANGS.en);
+  const missing = [];
+  Object.keys(LANGS.en).forEach(k => {
+    if (data[k] === undefined || data[k] === null) missing.push(k);
+  });
+  Object.keys(data).forEach(k => {
+    if (data[k] !== undefined && data[k] !== null) merged[k] = data[k];
+  });
+  if (missing.length) {
+    // Список недостающих ключей — подсказка переводчикам; на работу интерфейса не влияет
+    console.warn('[i18n] "' + code + '": ' + missing.length + ' key(s) missing, using English fallback:', missing);
+  }
+  return merged;
 }
 
 // Текст интерфейса на текущем языке; если ключа нет (или язык не загружен) — английский
