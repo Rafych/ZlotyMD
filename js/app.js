@@ -176,9 +176,10 @@ function buildPreviewHTML(title) {
   const bodyInner = clone.outerHTML;
   return `<!DOCTYPE html>
 <!--
-  Złoty MD — Copyright (c) Cybersecurity Department(Отдел кибербезопасности). MIT License.
+  Złoty MD — © 2026 Rafych (https://github.com/Rafych) and Hiromichi (https://github.com/hiromichipixel)
+  MIT License — https://github.com/Rafych/ZlotyMD/blob/main/LICENSE
 
-  Third-party libraries used in this file:
+  Third-party components used (loaded at runtime from a CDN; none of their files are copied into this file):
 
   marked v9.1.6
     Copyright (c) 2011-2018, Christopher Jeffrey (https://github.com/markedjs/marked)
@@ -187,10 +188,13 @@ function buildPreviewHTML(title) {
   KaTeX v0.16.9
     Copyright (c) 2013-2020 Khan Academy and other contributors
     MIT License — https://github.com/KaTeX/KaTeX/blob/main/LICENSE
+    KaTeX fonts: SIL Open Font License 1.1 (fonts derived from AMS Fonts / Computer Modern) — https://github.com/KaTeX/KaTeX/blob/main/LICENSE
 
   Mermaid v10.6.1
     Copyright (c) 2014-2023 Knut Sveidqvist and contributors
     MIT License — https://github.com/mermaid-js/mermaid/blob/develop/LICENSE
+    The distributed bundle includes dependencies (e.g. d3, dagre-d3-es, DOMPurify, dayjs, khroma)
+    under their own permissive licenses (MIT / ISC / BSD-3-Clause / Apache-2.0 / MPL-2.0).
 
   Google Sans
     Copyright (c) Google Inc.
@@ -199,6 +203,16 @@ function buildPreviewHTML(title) {
   JetBrains Mono v2020
     Copyright (c) 2020 JetBrains s.r.o.
     SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
+
+  TikZJax (@drgrice1/tikzjax v1.0.0-beta24) — loaded only when a document contains TikZ
+    Copyright (c) Jim Fowler, Glenn Rice and contributors
+    GPL-3.0-or-later — https://github.com/drgrice1/tikzjax
+    It bundles TeX and TeX packages (e.g. PGF/TikZ, pgfplots) under their own licenses.
+
+  Content delivery / font services (no code included): cdnjs (Cloudflare), jsDelivr, Google Fonts.
+
+  Optional AI features call external APIs with the user's own key (no code included; each
+  provider's terms of service apply): Anthropic API, Google Gemini API.
 -->
 <html lang="${currentLang}">
 <head>
@@ -1615,6 +1629,8 @@ const LANGS = {
     aboutLibMarkedCopy: '© 2011–2018 Christopher Jeffrey',
     aboutLibJetbrainsBadge: 'SIL OFL 1.1',
     aboutLibJetbrainsCopy: '© 2020 JetBrains s.r.o.',
+    aboutLibTikzjaxBadge: 'GPL-3.0-or-later',
+    aboutLibTikzjaxCopy: '© Jim Fowler, Glenn Rice and contributors',
     langBtnTitle: 'Language',
     tblDialogTitle: 'Insert custom table',
     tblColsLabel: 'Columns',
@@ -2413,8 +2429,6 @@ ed.value = INIT;
 render(INIT);
 if (window.innerWidth > 768) ed.focus();
 applyLang('en');
-
-document.getElementById('aboutYear').textContent = new Date().getFullYear();
 
 // Открывает диалоговое окно «О программе»
 function toggleAbout() {
