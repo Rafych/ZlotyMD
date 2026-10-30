@@ -6,7 +6,8 @@ const cc = document.getElementById('cc'),
   wc = document.getElementById('wc'),
   lc = document.getElementById('lc');
 
-const SETTINGS_DEFAULTS = { htmlRendering: false };
+// aiDot — показывать фиолетовую точку («шишку») на значке ИИ (по умолчанию скрыта)
+const SETTINGS_DEFAULTS = { htmlRendering: false, aiDot: false };
 let appSettings = { ...SETTINGS_DEFAULTS };
 
 const FONT_DEFAULTS = {
@@ -1708,6 +1709,8 @@ const LANGS = {
     settingsHtmlLabel: 'Inline HTML',
     settingsHtmlDesc:
       'Render all raw HTML tags in Markdown (e.g. <div>, <span>, <table>, <iframe>…). When off, all tags are escaped and shown as plain text.',
+    settingsAiDotLabel: 'Show the bump',
+    settingsAiDotDesc: 'Show a small purple dot above the head of the AI Assistant icon.',
     settingsPreviewLabel: 'Preview',
     init: `# Welcome to Złoty MD 🎨
 
@@ -2119,6 +2122,8 @@ function applyLang(code) {
   if (document.getElementById('settingsModal')?.classList.contains('open')) {
     const descEl = document.querySelector('#settingsModal [data-i18n="settingsHtmlDesc"]');
     if (descEl && t.settingsHtmlDesc) descEl.textContent = t.settingsHtmlDesc;
+    const dotDescEl = document.querySelector('#settingsModal [data-i18n="settingsAiDotDesc"]');
+    if (dotDescEl && t.settingsAiDotDesc) dotDescEl.textContent = t.settingsAiDotDesc;
   }
 }
 
@@ -2673,6 +2678,10 @@ function applySettings() {
   marked.setOptions({ gfm: true, breaks: true });
   const tog = document.getElementById('htmlToggle');
   if (tog) tog.setAttribute('aria-checked', appSettings.htmlRendering ? 'true' : 'false');
+  // Фиолетовая точка на значке ИИ
+  document.body.classList.toggle('ai-dot-on', !!appSettings.aiDot);
+  const dotTog = document.getElementById('aiDotToggle');
+  if (dotTog) dotTog.setAttribute('aria-checked', appSettings.aiDot ? 'true' : 'false');
   updateSettingsPreview();
   if (ed.value) (typeof _render === 'function' ? _render : render)(ed.value);
 }
@@ -2693,6 +2702,13 @@ function updateSettingsPreview() {
 // Переключает разрешение/запрет рендеринга сырого HTML внутри Markdown
 function toggleHtmlRendering() {
   appSettings.htmlRendering = !appSettings.htmlRendering;
+  applySettings();
+  saveSettings();
+}
+
+// Переключает показ фиолетовой точки на значке ИИ
+function toggleAiDot() {
+  appSettings.aiDot = !appSettings.aiDot;
   applySettings();
   saveSettings();
 }
@@ -2726,7 +2742,7 @@ function toggleSettings() {
     document.getElementById('settingsBtn').style.color = 'var(--gb)';
     updateSettingsPreview();
     const t = LANGS[currentLang] || LANGS['en'];
-    ['settingsHtmlDesc'].forEach(key => {
+    ['settingsHtmlDesc', 'settingsAiDotDesc'].forEach(key => {
       const el = document.querySelector(`#settingsModal [data-i18n="${key}"]`);
       if (el && t[key]) el.textContent = t[key];
     });
@@ -3775,37 +3791,6 @@ function toggleAiPanel() {
   if (open) document.getElementById('aiInput').focus();
   setTimeout(clampEpFlex, 260);
 }
-
-// Insert + Home одновременно: показать/скрыть фиолетовую точку на значке ИИ
-const AI_DOT_KEYS = ['Insert', 'Home'];
-const _aiDotPressed = new Set();
-let _aiDotFired = false;
-function _setAiDot(on) {
-  document.body.classList.toggle('ai-dot-on', on);
-  try {
-    localStorage.setItem('zmd_ai_dot', on ? '1' : '0');
-  } catch (_) {}
-}
-try {
-  if (localStorage.getItem('zmd_ai_dot') === '1') document.body.classList.add('ai-dot-on');
-} catch (_) {}
-document.addEventListener('keydown', e => {
-  if (!AI_DOT_KEYS.includes(e.key)) return;
-  _aiDotPressed.add(e.key);
-  if (_aiDotFired || !AI_DOT_KEYS.every(k => _aiDotPressed.has(k))) return;
-  // Срабатывает один раз за нажатие, пока обе клавиши не отпущены
-  _aiDotFired = true;
-  e.preventDefault();
-  _setAiDot(!document.body.classList.contains('ai-dot-on'));
-});
-document.addEventListener('keyup', e => {
-  _aiDotPressed.delete(e.key);
-  if (!_aiDotPressed.size) _aiDotFired = false;
-});
-window.addEventListener('blur', () => {
-  _aiDotPressed.clear();
-  _aiDotFired = false;
-});
 
 // Проверяет, находится ли браузер в автономном режиме (без сети)
 function _isOffline() {
