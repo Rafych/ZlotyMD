@@ -1495,12 +1495,12 @@ body {
   pointer-events: auto;
 }
 
-/* Индикатор загрузки: плашка сверху по центру со спиннером */
+/* Индикатор загрузки: плашка снизу по центру со спиннером (как и остальные тосты) */
 .busy-indicator {
   position: fixed;
-  top: var(--s21);
+  bottom: var(--s21);
   left: 50%;
-  transform: translateX(-50%) translateY(-60px);
+  transform: translateX(-50%) translateY(80px);
   display: flex;
   align-items: center;
   gap: var(--s8);
@@ -1535,6 +1535,10 @@ body {
   to {
     transform: rotate(360deg);
   }
+}
+/* Если одновременно виден и индикатор загрузки, и тост восстановления — тост поднимается выше, чтобы не перекрываться */
+.busy-indicator.show ~ .restore-toast {
+  bottom: calc(var(--s21) + 48px);
 }
 @media (prefers-reduced-motion: reduce) {
   .busy-indicator {
@@ -3092,6 +3096,7 @@ body.ai-dot-on .ai-dot {
   .rz,
   .tabbar,
   .restore-toast,
+  .busy-indicator,
   .about-overlay,
   .about-modal,
   .font-overlay,
