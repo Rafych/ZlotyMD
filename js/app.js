@@ -1635,6 +1635,26 @@ function makeLangError(kind, code, status) {
   return err;
 }
 
+// Загружает lang/<код>.js через <script> (способ для file://, где fetch недоступен).
+// Файл кладёт словарь в window.ZMD_LANGS[код]; возвращает этот объект.
+function loadLangScript(code) {
+  return new Promise((resolve, reject) => {
+    const sc = document.createElement('script');
+    sc.src = 'lang/' + code + '.js';
+    sc.onload = () => {
+      sc.remove();
+      const data = window.ZMD_LANGS && window.ZMD_LANGS[code];
+      if (data) resolve(data);
+      else reject(makeLangError('format', code));
+    };
+    sc.onerror = () => {
+      sc.remove();
+      reject(makeLangError('notfound', code));
+    };
+    document.head.appendChild(sc);
+  });
+}
+
 // Загружает lang/<код>.json в LANGS (английский встроен, остальные — по требованию).
 // Бросает ошибку с полем kind: invalid | file | network | notfound | http | format
 async function loadLangFile(code) {
@@ -1642,19 +1662,23 @@ async function loadLangFile(code) {
   if (!LANG_CODE_RE.test(code)) throw makeLangError('invalid', code);
   if (!_langLoading[code]) {
     _langLoading[code] = (async () => {
-      let res;
-      try {
-        res = await fetch('lang/' + code + '.json');
-      } catch (e) {
-        // При открытии через file:// fetch недоступен — отдельное понятное сообщение
-        throw makeLangError(location.protocol === 'file:' ? 'file' : 'network', code);
-      }
-      if (!res.ok) throw makeLangError(res.status === 404 ? 'notfound' : 'http', code, res.status);
       let data;
-      try {
-        data = await res.json();
-      } catch (e) {
-        throw makeLangError('format', code);
+      if (location.protocol === 'file:') {
+        // При открытии с диска fetch блокируется CORS, поэтому подключаем lang/<код>.js через <script>
+        data = await loadLangScript(code);
+      } else {
+        let res;
+        try {
+          res = await fetch('lang/' + code + '.json');
+        } catch (e) {
+          throw makeLangError('network', code);
+        }
+        if (!res.ok) throw makeLangError(res.status === 404 ? 'notfound' : 'http', code, res.status);
+        try {
+          data = await res.json();
+        } catch (e) {
+          throw makeLangError('format', code);
+        }
       }
       if (!data || typeof data !== 'object' || Array.isArray(data) || typeof data.init !== 'string') {
         throw makeLangError('format', code);
