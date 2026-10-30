@@ -439,14 +439,29 @@ function onOpenFileClick() {
   input.click();
 }
 
-// Читает выбранный пользователем файл (.md/.zmd) и загружает его в редактор
+// Читает выбранный пользователем файл (.md/.zmd/.txt и др.) и загружает его в редактор
 async function handleFileOpenInput(evt) {
   const file = evt.target.files && evt.target.files[0];
   if (!file) return;
   if (!(await confirmAiNav())) return;
-  const text = await file.text();
+  await openFileObject(file);
+}
+
+// Расширения, с которыми приложение регистрируется в ОС (должны совпадать с file_handlers в manifest.webmanifest)
+const ZMD_FILE_EXT_RE = /\.(zmd|md|markdown|text|txt)$/i;
+
+// Открывает объект File как новый документ: общий код для диалога «Открыть файл» и запуска из ОС (PWA file handler)
+async function openFileObject(file) {
+  let text;
+  try {
+    text = await file.text();
+  } catch (e) {
+    console.warn('Failed to read file:', e);
+    await showErrorModal(tr('fileOpenFailed').replace('{name}', file.name || ''));
+    return;
+  }
   const { meta, content } = parseZmdText(text);
-  const baseName = file.name.replace(/\.(zmd|md|markdown|txt)$/i, '');
+  const baseName = file.name.replace(ZMD_FILE_EXT_RE, '');
 
   await flushCurrentDocSave();
   const now = Date.now();
@@ -472,6 +487,31 @@ async function handleFileOpenInput(evt) {
   await persistDocIndex();
   await switchToDoc(id);
   closeDocsPanel();
+}
+
+// PWA: обработка файлов, которые ОС передаёт приложению («Открыть с помощью» / двойной клик по файлу)
+let _launchFilesChain = Promise.resolve(); // очередь, чтобы несколько файлов открывались строго по одному
+function initLaunchQueue() {
+  if (!('launchQueue' in window) || !window.launchQueue || typeof window.launchQueue.setConsumer !== 'function') return;
+  window.launchQueue.setConsumer(launchParams => {
+    if (!launchParams || !launchParams.files || !launchParams.files.length) return;
+    const handles = Array.from(launchParams.files);
+    _launchFilesChain = _launchFilesChain.then(async () => {
+      await appReady; // ждём, пока загрузятся язык, настройки и список документов
+      for (const handle of handles) {
+        let file = null;
+        try {
+          file = await handle.getFile();
+        } catch (e) {
+          console.warn('Failed to get launched file:', e);
+          await showErrorModal(tr('fileOpenFailed').replace('{name}', handle.name || ''));
+          continue;
+        }
+        if (!(await confirmAiNav())) break;
+        await openFileObject(file);
+      }
+    }).catch(err => console.warn('Launch queue error:', err));
+  });
 }
 // Определяет заголовок документа: явное имя или первый заголовок H1
 function getDocTitle() {
@@ -1690,6 +1730,7 @@ const LANGS = {
     docsCantDeleteLast: 'You must have at least one document.',
     untitledDoc: 'Untitled Document',
     docsOpenedMsg: 'Opened "{name}"',
+    fileOpenFailed: 'Could not open the file “{name}”.',
     openWindow: 'Open',
     diffPrompt: 'Enter language name (leave blank for plain diff):',
     diffDefault: '- removed line\n+ added line',
@@ -3155,12 +3196,15 @@ async function initDocuments() {
   await switchToDoc(curId);
 }
 
-(async function initSave() {
+// Promise завершения инициализации: нужен, чтобы файлы из ОС открывались только после загрузки документов
+const appReady = (async function initSave() {
   await loadLangSetting();
   await loadLegacyFontSizes();
   await loadSettings();
   await initDocuments();
 })();
+// Потребитель очереди запуска регистрируем сразу, чтобы не пропустить файлы, переданные при старте
+initLaunchQueue();
 
 // Обрабатывает пользовательские расширенные таблицы (:::table) при рендеринге
 function _processCustomTables(v) {
