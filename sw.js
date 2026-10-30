@@ -2,7 +2,7 @@
  * Локальные файлы и CDN-ресурсы (marked, KaTeX, Mermaid, шрифты) кэшируются
  * при установке и при использовании, поэтому редактор работает без сети.
  * При изменении файлов приложения увеличьте CACHE_VERSION. */
-const CACHE_VERSION = 'zmd-v7';
+const CACHE_VERSION = 'zmd-v8';
 const CACHE = CACHE_VERSION;
 
 const LOCAL_ASSETS = [
@@ -47,7 +47,8 @@ const CDN_STYLES = [
 const CACHEABLE_HOSTS = [
   'cdnjs.cloudflare.com',
   'fonts.googleapis.com',
-  'fonts.gstatic.com'
+  'fonts.gstatic.com',
+  'cdn.jsdelivr.net' // TikZJax (~6 МБ) — кэшируется при первом использовании, не при установке
 ];
 
 async function putSafe(cache, url, response) {

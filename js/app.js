@@ -118,6 +118,8 @@ function buildPreviewHTML(title) {
     .md .mermaid svg{display:block;max-width:100%;height:auto;overflow:hidden;margin:0 auto;font-family:var(--font) !important}
     .md .mermaid svg text,.md .mermaid svg .label{font-family:var(--font) !important}
     .md .mermaid svg .edgePath .path{stroke-width:1.5px}
+    .md .tikz-wrap{text-align:center;margin-bottom:var(--s21);overflow-x:auto}
+    .md .tikz-wrap svg{display:inline-block;max-width:100%;height:auto}
     .md .mermaid-error{background:var(--grt);border:1px solid var(--gr);border-radius:var(--r8);padding:var(--s13) var(--s21);color:var(--gr);font-size:12px;font-family:var(--mono);text-align:left}
     .md blockquote{border-left:3px solid var(--gy);background:var(--gyt);padding:var(--s13) var(--s21);border-radius:0 var(--r8) var(--r8) 0;margin-bottom:var(--s13);color:var(--mut);font-style:italic}
     .md table{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13);background:#fff}
@@ -159,6 +161,11 @@ function buildPreviewHTML(title) {
 
   const clone = mo.cloneNode(true);
   clone.querySelectorAll('.cpbtn').forEach(b => b.remove());
+  // TikZ уже нарисован в SVG; незаконченные компиляции в экспорт не попадают
+  clone.querySelectorAll('script[type="text/tikz"]').forEach(n => n.remove());
+  const tikzFonts = clone.querySelector('.tikz-wrap')
+    ? `<link rel="stylesheet" href="${TIKZJAX_BASE}/fonts.css">\n`
+    : '';
   clone.querySelectorAll('.mermaid').forEach(node => {
     const src = node.getAttribute('data-src') || node.dataset.src;
     if (src) {
@@ -204,7 +211,7 @@ function buildPreviewHTML(title) {
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<style>${PREVIEW_CSS}</style>
+${tikzFonts}<style>${PREVIEW_CSS}</style>
 </head>
 <body>
 ${bodyInner}
@@ -756,11 +763,6 @@ function _restoreLatex(html) {
   });
 }
 
-// Определяет, является ли документ полностью LaTeX-документом (например, \documentclass)
-function _isLatexDoc(v) {
-  return /\\documentclass\s*[\[{]/.test(v) || /\\begin\s*\{document\}/.test(v);
-}
-
 // Разбирает LaTeX-документ на структурные блоки (секции, окружения и т.д.)
 function _parseLatexDoc(v) {
   v = v.replace(/(?<!\\)%[^\n]*/g, '');
@@ -837,7 +839,7 @@ function _parseLatexDoc(v) {
 
 // Рендерит распознанный LaTeX-документ в HTML-разметку
 function _renderLatexDoc(v) {
-  const { body, pkgs } = _parseLatexDoc(v);
+  const { body } = _parseLatexDoc(v);
 
   let processed = _protectLatex(body);
 
@@ -848,18 +850,7 @@ function _renderLatexDoc(v) {
   let html = marked.parse(processed);
 
   html = _restoreLatex(html);
-
-  const pkgBanner = pkgs.length
-    ? `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-         padding:8px 13px;margin-bottom:21px;border-radius:8px;
-         background:var(--grt);border:1px solid var(--gr);font-size:11px;color:var(--gr)">
-         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="8" cy="8" r="6.5"/><line x1="8" y1="7" x2="8" y2="11.5"/><circle cx="8" cy="4.5" r=".8" fill="currentColor" stroke="none"/></svg>
-         <strong style="font-weight:700">Packages:</strong>
-         ${pkgs.map(p => `<code style="background:rgba(234,67,53,.12);color:var(--gr);padding:1px 5px;border-radius:4px;font-size:11px">${p}</code>`).join('')}
-       </div>`
-    : '';
-
-  return pkgBanner + html;
+  return `<div class="latex-doc">${html}</div>`;
 }
 
 // Экранирование спецсимволов для встраивания кода Mermaid-диаграммы
@@ -897,18 +888,358 @@ function _convertMermaidFences(html) {
     }
   );
 }
+// ── TikZ (TikZJax: TeX, скомпилированный в WebAssembly, рисует TikZ в SVG прямо в браузере) ──
+const TIKZJAX_BASE = 'https://cdn.jsdelivr.net/npm/@drgrice1/tikzjax@1.0.0-beta24/dist';
+// Пакеты, файлы которых есть в сборке TikZJax (tikz и xcolor уже загружены в ядро)
+const TIKZ_SUPPORTED_PKGS = new Set([
+  'amsbsy', 'amsfonts', 'amsgen', 'amsmath', 'amsopn', 'amssymb', 'amstext', 'array',
+  'etoolbox', 'hf-tikz', 'pgfplots', 'tikz-3dplot', 'tikz-cd', 'xparse'
+]);
+const TIKZ_PRELOADED_PKGS = new Set(['tikz', 'pgf', 'xcolor']);
+const TIKZ_ENVS = 'tikzpicture|tikzcd';
+const TIKZ_TOKEN = '\x02TKZ';
+const TIKZ_END = '\x03';
+const TIKZ_DEBOUNCE = 600;
+const TIKZ_CACHE_MAX = 200;
+let _tikzStore = [];
+// ключ → готовый SVG (или { error }) — чтобы не компилировать заново при каждом нажатии клавиши
+const _tikzSvgCache = new Map();
+// ключ → узел с идущей компиляцией: переносится в новый предпросмотр, а не запускается заново
+const _tikzLiveNodes = new Map();
+let _tikzTimer = null;
+let _tikzJaxPromise = null;
 
-const _edBadge = document.getElementById('edBadge');
-// Переключает индикатор режима редактора между Markdown и LaTeX
-function _setEditorMode(isLatex) {
-  if (isLatex) {
-    _edBadge.className = 'badge tx';
-    _edBadge.textContent = 'LaTeX';
-  } else {
-    _edBadge.className = 'badge bl';
-    _edBadge.textContent = 'Markdown';
-  }
+// Разбирает строки преамбулы (\usepackage, \usetikzlibrary и т.п.) в общий объект параметров
+function _tikzParsePreamble(text, opts) {
+  text.replace(/\\usetikzlibrary\s*\{([^}]*)\}/g, (_, list) => {
+    list.split(',').map(s => s.trim()).filter(Boolean).forEach(l => opts.libs.add(l));
+    return '';
+  });
+  text.replace(/\\usepackage\s*(?:\[([^\]]*)\])?\s*\{([^}]*)\}/g, (_, o, list) => {
+    list.split(',').map(s => s.trim()).filter(Boolean).forEach(p => {
+      if (TIKZ_PRELOADED_PKGS.has(p)) return;
+      if (TIKZ_SUPPORTED_PKGS.has(p)) opts.pkgs[p] = o || '';
+      else opts.unsupported.add(p);
+    });
+    return '';
+  });
+  // Прочие команды преамбулы, которые влияют на рисунки
+  (text.match(/^[ \t]*\\(?:pgfplotsset|tikzset|definecolor|colorlet|usepgfplotslibrary|tdplotsetmaincoords|newcommand|renewcommand)\b.*$/gm) || [])
+    .forEach(line => opts.pre.push(line.trim()));
+  return opts;
 }
+
+// TeX в TikZJax не умеет японский/китайский и символы вроде ℃ (нет шрифтов и inputenc).
+// Такие куски заменяем прямоугольником той же ширины с «меткой» в цвете, а после
+// компиляции ставим на его место SVG-текст. Перед меткой — крошечный прямоугольник
+// в текущем цвете, чтобы узнать цвет текста.
+const TIKZ_TEXT_MACRO =
+  '\\newcommand{\\zmdtext}[3]{\\rule{0.01pt}{0.01pt}\\textcolor[RGB]{3,#1,#2}{\\rule[-0.12em]{#3em}{1em}}}';
+const TIKZ_NON_TEX_RE = /[^\u0000-ÿ]+/g;
+const TIKZ_WIDE_RE =
+  /[ᄀ-ᅟ℀-⅏⺀-꓏가-힣豈-﫿︰-﹏＀-｠￠-￦]/;
+const TIKZ_TEXT_FONT =
+  "'Noto Serif JP','Hiragino Mincho ProN','Yu Mincho','Noto Serif CJK JP',serif";
+
+// Заменяет недоступные для TeX символы на метки; строки сохраняет в texts
+function _tikzMaskText(str, texts) {
+  return str.replace(TIKZ_NON_TEX_RE, run => {
+    const i = texts.length;
+    texts.push(run);
+    let w = 0;
+    for (const ch of run) w += TIKZ_WIDE_RE.test(ch) ? 1 : 0.6;
+    return `\\zmdtext{${200 + (i >> 8)}}{${i & 255}}{${w.toFixed(2)}}`;
+  });
+}
+
+function _tikzRgb(fill) {
+  if (!fill) return null;
+  let m = fill.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (m) return m.slice(1).map(h => parseInt(h, 16));
+  m = fill.match(/^rgb\(\s*([\d.]+)(%?)\s*,\s*([\d.]+)%?\s*,\s*([\d.]+)%?\s*\)$/i);
+  if (!m) return null;
+  const k = m[2] ? 2.55 : 1;
+  return [m[1], m[3], m[4]].map(v => Math.round(parseFloat(v) * k));
+}
+
+// Ставит на место меток настоящий текст (тот же размер, позиция и цвет)
+function _tikzApplyText(svg, texts) {
+  if (!texts || !texts.length) return;
+  const rects = Array.from(svg.querySelectorAll('rect'));
+  rects.forEach((r, k) => {
+    const c = _tikzRgb(r.getAttribute('fill'));
+    if (!c || c[0] !== 3 || c[1] < 200) return;
+    const str = texts[(c[1] - 200) * 256 + c[2]];
+    if (str == null) return;
+    let color = '#000';
+    const probe = rects[k - 1];
+    if (probe && parseFloat(probe.getAttribute('width')) < 0.1 && parseFloat(probe.getAttribute('height')) < 0.1) {
+      color = probe.getAttribute('fill') || color;
+      probe.remove();
+    }
+    const x = parseFloat(r.getAttribute('x'));
+    const y = parseFloat(r.getAttribute('y'));
+    const w = parseFloat(r.getAttribute('width'));
+    const h = parseFloat(r.getAttribute('height'));
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    t.setAttribute('x', x);
+    t.setAttribute('y', y + h * 0.88);
+    t.setAttribute('font-size', h);
+    t.setAttribute('textLength', w);
+    t.setAttribute('lengthAdjust', 'spacingAndGlyphs');
+    t.setAttribute('fill', color);
+    t.setAttribute('font-family', TIKZ_TEXT_FONT);
+    if (r.getAttribute('transform')) t.setAttribute('transform', r.getAttribute('transform'));
+    t.textContent = str;
+    r.replaceWith(t);
+  });
+}
+
+function _tikzEmptyOpts() {
+  return { libs: new Set(), pkgs: {}, pre: [], unsupported: new Set() };
+}
+
+// Регистрирует один рисунок и возвращает токен-заглушку для Markdown
+function _tikzPush(code, docOpts) {
+  const opts = _tikzEmptyOpts();
+  docOpts.libs.forEach(l => opts.libs.add(l));
+  Object.assign(opts.pkgs, docOpts.pkgs);
+  opts.pre.push(...docOpts.pre);
+  docOpts.unsupported.forEach(p => opts.unsupported.add(p));
+
+  let body = code.trim();
+  // Всё, что стоит до первого \begin{...}, — это преамбула самого блока
+  const firstEnv = body.search(/\\begin\s*\{/);
+  if (firstEnv > 0) {
+    const head = body.slice(0, firstEnv);
+    _tikzParsePreamble(head, opts);
+    const rest = head
+      .replace(/\\usetikzlibrary\s*\{[^}]*\}/g, '')
+      .replace(/\\usepackage\s*(?:\[[^\]]*\])?\s*\{[^}]*\}/g, '');
+    const pre = rest.split('\n').map(l => l.trim()).filter(l => l && !opts.pre.includes(l));
+    opts.pre.push(...pre);
+    body = body.slice(firstEnv);
+  }
+  // Голые команды без окружения оборачиваем в tikzpicture
+  if (!/\\begin\s*\{/.test(body)) body = `\\begin{tikzpicture}\n${body}\n\\end{tikzpicture}`;
+  // Пакеты, без которых окружение не скомпилируется
+  if (/\\begin\s*\{tikzcd\}/.test(body)) opts.pkgs['tikz-cd'] ??= '';
+  if (/\\begin\s*\{(?:axis|semilogxaxis|semilogyaxis|loglogaxis|polaraxis)\}|\\addplot/.test(body))
+    opts.pkgs.pgfplots ??= '';
+  if (/\\tdplot/.test(body)) opts.pkgs['tikz-3dplot'] ??= '';
+
+  const texts = [];
+  body = _tikzMaskText(body, texts);
+  let pre = opts.pre.map(l => _tikzMaskText(l, texts));
+  if (texts.length) pre = [TIKZ_TEXT_MACRO, ...pre];
+
+  _tikzStore.push({
+    src: body,
+    libs: [...opts.libs].sort().join(','),
+    pkgs: opts.pkgs,
+    pre: pre.join('\n'),
+    texts,
+    unsupported: [...opts.unsupported]
+  });
+  return `\n\n${TIKZ_TOKEN}${_tikzStore.length - 1}${TIKZ_END}\n\n`;
+}
+
+// Применяет fn только к частям текста вне блоков кода
+function _tikzOutsideCode(text, fn) {
+  return text
+    .split(/(```[\s\S]*?```|`[^`\n]+`)/g)
+    .map((part, i) => (i % 2 ? part : fn(part)))
+    .join('');
+}
+
+// Markdown: ```tikz-блоки и «голые» \begin{tikzpicture}/\begin{tikzcd} заменяет токенами
+function _protectTikz(v) {
+  const hasFence = /^```tikz[ \t]*$/m.test(v);
+  const envRe = new RegExp(`\\\\begin\\s*\\{(${TIKZ_ENVS})\\}[\\s\\S]*?\\\\end\\s*\\{\\1\\}`, 'g');
+  if (!hasFence && !envRe.test(v)) return v;
+  envRe.lastIndex = 0;
+
+  // \usetikzlibrary / \usepackage вне кода действуют на все рисунки документа
+  const docOpts = _tikzEmptyOpts();
+  v = _tikzOutsideCode(v, part =>
+    part.replace(/^[ \t]*\\(?:usetikzlibrary|usepackage)\b[^\n]*$/gm, line => {
+      _tikzParsePreamble(line, docOpts);
+      return '';
+    })
+  );
+  v = v.replace(/^```tikz[ \t]*\n([\s\S]*?)^```[ \t]*$/gm, (_, code) => _tikzPush(code, docOpts));
+  v = _tikzOutsideCode(v, part => part.replace(envRe, full => _tikzPush(full, docOpts)));
+  return v;
+}
+
+// LaTeX-документ: окружения tikzpicture/tikzcd с учётом преамбулы документа
+function _protectTikzLatexDoc(v) {
+  const envRe = new RegExp(`\\\\begin\\s*\\{(${TIKZ_ENVS})\\}[\\s\\S]*?\\\\end\\s*\\{\\1\\}`, 'g');
+  if (!envRe.test(v)) return v;
+  envRe.lastIndex = 0;
+  const docStart = v.search(/\\begin\s*\{document\}/);
+  const preamble = (docStart >= 0 ? v.slice(0, docStart) : '').replace(/(?<!\\)%[^\n]*/g, '');
+  const docOpts = _tikzParsePreamble(preamble, _tikzEmptyOpts());
+  const head = docStart >= 0 ? v.slice(0, docStart) : '';
+  const body = docStart >= 0 ? v.slice(docStart) : v;
+  return head + body.replace(envRe, full => _tikzPush(full, docOpts));
+}
+
+// LaTeX-документ (\documentclass … \end{document}), вставленный в Markdown, рисуем на его месте,
+// а не переключаем весь редактор в отдельный режим
+const LATEX_DOC_RE =
+  /\\documentclass\s*(?:\[[^\]]*\])?\s*\{[^}]*\}[\s\S]*?\\end\s*\{document\}|\\begin\s*\{document\}[\s\S]*?\\end\s*\{document\}/g;
+const LDOC_TOKEN = '\x02LDOC';
+let _latexDocStore = [];
+
+function _protectLatexDocs(v) {
+  _latexDocStore = [];
+  if (!/\\(?:documentclass|begin\s*\{document\})/.test(v)) return v;
+  return _tikzOutsideCode(v, part =>
+    part.replace(LATEX_DOC_RE, doc => {
+      let d = _protectTikzLatexDoc(doc);
+      if (!appSettings.htmlRendering) d = escapeHtmlInMarkdown(d);
+      _latexDocStore.push(_renderLatexDoc(d));
+      return `\n\n${LDOC_TOKEN}${_latexDocStore.length - 1}${TIKZ_END}\n\n`;
+    })
+  );
+}
+
+function _restoreLatexDocs(html) {
+  return html.replace(/(?:<p>)?\x02LDOC(\d+)\x03(?:<\/p>)?/g, (_, i) => _latexDocStore[parseInt(i)] || '');
+}
+
+// Заменяет токены на контейнеры рисунков (сам SVG вставляет _mountTikz)
+function _restoreTikz(html) {
+  const re = new RegExp(`(?:<p>)?\\x02TKZ(\\d+)\\x03(?:</p>)?`, 'g');
+  return html.replace(re, (_, i) => {
+    const item = _tikzStore[parseInt(i)];
+    if (!item) return '';
+    const key = JSON.stringify([item.src, item.libs, item.pkgs, item.pre, item.texts]);
+    return `<div class="tikz-wrap" data-tikz-idx="${i}" data-tikz-key="${_mmdEsc(key).replace(/"/g, '&quot;')}"></div>`;
+  });
+}
+
+function _tikzCachePut(key, value) {
+  _tikzSvgCache.delete(key);
+  _tikzSvgCache.set(key, value);
+  if (_tikzSvgCache.size > TIKZ_CACHE_MAX) _tikzSvgCache.delete(_tikzSvgCache.keys().next().value);
+}
+
+function _tikzShowError(wrap, item, kind) {
+  const t = LANGS[currentLang] || LANGS['en'];
+  const div = document.createElement('div');
+  div.className = 'mermaid-error tikz-error';
+  let msg = kind === 'load' ? t.tikzLoadError : t.tikzCompileError;
+  if (kind !== 'load' && item && item.unsupported.length) {
+    msg += '\n' + t.tikzUnsupportedPkgs.replace('{pkgs}', item.unsupported.join(', '));
+  }
+  div.textContent = msg;
+  wrap.replaceChildren(div);
+}
+
+// Загружает TikZJax (≈6 МБ при первом использовании, дальше — из кэша браузера/Service Worker)
+function _ensureTikzJax() {
+  if (_tikzJaxPromise) return _tikzJaxPromise;
+  _tikzJaxPromise = new Promise((resolve, reject) => {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = TIKZJAX_BASE + '/fonts.css';
+    document.head.appendChild(link);
+    const s = document.createElement('script');
+    s.src = TIKZJAX_BASE + '/tikzjax.js';
+    s.onload = () => resolve();
+    s.onerror = () => {
+      _tikzJaxPromise = null; // при следующей отрисовке попробуем снова
+      s.remove();
+      reject(new Error('TikZJax load failed'));
+    };
+    document.head.appendChild(s);
+  });
+  return _tikzJaxPromise;
+}
+
+// Вставляет готовые SVG из кэша сразу, а новые рисунки отправляет в TikZJax с задержкой
+function _mountTikz() {
+  const wraps = Array.from(mo.querySelectorAll('.tikz-wrap'));
+  const present = new Set();
+  let needCompile = false;
+  wraps.forEach(wrap => {
+    const key = wrap.dataset.tikzKey;
+    present.add(key);
+    const cached = _tikzSvgCache.get(key);
+    if (cached) {
+      if (cached.error) _tikzShowError(wrap, _tikzStore[wrap.dataset.tikzIdx], cached.error);
+      else wrap.innerHTML = cached.svg;
+      return;
+    }
+    const live = _tikzLiveNodes.get(key);
+    if (live) wrap.appendChild(live);
+    else needCompile = true;
+  });
+  // Компиляции рисунков, которых больше нет в тексте, не переносим
+  for (const key of _tikzLiveNodes.keys()) if (!present.has(key)) _tikzLiveNodes.delete(key);
+  if (wraps.length) _ensureTikzJax().catch(() => {});
+  clearTimeout(_tikzTimer);
+  if (needCompile) _tikzTimer = setTimeout(_compileTikz, TIKZ_DEBOUNCE);
+}
+
+async function _compileTikz() {
+  const wraps = Array.from(mo.querySelectorAll('.tikz-wrap')).filter(
+    w => !w.firstChild && !_tikzSvgCache.has(w.dataset.tikzKey)
+  );
+  if (!wraps.length) return;
+  try {
+    await _ensureTikzJax();
+  } catch (_) {
+    wraps.forEach(w => w.isConnected && _tikzShowError(w, null, 'load'));
+    return;
+  }
+  wraps.forEach(wrap => {
+    if (!wrap.isConnected || wrap.firstChild) return;
+    const key = wrap.dataset.tikzKey;
+    if (_tikzLiveNodes.has(key)) {
+      wrap.appendChild(_tikzLiveNodes.get(key));
+      return;
+    }
+    const item = _tikzStore[wrap.dataset.tikzIdx];
+    const inner = document.createElement('div');
+    inner.className = 'tikz-inner';
+    const s = document.createElement('script');
+    s.type = 'text/tikz';
+    if (item.libs) s.dataset.tikzLibraries = item.libs;
+    if (Object.keys(item.pkgs).length) s.dataset.texPackages = JSON.stringify(item.pkgs);
+    if (item.pre) s.dataset.addToPreamble = item.pre;
+    s.textContent = item.src;
+    inner.appendChild(s);
+    _tikzLiveNodes.set(key, inner);
+    wrap.appendChild(inner);
+  });
+}
+
+// TikZJax сообщает о готовом SVG событием; при ошибке он вставляет <img> на invalid.site
+document.addEventListener('tikzjax-load-finished', e => {
+  const svg = e.target;
+  const wrap = svg.closest && svg.closest('.tikz-wrap');
+  if (!wrap) return;
+  const key = wrap.dataset.tikzKey;
+  _tikzApplyText(svg, JSON.parse(key)[4]);
+  _tikzCachePut(key, { svg: svg.outerHTML });
+  _tikzLiveNodes.delete(key);
+});
+new MutationObserver(records => {
+  for (const r of records) {
+    for (const n of r.addedNodes) {
+      if (n.nodeName !== 'IMG' || !/invalid\.site/.test(n.getAttribute('src') || '')) continue;
+      const wrap = n.closest('.tikz-wrap');
+      if (!wrap) continue;
+      const key = wrap.dataset.tikzKey;
+      _tikzCachePut(key, { error: 'compile' });
+      _tikzLiveNodes.delete(key);
+      _tikzShowError(wrap, _tikzStore[wrap.dataset.tikzIdx], 'compile');
+    }
+  }
+}).observe(mo, { childList: true, subtree: true });
 
 // Обрабатывает пользовательские атрибуты изображений {width=...height=...}
 function _figureLabel(n, alt) {
@@ -942,74 +1273,74 @@ function _processImageAttrs(v) {
 
 // Главная функция рендеринга: Markdown -> HTML предпросмотр (ядро приложения)
 function render(v) {
+  const raw = v;
+  _tikzStore = [];
+  // LaTeX-документы и TikZ вынимаем до экранирования HTML: в коде рисунков бывают «<» и «>»
+  v = _protectLatexDocs(v);
+  v = _protectTikz(v);
   if (!appSettings.htmlRendering) {
     v = escapeHtmlInMarkdown(v);
   }
   if (!v.trim()) {
     emp.style.display = 'flex';
     mo.style.display = 'none';
-    _setEditorMode(false);
   } else {
     emp.style.display = 'none';
     mo.style.display = 'block';
-    const isLatex = _isLatexDoc(v);
-    _setEditorMode(isLatex);
-    if (isLatex) {
-      mo.innerHTML = _renderLatexDoc(v);
-    } else {
-      const hasMmd = /```\s*mermaid\b/.test(v);
-      const vv = _processCustomTables(_processImageAttrs(v));
-      let _html = marked.parse(_protectEscapes(_protectLatex(vv)));
-      _html = _convertMermaidFences(_html);
-      mo.innerHTML = _restoreEscapes(_restoreLatex(_html));
-      if (hasMmd && typeof mermaid !== 'undefined') {
+    const hasMmd = /```\s*mermaid\b/.test(v);
+    const vv = _processCustomTables(_processImageAttrs(v));
+    let _html = marked.parse(_protectEscapes(_protectLatex(vv)));
+    _html = _convertMermaidFences(_html);
+    mo.innerHTML = _restoreTikz(_restoreLatexDocs(_restoreEscapes(_restoreLatex(_html))));
+    if (hasMmd && typeof mermaid !== 'undefined') {
+      requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            const nodes = Array.from(mo.querySelectorAll('.mermaid'));
-            (async () => {
-              for (let idx = 0; idx < nodes.length; idx++) {
-                const node = nodes[idx];
-                node.id =
-                  'mmd-' + Date.now() + '-' + idx + '-' + Math.random().toString(36).slice(2, 7);
-                if (!node.dataset.src) node.dataset.src = node.textContent;
-                try {
-                  await mermaid.run({ nodes: [node], suppressErrors: true });
-                  node.querySelectorAll('svg').forEach(svg => {
-                    const vb = svg.getAttribute('viewBox');
-                    if (!vb) return;
-                    const parts = vb.trim().split(/\s+/);
-                    const vw = parseFloat(parts[2]);
-                    const vh = parseFloat(parts[3]);
-                    if (!(vw > 0 && vh > 0)) return;
-                    const curH = parseFloat(svg.getAttribute('height') || '0');
-                    if (!curH) {
-                      svg.setAttribute('height', vh);
-                      if (!parseFloat(svg.getAttribute('width') || '0')) {
-                        svg.setAttribute('width', vw);
-                      }
+          const nodes = Array.from(mo.querySelectorAll('.mermaid'));
+          (async () => {
+            for (let idx = 0; idx < nodes.length; idx++) {
+              const node = nodes[idx];
+              node.id =
+                'mmd-' + Date.now() + '-' + idx + '-' + Math.random().toString(36).slice(2, 7);
+              if (!node.dataset.src) node.dataset.src = node.textContent;
+              try {
+                await mermaid.run({ nodes: [node], suppressErrors: true });
+                node.querySelectorAll('svg').forEach(svg => {
+                  const vb = svg.getAttribute('viewBox');
+                  if (!vb) return;
+                  const parts = vb.trim().split(/\s+/);
+                  const vw = parseFloat(parts[2]);
+                  const vh = parseFloat(parts[3]);
+                  if (!(vw > 0 && vh > 0)) return;
+                  const curH = parseFloat(svg.getAttribute('height') || '0');
+                  if (!curH) {
+                    svg.setAttribute('height', vh);
+                    if (!parseFloat(svg.getAttribute('width') || '0')) {
+                      svg.setAttribute('width', vw);
                     }
-                  });
-                } catch (_) {
-                  const wrap = node.closest('.mermaid-wrap');
-                  if (wrap && !wrap.querySelector('svg') && !wrap.querySelector('.mermaid-error')) {
-                    const errDiv = document.createElement('div');
-                    errDiv.className = 'mermaid-error';
-                    errDiv.textContent =
-                      LANGS[currentLang]?.mermaidSyntaxError || LANGS['en'].mermaidSyntaxError;
-                    wrap.appendChild(errDiv);
                   }
+                });
+              } catch (_) {
+                const wrap = node.closest('.mermaid-wrap');
+                if (wrap && !wrap.querySelector('svg') && !wrap.querySelector('.mermaid-error')) {
+                  const errDiv = document.createElement('div');
+                  errDiv.className = 'mermaid-error';
+                  errDiv.textContent =
+                    LANGS[currentLang]?.mermaidSyntaxError || LANGS['en'].mermaidSyntaxError;
+                  wrap.appendChild(errDiv);
                 }
               }
-            })();
-          });
+            }
+          })();
         });
-      }
+      });
     }
+    _mountTikz();
     addCopyBtns();
   }
-  cc.textContent = v.length.toLocaleString();
-  wc.textContent = (v.trim() ? v.trim().split(/\s+/).length : 0).toLocaleString();
-  lc.textContent = v.split('\n').length.toLocaleString();
+  // Статистика — по исходному тексту (а не по тексту с токенами и экранированием)
+  cc.textContent = raw.length.toLocaleString();
+  wc.textContent = (raw.trim() ? raw.trim().split(/\s+/).length : 0).toLocaleString();
+  lc.textContent = raw.split('\n').length.toLocaleString();
 }
 
 ed.addEventListener('input', () => render(ed.value));
@@ -1118,6 +1449,19 @@ function iMermaid() {
   ed.focus();
   render(ed.value);
 }
+// Вставляет шаблон рисунка TikZ
+function iTikz() {
+  const { s, e, t } = gs();
+  const body =
+    t ||
+    '\\begin{tikzpicture}\n  \\draw[->] (0,0) -- (2,1) node[right] {$v$};\n  \\draw (1,0) circle (0.5);\n\\end{tikzpicture}';
+  const r = '```tikz\n' + body + '\n```';
+  ed.value = ed.value.slice(0, s) + r + ed.value.slice(e);
+  ed.selectionStart = s + 8;
+  ed.selectionEnd = s + 8 + body.length;
+  ed.focus();
+  render(ed.value);
+}
 // Переключает вкладки редактор/превью на мобильных экранах
 function mTab(tab, btn) {
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
@@ -1216,6 +1560,15 @@ const LANGS = {
     aiEditStale: '⚠ Editor changed — could not apply',
     aiKeyWarning: '⚠ Please enter your {backend} API key and press "Save".',
     aiThinking: '● Thinking…',
+    pvPopBtnTitle: 'Open in new window',
+    ttTikz: 'TikZ figure (```tikz...```)',
+    tikzLoadError: '⚠ TikZ: could not load the TeX engine (an internet connection is needed the first time).',
+    tikzCompileError: '⚠ TikZ: compilation failed. Check the code for errors.',
+    tikzUnsupportedPkgs: 'Packages not available in the browser TeX: {pkgs}',
+    aiModelsRefreshTitle: 'Reload the model list from the API',
+    aiModelsFetchError: '⚠ Could not load the model list: ',
+    aiModelNotFound: 'This model is not available. Press ↻ to reload the model list and pick another one.',
+    aiRefusal: '⚠ The model declined to answer this request.',
     aiErrorPrefix: '⚠ Error: ',
     aiSelectedSuffix: ' (selected text: {n} chars)',
     aiEmptyResponse: '(empty response)',
@@ -1434,35 +1787,173 @@ sequenceDiagram
   }
 };
 
-// Список доступных ИИ-моделей по бэкендам (Anthropic / Gemini)
-const AI_MODELS = {
+// Встроенный список моделей — используется, пока список не получен из API (нет ключа, нет сети)
+const AI_FALLBACK_MODELS = {
   anthropic: [
-    { id: 'claude-sonnet-5', label: 'Claude Sonnet 5', attach: true },
-    { id: 'claude-opus-4-8', label: 'Claude Opus 4.8', attach: true },
-    { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5', attach: true }
+    { id: 'claude-opus-5-5', label: 'Claude Opus 5.5', attach: true },
+    { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5', attach: true },
+    { id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5', attach: true }
   ],
   gemini: [
-    { id: 'gemini-3.1-pro', label: 'Gemini 3.1 Pro', attach: true },
-    { id: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash', attach: true },
-    { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', attach: true },
-    { id: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite', attach: false }
+    { id: 'gemini-3.6-flash', label: 'Gemini 3.6 Flash', attach: true },
+    { id: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro Preview', attach: true },
+    { id: 'gemini-3.5-flash-lite', label: 'Gemini 3.5 Flash-Lite', attach: true }
   ]
 };
+// Модель по умолчанию, если пользователь ещё ничего не выбирал
+const AI_DEFAULT_MODEL = { anthropic: 'claude-opus-5-5', gemini: 'gemini-3.6-flash' };
 const AI_BACKEND_LABEL = { anthropic: 'Claude', gemini: 'Gemini' };
+// Список моделей из API кэшируется в localStorage и обновляется раз в сутки
+const AI_MODELS_CACHE_PREFIX = 'zmd_ai_models_';
+const AI_MODELS_TTL = 24 * 60 * 60 * 1000;
+
+// Текущие списки моделей по бэкендам: из кэша API, иначе встроенные
+const AI_MODELS = {};
+Object.keys(AI_FALLBACK_MODELS).forEach(b => {
+  AI_MODELS[b] = _readAiModelsCache(b)?.models || AI_FALLBACK_MODELS[b];
+});
 
 let AI_BACKEND = 'anthropic';
-let AI_MODEL = AI_MODELS.anthropic[0].id;
+let AI_MODEL = AI_DEFAULT_MODEL.anthropic;
 let _aiKey = '';
+
+function _readAiModelsCache(backend) {
+  try {
+    const c = JSON.parse(localStorage.getItem(AI_MODELS_CACHE_PREFIX + backend) || 'null');
+    return c && Array.isArray(c.models) && c.models.length ? c : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+// Модель, которую пользователь выбрал сам (сохраняется только при ручном выборе)
+function _savedAiModel(backend) {
+  try {
+    return localStorage.getItem('zmd_ai_model_' + backend);
+  } catch (_) {
+    return null;
+  }
+}
+
+// Выбирает модель из текущего списка: сохранённая → по умолчанию → первая в списке
+function _pickAiModel() {
+  const list = AI_MODELS[AI_BACKEND];
+  const saved = _savedAiModel(AI_BACKEND);
+  if (saved && list.some(x => x.id === saved)) return saved;
+  const def = AI_DEFAULT_MODEL[AI_BACKEND];
+  if (list.some(x => x.id === def)) return def;
+  return list[0].id;
+}
 
 (function _loadAiBackendModel() {
   try {
     const b = localStorage.getItem('zmd_ai_backend');
     if (b && AI_MODELS[b]) AI_BACKEND = b;
-    const m = localStorage.getItem('zmd_ai_model_' + AI_BACKEND);
-    if (m && AI_MODELS[AI_BACKEND].some(x => x.id === m)) AI_MODEL = m;
-    else AI_MODEL = AI_MODELS[AI_BACKEND][0].id;
   } catch (_) {}
+  AI_MODEL = _pickAiModel();
 })();
+
+// Запрашивает у Anthropic список доступных этому ключу моделей (GET /v1/models)
+async function _fetchAnthropicModels() {
+  const models = [];
+  let after = '';
+  for (let page = 0; page < 10; page++) {
+    const res = await fetch(
+      'https://api.anthropic.com/v1/models?limit=1000' + (after ? '&after_id=' + after : ''),
+      {
+        headers: {
+          'x-api-key': _aiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        }
+      }
+    );
+    if (!res.ok) throw new Error(await _aiErrorText(res));
+    const data = await res.json();
+    (data.data || []).forEach(m =>
+      models.push({
+        id: m.id,
+        label: m.display_name || m.id,
+        attach: m.capabilities?.image_input?.supported !== false
+      })
+    );
+    if (!data.has_more || !data.last_id) break;
+    after = encodeURIComponent(data.last_id);
+  }
+  return models;
+}
+
+// Модели Gemini, которые не подходят для текстового чата
+const GEMINI_EXCLUDE_RE =
+  /(tts|live|image|embedding|transcribe|robotics|native-audio|computer-use|nano-banana|omni|translate|aqa|gemma|learnlm)/i;
+
+// Запрашивает у Google список моделей с поддержкой generateContent (GET /v1beta/models)
+async function _fetchGeminiModels() {
+  const models = [];
+  let token = '';
+  for (let page = 0; page < 10; page++) {
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000' +
+        (token ? '&pageToken=' + encodeURIComponent(token) : ''),
+      { headers: { 'x-goog-api-key': _aiKey } }
+    );
+    if (!res.ok) throw new Error(await _aiErrorText(res));
+    const data = await res.json();
+    (data.models || []).forEach(m => {
+      const id = (m.name || '').replace(/^models\//, '');
+      if (!/^gemini-/.test(id) || GEMINI_EXCLUDE_RE.test(id)) return;
+      if (!(m.supportedGenerationMethods || []).includes('generateContent')) return;
+      models.push({ id, label: m.displayName || id, attach: true });
+    });
+    token = data.nextPageToken;
+    if (!token) break;
+  }
+  // Новые версии выше: сортируем по номеру версии в ID по убыванию
+  const ver = id => parseFloat((id.match(/^gemini-(\d+(?:\.\d+)?)/) || [])[1] || '0');
+  return models.sort((a, b) => ver(b.id) - ver(a.id) || a.id.localeCompare(b.id));
+}
+
+let _aiModelsLoading = false;
+
+// Обновляет список моделей из API. force — без учёта срока кэша (кнопка ↻, сохранение ключа)
+async function refreshAiModels(force) {
+  if (_aiModelsLoading || _isOffline()) return;
+  const t = LANGS[currentLang] || LANGS['en'];
+  if (!_aiKey) {
+    if (force) {
+      const backendName = AI_BACKEND === 'gemini' ? 'Google AI Studio' : 'Anthropic';
+      _aiAddMsg(t.aiKeyWarning.replace('{backend}', backendName), 'thinking');
+    }
+    return;
+  }
+  const backend = AI_BACKEND;
+  const cache = _readAiModelsCache(backend);
+  if (!force && cache && Date.now() - cache.fetchedAt < AI_MODELS_TTL) return;
+  const btn = document.getElementById('aiModelsRefreshBtn');
+  _aiModelsLoading = true;
+  if (btn) btn.classList.add('spin');
+  try {
+    const models =
+      backend === 'gemini' ? await _fetchGeminiModels() : await _fetchAnthropicModels();
+    if (!models.length) return;
+    AI_MODELS[backend] = models;
+    try {
+      localStorage.setItem(
+        AI_MODELS_CACHE_PREFIX + backend,
+        JSON.stringify({ fetchedAt: Date.now(), models })
+      );
+    } catch (_) {}
+    if (backend === AI_BACKEND) {
+      AI_MODEL = _pickAiModel();
+      _populateAiSelects();
+    }
+  } catch (err) {
+    if (force) _aiAddMsg(t.aiModelsFetchError + err.message, 'thinking');
+  } finally {
+    _aiModelsLoading = false;
+    if (btn) btn.classList.remove('spin');
+  }
+}
 
 // Заполняет выпадающие списки бэкенда и модели ИИ на основе AI_MODELS
 function _populateAiSelects() {
@@ -1475,8 +1966,11 @@ function _populateAiSelects() {
         `<option value="${b}"${b === AI_BACKEND ? ' selected' : ''}>${AI_BACKEND_LABEL[b]}</option>`
     )
     .join('');
+  // Названия моделей приходят из API — экранируем
+  const esc = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   mSel.innerHTML = AI_MODELS[AI_BACKEND].map(
-    m => `<option value="${m.id}"${m.id === AI_MODEL ? ' selected' : ''}>${m.label}</option>`
+    m =>
+      `<option value="${esc(m.id)}"${m.id === AI_MODEL ? ' selected' : ''}>${esc(m.label)}</option>`
   ).join('');
   _updateAiAttachAvailability();
 }
@@ -1522,19 +2016,9 @@ function onAiBackendChange() {
   try {
     localStorage.setItem('zmd_ai_backend', AI_BACKEND);
   } catch (_) {}
-  const savedModel = (function () {
-    try {
-      return localStorage.getItem('zmd_ai_model_' + AI_BACKEND);
-    } catch (_) {
-      return null;
-    }
-  })();
-  AI_MODEL =
-    savedModel && AI_MODELS[AI_BACKEND].some(x => x.id === savedModel)
-      ? savedModel
-      : AI_MODELS[AI_BACKEND][0].id;
+  AI_MODEL = _pickAiModel();
   _populateAiSelects();
-  _loadAiKeyForBackend();
+  _loadAiKeyForBackend().then(() => refreshAiModels(false));
   _updateAiWelcomeText();
   _updateAiAttachAvailability();
 }
@@ -3245,6 +3729,7 @@ function rejectAiEdit(id) {
   _populateAiSelects();
   await _loadAiKeyForBackend();
   _updateAiWelcomeText();
+  refreshAiModels(false);
 })();
 
 // Сохраняет введённый пользователем API-ключ отдельно для текущего бэкенда (Claude/Gemini) в IndexedDB
@@ -3255,6 +3740,8 @@ async function saveApiKey() {
   try {
     await idbSet('zmd_ai_key_' + AI_BACKEND, k);
   } catch (_) {}
+  // Новый ключ может давать доступ к другим моделям — обновляем список сразу
+  refreshAiModels(true);
   const btn = document.querySelector('.ai-ksave');
   const t = LANGS[currentLang] || LANGS['en'];
   btn.textContent = t.aiSavedBtn;
@@ -3274,6 +3761,37 @@ function toggleAiPanel() {
   if (open) document.getElementById('aiInput').focus();
   setTimeout(clampEpFlex, 260);
 }
+
+// Insert + Home одновременно: показать/скрыть фиолетовую точку на значке ИИ
+const AI_DOT_KEYS = ['Insert', 'Home'];
+const _aiDotPressed = new Set();
+let _aiDotFired = false;
+function _setAiDot(on) {
+  document.body.classList.toggle('ai-dot-on', on);
+  try {
+    localStorage.setItem('zmd_ai_dot', on ? '1' : '0');
+  } catch (_) {}
+}
+try {
+  if (localStorage.getItem('zmd_ai_dot') === '1') document.body.classList.add('ai-dot-on');
+} catch (_) {}
+document.addEventListener('keydown', e => {
+  if (!AI_DOT_KEYS.includes(e.key)) return;
+  _aiDotPressed.add(e.key);
+  if (_aiDotFired || !AI_DOT_KEYS.every(k => _aiDotPressed.has(k))) return;
+  // Срабатывает один раз за нажатие, пока обе клавиши не отпущены
+  _aiDotFired = true;
+  e.preventDefault();
+  _setAiDot(!document.body.classList.contains('ai-dot-on'));
+});
+document.addEventListener('keyup', e => {
+  _aiDotPressed.delete(e.key);
+  if (!_aiDotPressed.size) _aiDotFired = false;
+});
+window.addEventListener('blur', () => {
+  _aiDotPressed.clear();
+  _aiDotFired = false;
+});
 
 // Проверяет, находится ли браузер в автономном режиме (без сети)
 function _isOffline() {
@@ -3363,6 +3881,7 @@ function updateAiOnlineState() {
     '#aiKsaveBtn',
     '#aiBackendSelect',
     '#aiModelSelect',
+    '#aiModelsRefreshBtn',
     '.ai-preset'
   ];
   document.querySelectorAll(netSelectors.join(',')).forEach(el => {
@@ -3452,9 +3971,33 @@ function aiPreset(prompt, isEditPreset) {
 
 
 
+// Максимальная длина ответа (в токенах). С запасом: у новых моделей часть уходит на рассуждения
+const AI_MAX_OUTPUT_TOKENS = 16000;
+
+// Модели Anthropic, для которых работает серверный fallback при отказе (stop_reason: refusal)
+const ANTHROPIC_FALLBACK_MODELS = new Set([
+  'claude-fable-5-1',
+  'claude-opus-5-5',
+  'claude-opus-5',
+  'claude-sonnet-5-5'
+]);
+
+// Формирует текст ошибки из HTTP-ответа API; при 404 подсказывает обновить список моделей
+async function _aiErrorText(res) {
+  const err = await res.json().catch(() => ({}));
+  const msg = err?.error?.message || `HTTP ${res.status}`;
+  if (res.status === 404) {
+    const t = LANGS[currentLang] || LANGS['en'];
+    return `${msg}
+${t.aiModelNotFound}`;
+  }
+  return msg;
+}
+
 // Отправляет запрос к Gemini API и возвращает текст ответа
 async function _callGemini(fullPrompt, isEdit, attachments) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${_aiKey}`;
+  // Ключ передаётся в заголовке, а не в URL, чтобы не попадать в логи и историю
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(AI_MODEL)}:generateContent`;
   const contents = _aiConvHistory.map(m => ({
     role: m.role === 'user' ? 'user' : 'model',
     parts: _aiBuildGeminiParts(m.text, m.attachments)
@@ -3462,23 +4005,24 @@ async function _callGemini(fullPrompt, isEdit, attachments) {
   contents.push({ role: 'user', parts: _aiBuildGeminiParts(fullPrompt, attachments) });
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': _aiKey },
     signal: _aiAbortController ? _aiAbortController.signal : undefined,
     body: JSON.stringify({
       system_instruction: { parts: [{ text: _aiSystem(isEdit) }] },
       contents,
-      generationConfig: { maxOutputTokens: 8192 }
+      generationConfig: { maxOutputTokens: AI_MAX_OUTPUT_TOKENS }
     })
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `HTTP ${res.status}`);
-  }
+  if (!res.ok) throw new Error(await _aiErrorText(res));
   const data = await res.json();
   const t = LANGS[currentLang] || LANGS['en'];
   const cand = data.candidates?.[0];
-  const text = cand?.content?.parts?.map(p => p.text || '').join('') || '';
+  // Части с thought: true — это рассуждения модели, в ответ их не включаем
+  const text = cand?.content?.parts?.filter(p => !p.thought).map(p => p.text || '').join('') || '';
   if (!text && cand?.finishReason === 'MAX_TOKENS') throw new Error(t.aiTruncatedError);
+  if (!text && (data.promptFeedback?.blockReason || cand?.finishReason === 'SAFETY')) {
+    throw new Error(t.aiRefusal);
+  }
   return text || t.aiEmptyResponse;
 }
 
@@ -3489,29 +4033,40 @@ async function _callAnthropic(fullPrompt, isEdit, attachments) {
     content: _aiBuildAnthropicContent(m.text, m.attachments)
   }));
   messages.push({ role: 'user', content: _aiBuildAnthropicContent(fullPrompt, attachments) });
+  const headers = {
+    'Content-Type': 'application/json',
+    'x-api-key': _aiKey,
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-direct-browser-access': 'true'
+  };
+  const body = {
+    model: AI_MODEL,
+    max_tokens: AI_MAX_OUTPUT_TOKENS,
+    system: _aiSystem(isEdit),
+    messages
+  };
+  // При отказе модели сервер сам повторяет запрос на рекомендованной модели
+  if (ANTHROPIC_FALLBACK_MODELS.has(AI_MODEL)) {
+    headers['anthropic-beta'] = 'server-side-fallback-2026-07-01';
+    body.fallbacks = 'default';
+  }
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': _aiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
+    headers,
     signal: _aiAbortController ? _aiAbortController.signal : undefined,
-    body: JSON.stringify({
-      model: AI_MODEL,
-      max_tokens: 8192,
-      system: _aiSystem(isEdit),
-      messages
-    })
+    body: JSON.stringify(body)
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `HTTP ${res.status}`);
-  }
+  if (!res.ok) throw new Error(await _aiErrorText(res));
   const data = await res.json();
   const t = LANGS[currentLang] || LANGS['en'];
-  return data.content?.map(c => c.text || '').join('') || t.aiEmptyResponse;
+  if (data.stop_reason === 'refusal') throw new Error(t.aiRefusal);
+  // Берём только текстовые блоки (блоки thinking пропускаем)
+  const text = (data.content || [])
+    .filter(c => c.type === 'text')
+    .map(c => c.text)
+    .join('');
+  if (!text && data.stop_reason === 'max_tokens') throw new Error(t.aiTruncatedError);
+  return text || t.aiEmptyResponse;
 }
 
 // Основной обработчик отправки сообщения ИИ-ассистенту (чат или правка)

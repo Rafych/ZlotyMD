@@ -934,6 +934,21 @@ body {
 .md .mermaid svg .edgePath .path {
   stroke-width: 1.5px;
 }
+/* Рисунки TikZ (SVG от TikZJax) */
+.md .tikz-wrap {
+  text-align: center;
+  margin-bottom: var(--s21);
+  overflow-x: auto;
+  min-height: 24px;
+}
+.md .tikz-wrap svg {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+}
+.md .tikz-error {
+  white-space: pre-wrap;
+}
 .md .mermaid-error {
   background: var(--grt);
   border: 1px solid var(--gr);
@@ -2692,6 +2707,39 @@ body {
 .ai-modelrow select:focus {
   border-color: var(--gb);
 }
+/* Кнопка обновления списка моделей из API */
+/* Фиолетовая точка над головой на значке ИИ (включается Insert+Home) */
+.ai-dot {
+  display: none;
+}
+body.ai-dot-on .ai-dot {
+  display: inline;
+}
+.ai-models-refresh {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--r5);
+  border: 1.5px solid var(--bord);
+  background: var(--bg);
+  color: var(--mut);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.12s, color 0.12s;
+}
+.ai-models-refresh:hover {
+  border-color: var(--gb);
+  color: var(--gb);
+}
+.ai-models-refresh.spin {
+  animation: ai-models-spin 0.8s linear infinite;
+}
+@keyframes ai-models-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 /* Поле ввода и сохранения API-ключа */
 .ai-keyrow {
   display: flex;
@@ -3065,6 +3113,9 @@ body {
     max-width: 100%;
     break-inside: avoid;
   }
+  .md .tikz-wrap {
+    break-inside: avoid;
+  }
   .md .mermaid-wrap {
     break-inside: avoid;
     border: 1px solid #ccc !important;
@@ -3095,6 +3146,7 @@ body {
 .ai-send:disabled,
 #aiBackendSelect:disabled,
 #aiModelSelect:disabled,
+#aiModelsRefreshBtn:disabled,
 #aiKey:disabled {
   opacity: 0.45;
   cursor: not-allowed;

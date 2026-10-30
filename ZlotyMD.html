@@ -23,6 +23,12 @@
   JetBrains Mono v2020
     Copyright (c) 2020 JetBrains s.r.o.
     SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
+
+  Loaded at runtime from a CDN only when a document contains TikZ (not part of this repository):
+
+  TikZJax (@drgrice1/tikzjax v1.0.0-beta24)
+    Copyright (c) Jim Fowler, Glenn Rice and contributors
+    GPL-3.0-or-later — https://github.com/drgrice1/tikzjax
 -->
 <html lang="en">
   <head>
@@ -555,6 +561,20 @@
             >
               mmd
             </button>
+            <button
+              class="btn g"
+              title="TikZ figure (```tikz ... ```)"
+              data-i18n-title="ttTikz"
+              onclick="iTikz()"
+              style="
+                font-family: var(--mono);
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: -0.3px;
+              "
+            >
+              tikz
+            </button>
           </div>
           <div class="tsep"></div>
           <div class="tg">
@@ -751,6 +771,7 @@
           <svg viewBox="0 0 16 16">
             <circle cx="8" cy="6" r="3.5" />
             <path d="M2 13.5c0-2.5 2.7-4 6-4s6 1.5 6 4" />
+            <circle class="ai-dot" cx="12.5" cy="4.5" r="1.5" fill="#a142f4" stroke="none" />
           </svg>
         </button>
 
@@ -1263,6 +1284,7 @@
               <svg viewBox="0 0 16 16">
                 <circle cx="8" cy="6" r="3.5" />
                 <path d="M2 13.5c0-2.5 2.7-4 6-4s6 1.5 6 4" />
+                <circle class="ai-dot" cx="12.5" cy="4.5" r="1.5" fill="#a142f4" stroke="none" />
               </svg>
               <span data-i18n="aiBtnTitle">AI Assistant</span>
             </div>
@@ -1312,6 +1334,16 @@
             <div class="ai-modelrow">
               <select id="aiBackendSelect" onchange="onAiBackendChange()"></select>
               <select id="aiModelSelect" onchange="onAiModelChange()"></select>
+              <button
+                class="ai-models-refresh"
+                id="aiModelsRefreshBtn"
+                type="button"
+                title="Reload the model list from the API"
+                data-i18n-title="aiModelsRefreshTitle"
+                onclick="refreshAiModels(true)"
+              >
+                ↻
+              </button>
             </div>
             <div class="ai-keyrow">
               <svg viewBox="0 0 16 16">
