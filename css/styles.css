@@ -1756,6 +1756,11 @@ body {
   padding: var(--s13);
   margin-top: var(--s5);
 }
+/* Отступ строки настройки, идущей сразу после блока предпросмотра */
+.settings-preview-box + .settings-row {
+  margin-top: var(--s13);
+  margin-bottom: 0;
+}
 /* Предпросмотр применяемых настроек HTML-рендеринга */
 .settings-preview-label {
   font-size: 10px;
