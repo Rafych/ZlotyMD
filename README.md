@@ -23,6 +23,8 @@ Edytor Markdown z proporcjami złotego podziału i paletą kolorów w stylu Goog
 
 # License
 
+© 2026 [Rafych](https://github.com/Rafych) and [Hiromichi](https://github.com/hiromichipixel)
+
 Złoty MD is released under the [MIT License](./LICENSE).
 
 # Third-party libraries

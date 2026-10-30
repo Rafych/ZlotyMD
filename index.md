@@ -86,7 +86,7 @@ The project is open source and welcomes community contributions.
 
 ## Copyright
 
-© 2026 Cybersecurity Department. MIT License.
+© 2026 [Rafych](https://github.com/Rafych) and [Hiromichi](https://github.com/hiromichipixel). MIT License.
 GitHub: https://github.com/Rafych/ZlotyMD
 
 ---
