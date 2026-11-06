@@ -416,6 +416,7 @@ body {
 
 /* Стили текстового поля редактора */
 #ed {
+  cursor: text;
   flex: 1;
   resize: none;
   border: none;
@@ -509,6 +510,7 @@ body {
   margin-bottom: var(--s13);
 }
 .md a {
+  cursor: pointer;
   color: var(--gb);
   text-decoration: none;
   border-bottom: 1.5px solid var(--gbt);
@@ -579,6 +581,7 @@ body {
   opacity: 0.7;
 }
 .pre-body {
+  cursor: text;
   overflow-x: auto;
   padding: var(--s21);
 }
@@ -875,6 +878,7 @@ body {
   text-align: center;
 }
 .md input[type='checkbox'] {
+  cursor: pointer;
   accent-color: var(--gg);
 }
 .md .katex-display {
@@ -1234,6 +1238,7 @@ body {
   color: var(--txt);
 }
 .about-value a {
+  cursor: pointer;
   color: var(--gb);
   text-decoration: none;
 }
@@ -1523,6 +1528,7 @@ body {
   opacity: 1;
 }
 .busy-spinner {
+  cursor: progress;
   width: 14px;
   height: 14px;
   flex-shrink: 0;
@@ -1685,6 +1691,7 @@ body {
   box-shadow: 0 1px 4px rgba(66, 133, 244, 0.3);
 }
 .font-num {
+  cursor: text;
   width: 48px;
   height: 28px;
   border: 1.5px solid var(--bord);
@@ -2225,6 +2232,7 @@ body {
   margin-bottom: var(--s5);
 }
 .pdf-input {
+  cursor: text;
   width: 100%;
   height: 36px;
   border: 1.5px solid var(--bord);
@@ -2372,6 +2380,7 @@ body {
 }
 /* Стили пузырей сообщений (пользователь/ассистент) */
 .ai-bubble {
+  cursor: text;
   padding: var(--s8) var(--s13);
   border-radius: var(--r8);
   font-size: 12px;
@@ -2440,6 +2449,7 @@ body {
   gap: var(--s5);
 }
 .ai-tin {
+  cursor: text;
   flex: 1;
   padding: var(--s8) var(--s13);
   border-radius: var(--r8);
@@ -2817,6 +2827,7 @@ body.ai-dot-on .ai-dot {
   fill: none;
 }
 #aiKey {
+  cursor: text;
   flex: 1;
   border: none;
   background: transparent;
@@ -2953,6 +2964,7 @@ body.ai-dot-on .ai-dot {
   flex-shrink: 0;
 }
 .tbl-num {
+  cursor: text;
   width: 55px;
   padding: var(--s5) var(--s8);
   border-radius: var(--r8);
@@ -2980,6 +2992,7 @@ body.ai-dot-on .ai-dot {
   cursor: pointer;
 }
 .tbl-chk input {
+  cursor: pointer;
   accent-color: var(--gb);
 }
 .tbl-dlg-ft {
