@@ -22,7 +22,6 @@ const FONT_DEFAULTS = {
 let fontSizes = { ...FONT_DEFAULTS };
 
 let currentLang = 'en';
-let previousLang = 'en';
 
 marked.setOptions({ gfm: true, breaks: true });
 // Экранирование HTML-тегов внутри Markdown, чтобы пользовательский ввод не исполнялся как разметка
@@ -428,15 +427,11 @@ function executeDlDownload() {
 const ZMD_FM_OPEN = '<!--zmd:meta';
 const ZMD_FM_CLOSE = 'zmd:meta-->';
 
-// Формирует служебные метаданные документа (имя, язык, размеры шрифта) в виде HTML-комментария
+// Формирует служебные метаданные документа (имя и размеры шрифтов) в виде HTML-комментария
 function buildZmdMeta() {
   return {
-    zmdVersion: 1,
     name: getDocTitle(),
-    isDefaultName: currentDocMeta ? !!currentDocMeta.isDefaultName : true,
-    fontSizes: { ...fontSizes },
-    createdAt: (currentDocMeta && currentDocMeta.createdAt) || Date.now(),
-    updatedAt: Date.now()
+    fontSizes: { ...fontSizes }
   };
 }
 
@@ -562,20 +557,15 @@ async function openFileObject(file) {
   const id = genDocId();
   const data = {
     name: (meta && meta.name) || baseName || untitledDocName(),
-    isDefaultName: meta ? !!meta.isDefaultName : false,
     content: content,
     fontSizes: Object.assign({ ...FONT_DEFAULTS }, (meta && meta.fontSizes) || {}),
     scrollEd: 0,
-    scrollPv: 0,
-    createdAt: (meta && meta.createdAt) || now,
-    updatedAt: now
+    scrollPv: 0
   };
   await persistDocRecord(id, data);
   docIndex.unshift({
     id,
     name: data.name,
-    isDefaultName: data.isDefaultName,
-    createdAt: data.createdAt,
     updatedAt: now
   });
   await persistDocIndex();
@@ -1879,7 +1869,7 @@ const LANGS = {
     chars: 'chars',
     words: 'words',
     lines: 'lines',
-    pdfPages: 'PDF pages',
+    pdfPages: 'pages',
     editorLabel: 'Editor',
     previewLabel: 'Preview',
     tabEdit: 'Edit',
@@ -1897,13 +1887,11 @@ const LANGS = {
     aiSavedBtn: 'Saved ✓',
     aiPresetContinue: 'Continue',
     aiPresetSummarize: 'Summarize',
-    aiPresetTranslateJa: 'To Japanese',
     aiPresetTranslateEn: 'To English',
     aiPresetProofread: 'Proofread',
     aiPresetBullet: 'Bulletize',
     aiPresetContinuePrompt: 'Continue writing',
     aiPresetSummarizePrompt: 'Summarize this',
-    aiPresetTranslateJaPrompt: 'Translate to Japanese',
     aiPresetTranslateEnPrompt: 'Translate to English',
     aiPresetProofreadPrompt: 'Proofread and correct this',
     aiPresetBulletPrompt: 'Convert to a bullet list',
@@ -2001,7 +1989,6 @@ const LANGS = {
     mermaidSyntaxError: '⚠ Mermaid: syntax error (diagram syntax error)',
     savedLabel: 'Saved',
     unsavedLabel: 'Unsaved',
-    restoredMsg: 'Content restored from saved session',
     tooLargeMsg: 'Content too large to save in cookie',
     downloadBtnTitle: 'Download',
     dlTitle: 'Download as…',
@@ -2011,10 +1998,6 @@ const LANGS = {
     dlMdDesc: 'Standard Markdown file',
     dlHint: 'Select one or more formats',
     dlDownloadBtn: 'Download',
-    settingsDocTitle: 'Document',
-    settingsDocNameLabel: 'Document Name',
-    settingsDocNameDesc:
-      'Used as the title for HTML and PDF downloads. Leave blank to use the first heading.',
     docsBtnTitle: 'Documents',
     docsPanelTitle: 'Documents',
     docsNewBtn: 'New Document',
@@ -2024,7 +2007,6 @@ const LANGS = {
     docsConfirmDelete: 'Delete this document? This cannot be undone.',
     docsCantDeleteLast: 'You must have at least one document.',
     untitledDoc: 'Untitled Document',
-    docsOpenedMsg: 'Opened "{name}"',
     fileOpenFailed: 'Could not open the file “{name}”.',
     openWindow: 'Open',
     diffPrompt: 'Enter language name (leave blank for plain diff):',
@@ -2175,55 +2157,49 @@ const AI_FALLBACK_MODELS = {
 // Модель по умолчанию, если пользователь ещё ничего не выбирал
 const AI_DEFAULT_MODEL = { anthropic: 'claude-opus-5-5', gemini: 'gemini-3.6-flash' };
 const AI_BACKEND_LABEL = { anthropic: 'Claude', gemini: 'Gemini' };
-// Список моделей из API кэшируется в localStorage и обновляется раз в сутки
+// Список моделей из API кэшируется в IndexedDB и обновляется раз в сутки
 const AI_MODELS_CACHE_PREFIX = 'zmd_ai_models_';
 const AI_MODELS_TTL = 24 * 60 * 60 * 1000;
 
-// Текущие списки моделей по бэкендам: из кэша API, иначе встроенные
+// Текущие списки моделей по бэкендам: встроенные, пока не загружен кэш (_loadAiModelsCaches)
 const AI_MODELS = {};
 Object.keys(AI_FALLBACK_MODELS).forEach(b => {
-  AI_MODELS[b] = _readAiModelsCache(b)?.models || AI_FALLBACK_MODELS[b];
+  AI_MODELS[b] = AI_FALLBACK_MODELS[b];
 });
+// Время получения списка из API по бэкендам (для срока жизни кэша)
+const _aiModelsFetchedAt = {};
 
+// Бэкенд и модели выбираются для каждого разговора (документа) отдельно — см. _loadAiConversation
 let AI_BACKEND = 'anthropic';
 let AI_MODEL = AI_DEFAULT_MODEL.anthropic;
+// Модели, выбранные вручную в текущем разговоре: { бэкенд: id модели }
+let _aiModelChoice = {};
 let _aiKey = '';
 
-function _readAiModelsCache(backend) {
-  try {
-    const c = JSON.parse(localStorage.getItem(AI_MODELS_CACHE_PREFIX + backend) || 'null');
-    return c && Array.isArray(c.models) && c.models.length ? c : null;
-  } catch (_) {
-    return null;
-  }
+// Загружает из IndexedDB кэш списков моделей (вызывается до открытия документа)
+async function _loadAiModelsCaches() {
+  await Promise.all(
+    Object.keys(AI_FALLBACK_MODELS).map(async b => {
+      try {
+        const c = JSON.parse((await idbGet(AI_MODELS_CACHE_PREFIX + b)) || 'null');
+        if (c && Array.isArray(c.models) && c.models.length) {
+          AI_MODELS[b] = c.models;
+          _aiModelsFetchedAt[b] = c.fetchedAt || 0;
+        }
+      } catch (_) {}
+    })
+  );
 }
 
-// Модель, которую пользователь выбрал сам (сохраняется только при ручном выборе)
-function _savedAiModel(backend) {
-  try {
-    return localStorage.getItem('zmd_ai_model_' + backend);
-  } catch (_) {
-    return null;
-  }
-}
-
-// Выбирает модель из текущего списка: сохранённая → по умолчанию → первая в списке
+// Выбирает модель из текущего списка: выбранная в разговоре → по умолчанию → первая в списке
 function _pickAiModel() {
   const list = AI_MODELS[AI_BACKEND];
-  const saved = _savedAiModel(AI_BACKEND);
+  const saved = _aiModelChoice[AI_BACKEND];
   if (saved && list.some(x => x.id === saved)) return saved;
   const def = AI_DEFAULT_MODEL[AI_BACKEND];
   if (list.some(x => x.id === def)) return def;
   return list[0].id;
 }
-
-(function _loadAiBackendModel() {
-  try {
-    const b = localStorage.getItem('zmd_ai_backend');
-    if (b && AI_MODELS[b]) AI_BACKEND = b;
-  } catch (_) {}
-  AI_MODEL = _pickAiModel();
-})();
 
 // Запрашивает у Anthropic список доступных этому ключу моделей (GET /v1/models)
 async function _fetchAnthropicModels() {
@@ -2299,8 +2275,7 @@ async function refreshAiModels(force) {
     return;
   }
   const backend = AI_BACKEND;
-  const cache = _readAiModelsCache(backend);
-  if (!force && cache && Date.now() - cache.fetchedAt < AI_MODELS_TTL) return;
+  if (!force && Date.now() - (_aiModelsFetchedAt[backend] || 0) < AI_MODELS_TTL) return;
   const btn = document.getElementById('aiModelsRefreshBtn');
   _aiModelsLoading = true;
   if (btn) btn.classList.add('spin');
@@ -2309,10 +2284,11 @@ async function refreshAiModels(force) {
       backend === 'gemini' ? await _fetchGeminiModels() : await _fetchAnthropicModels();
     if (!models.length) return;
     AI_MODELS[backend] = models;
+    _aiModelsFetchedAt[backend] = Date.now();
     try {
-      localStorage.setItem(
+      await idbSet(
         AI_MODELS_CACHE_PREFIX + backend,
-        JSON.stringify({ fetchedAt: Date.now(), models })
+        JSON.stringify({ fetchedAt: _aiModelsFetchedAt[backend], models })
       );
     } catch (_) {}
     if (backend === AI_BACKEND) {
@@ -2385,30 +2361,34 @@ function _updateAiAttachAvailability() {
 function onAiBackendChange() {
   const bSel = document.getElementById('aiBackendSelect');
   AI_BACKEND = bSel.value;
-  try {
-    localStorage.setItem('zmd_ai_backend', AI_BACKEND);
-  } catch (_) {}
   AI_MODEL = _pickAiModel();
-  _populateAiSelects();
-  _loadAiKeyForBackend().then(() => refreshAiModels(false));
-  _updateAiWelcomeText();
-  _updateAiAttachAvailability();
+  _applyAiSelection();
+  _saveAiConversation();
 }
 
 // Обработчик смены конкретной модели ИИ
 function onAiModelChange() {
   const mSel = document.getElementById('aiModelSelect');
   AI_MODEL = mSel.value;
-  try {
-    localStorage.setItem('zmd_ai_model_' + AI_BACKEND, AI_MODEL);
-  } catch (_) {}
+  _aiModelChoice[AI_BACKEND] = AI_MODEL;
   _updateAiAttachAvailability();
+  _saveAiConversation();
+}
+
+// Показывает бэкенд и модель текущего разговора в панели ИИ и подгружает ключ этого бэкенда
+function _applyAiSelection() {
+  _populateAiSelects();
+  _updateAiWelcomeText();
+  _loadAiKeyForBackend().then(() => refreshAiModels(false));
 }
 
 // Загружает сохранённый API-ключ для текущего выбранного бэкенда (отдельно для Claude и Gemini, хранится в IndexedDB)
 async function _loadAiKeyForBackend() {
+  const backend = AI_BACKEND;
   try {
-    const k = await idbGet('zmd_ai_key_' + AI_BACKEND);
+    const k = await idbGet('zmd_ai_key_' + backend);
+    // Пока ключ читался, бэкенд мог смениться (другой документ) — устаревший ключ не применяем
+    if (backend !== AI_BACKEND) return;
     _aiKey = k || '';
     const inp = document.getElementById('aiKey');
     if (inp) inp.value = _aiKey;
@@ -2458,13 +2438,6 @@ function applyLang(code) {
   document.querySelectorAll('.lang-opt').forEach(b => {
     b.classList.toggle('active', b.dataset.lang === code);
   });
-
-  if (ed.value === LANGS[previousLang]?.init || ed.value === '') {
-    ed.value = t.init;
-    (typeof _render === 'function' ? _render : render)(ed.value);
-  }
-
-  previousLang = code;
 
   const chip = document.getElementById('saveChip');
   if (chip) {
@@ -2971,30 +2944,6 @@ function setSaveStatus(state) {
   if (state === 'error') label.textContent = t.tooLargeMsg || 'Too large';
 }
 
-const FONT_CSS_MAP = {
-  h1: el => {
-    el.style.setProperty('--fz-h1', fontSizes.h1 + 'px');
-  },
-  h2: el => {
-    el.style.setProperty('--fz-h2', fontSizes.h2 + 'px');
-  },
-  h3: el => {
-    el.style.setProperty('--fz-h3', fontSizes.h3 + 'px');
-  },
-  body: el => {
-    el.style.setProperty('--fz-body', fontSizes.body + 'px');
-  },
-  latex: el => {
-    el.style.setProperty('--fz-latex', fontSizes.latex + 'px');
-  },
-  mmd: el => {
-    el.style.setProperty('--fz-mmd', fontSizes.mmd + 'px');
-  },
-  code: el => {
-    el.style.setProperty('--fz-code', fontSizes.code + 'px');
-  }
-};
-
 // Применяет текущие размеры шрифтов к CSS-переменным документа
 function applyFontSizesToDOM() {
   const root = document.documentElement;
@@ -3105,15 +3054,6 @@ document.addEventListener('keydown', e => {
   }
 });
 
-const IDB_FONT_KEY = 'zmd_fontsizes';
-let legacyFontSizes = null;
-// Загружает старые (legacy) размеры шрифтов, сохранённые до перехода на мультидокументность
-async function loadLegacyFontSizes() {
-  try {
-    const raw = await idbGet(IDB_FONT_KEY);
-    if (raw) legacyFontSizes = JSON.parse(raw);
-  } catch (e) {}
-}
 // Возвращает размеры шрифтов по умолчанию для нового документа
 function defaultFontSizesForNewDoc() {
   return { ...FONT_DEFAULTS };
@@ -3213,14 +3153,6 @@ function closeSettings() {
   document.getElementById('settingsBtn').style.color = '';
 }
 
-// Показывает всплывающее уведомление (тост) о восстановлении/действии
-function showRestoreToast(msg) {
-  const toast = document.getElementById('restoreToast');
-  document.getElementById('toastMsg').textContent = msg;
-  toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 4000);
-}
-
 const IDB_DOC_PREFIX = 'zmd_doc_';
 const IDB_INDEX_KEY = 'zmd_doc_index';
 const IDB_CURRENT_KEY = 'zmd_current_doc';
@@ -3300,26 +3232,21 @@ function untitledDocName() {
 }
 
 // Создаёт новый документ и делает его текущим
-async function createNewDoc(name) {
+async function createNewDoc() {
   const t = LANGS[currentLang] || LANGS['en'];
   const now = Date.now();
   const id = genDocId();
   const data = {
-    name: name || untitledDocName(),
-    isDefaultName: !name,
+    name: untitledDocName(),
     content: t.init,
     fontSizes: defaultFontSizesForNewDoc(),
     scrollEd: 0,
-    scrollPv: 0,
-    createdAt: now,
-    updatedAt: now
+    scrollPv: 0
   };
   await persistDocRecord(id, data);
   docIndex.unshift({
     id,
     name: data.name,
-    isDefaultName: data.isDefaultName,
-    createdAt: now,
     updatedAt: now
   });
   await persistDocIndex();
@@ -3341,13 +3268,10 @@ async function saveContent() {
     const now = Date.now();
     const data = {
       name: (currentDocMeta && currentDocMeta.name) || untitledDocName(),
-      isDefaultName: currentDocMeta ? !!currentDocMeta.isDefaultName : true,
       content: ed.value,
       fontSizes: { ...fontSizes },
       scrollEd: ed.scrollTop,
-      scrollPv: pv.scrollTop,
-      createdAt: (currentDocMeta && currentDocMeta.createdAt) || now,
-      updatedAt: now
+      scrollPv: pv.scrollTop
     };
     await persistDocRecord(currentDocId, data);
     const idxItem = docIndex.find(d => d.id === currentDocId);
@@ -3386,25 +3310,313 @@ function scheduleScrollSave() {
 ed.addEventListener('scroll', scheduleScrollSave);
 pv.addEventListener('scroll', scheduleScrollSave);
 
-let syncingScroll = false;
-// Синхронизирует прокрутку редактора и превью между собой
-function syncScroll(source, target) {
-  if (switchingDoc || syncingScroll) return;
-  syncingScroll = true;
-  const sMax = Math.max(1, source.scrollHeight - source.clientHeight);
-  const ratio = source.scrollTop / sMax;
-  const tMax = Math.max(0, target.scrollHeight - target.clientHeight);
-  target.scrollTop = ratio * tMax;
-  requestAnimationFrame(() => {
-    syncingScroll = false;
-  });
+// ---------- Синхронная прокрутка редактора и превью ----------
+// Вместо пропорции (из-за картинок, диаграмм и формул высоты блоков в превью и в редакторе разные)
+// сопоставляем блоки исходника с блоками превью и выравниваем по ним: строка начала блока
+// в редакторе ↔ верх того же блока в превью, между опорными точками — линейно.
+
+// Блоки верхнего уровня в исходнике: [{ line, type }]
+function _scanSourceBlocks(text) {
+  const lines = text.split('\n');
+  const blocks = [];
+  const isFence = l => /^\s{0,3}(`{3,}|~{3,})/.exec(l);
+  const isHeading = l => /^\s{0,3}#{1,6}(\s|$)/.test(l);
+  const isHr = l => /^\s{0,3}([-*_])(\s*\1){2,}\s*$/.test(l);
+  const isList = l => /^\s{0,3}([-*+]|\d{1,9}[.)])\s+\S/.test(l);
+  const isQuote = l => /^\s{0,3}>/.test(l);
+  const isTableSep = l => /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)+\|?\s*$|^\s*\|\s*:?-+:?\s*\|\s*$/.test(l);
+  // Пропускает строки до той, что подходит под re (включительно); возвращает индекс следующей
+  const skipTo = (from, re) => {
+    let j = from;
+    while (j < lines.length && !re.test(lines[j])) j++;
+    return Math.min(j + 1, lines.length);
+  };
+  let i = 0;
+  let prevBlank = true;
+  while (i < lines.length) {
+    const l = lines[i];
+    if (!l.trim()) {
+      prevBlank = true;
+      i++;
+      continue;
+    }
+    const start = i;
+    let type = 'p';
+    let m;
+    if ((m = isFence(l))) {
+      const lang = (l.slice(m[0].length).trim().split(/\s+/)[0] || '').toLowerCase();
+      type = lang === 'mermaid' ? 'mermaid' : lang === 'tikz' ? 'tikz' : 'pre';
+      const close = new RegExp('^\\s{0,3}' + (m[1][0] === '`' ? '`' : '~') + '{' + m[1].length + ',}\\s*$');
+      i = skipTo(i + 1, close);
+    } else if (/^\s*\\(documentclass|begin\s*\{document\})/.test(l)) {
+      type = 'other';
+      i = skipTo(i, /\\end\s*\{document\}/);
+    } else if (/^\s*\\begin\s*\{(tikzpicture|tikzcd)\}/.test(l)) {
+      type = 'tikz';
+      i = skipTo(i, /\\end\s*\{(tikzpicture|tikzcd)\}/);
+    } else if (/^\s*:::table/.test(l)) {
+      type = 'table';
+      i = skipTo(i + 1, /^\s*:::\s*$/);
+    } else if (/^\s*\$\$/.test(l)) {
+      // Выводимая формула: в превью — абзац с формулой
+      const rest = l.replace(/^\s*\$\$/, '');
+      i = rest.includes('$$') ? i + 1 : skipTo(i + 1, /\$\$/);
+    } else if (isHeading(l)) {
+      type = 'h';
+      i++;
+    } else if (/^\s{0,3}(=+|-+)\s*$/.test(l) && !prevBlank && blocks.length && blocks[blocks.length - 1].type === 'p') {
+      // Подчёркнутый заголовок: предыдущий абзац на самом деле заголовок
+      blocks[blocks.length - 1].type = 'h';
+      i++;
+      prevBlank = false;
+      continue;
+    } else if (isHr(l)) {
+      type = 'hr';
+      i++;
+    } else if (l.includes('|') && i + 1 < lines.length && isTableSep(lines[i + 1])) {
+      type = 'table';
+      i += 2;
+      while (i < lines.length && lines[i].trim() && lines[i].includes('|')) i++;
+    } else if (isQuote(l)) {
+      type = 'quote';
+      while (i < lines.length && lines[i].trim()) i++;
+    } else if (isList(l)) {
+      type = 'list';
+      // Список продолжается через пустые строки, пока идут пункты или вложенные строки
+      while (i < lines.length) {
+        if (lines[i].trim()) {
+          i++;
+          continue;
+        }
+        let j = i;
+        while (j < lines.length && !lines[j].trim()) j++;
+        if (j < lines.length && (isList(lines[j]) || /^\s{2,}\S/.test(lines[j]))) i = j;
+        else break;
+      }
+    } else if (/^\s*</.test(l)) {
+      type = 'other';
+      while (i < lines.length && lines[i].trim()) i++;
+    } else {
+      // Абзац: до пустой строки или до начала блока, который прерывает абзац
+      i++;
+      while (
+        i < lines.length &&
+        lines[i].trim() &&
+        !isFence(lines[i]) &&
+        !isHeading(lines[i]) &&
+        !isQuote(lines[i]) &&
+        !(/^\s{0,3}(=+|-+)\s*$/.test(lines[i]))
+      ) {
+        i++;
+      }
+    }
+    blocks.push({ line: start, type });
+    prevBlank = false;
+  }
+  return blocks;
 }
-ed.addEventListener('scroll', () => syncScroll(ed, pv));
-pv.addEventListener('scroll', () => syncScroll(pv, ed));
+
+// Тип блока верхнего уровня в превью (в тех же обозначениях, что и _scanSourceBlocks)
+function _previewBlockType(el) {
+  const tag = el.tagName;
+  if (/^H[1-6]$/.test(tag)) return 'h';
+  if (tag === 'PRE') return 'pre';
+  if (tag === 'HR') return 'hr';
+  if (tag === 'TABLE') return 'table';
+  if (tag === 'UL' || tag === 'OL') return 'list';
+  if (tag === 'BLOCKQUOTE') return 'quote';
+  if (tag === 'P' || tag === 'FIGURE') return 'p';
+  if (el.classList.contains('mermaid-wrap')) return 'mermaid';
+  if (el.classList.contains('tikz-wrap')) return 'tikz';
+  return 'other';
+}
+
+// Сопоставление блоков по типам (наибольшая общая подпоследовательность): пропуски и лишние
+// блоки с одной из сторон не сдвигают остальные пары. Результат: [{ line, el }]
+function _matchBlocks(src, els) {
+  const n = src.length;
+  const m = els.length;
+  const types = els.map(_previewBlockType);
+  if (!n || !m) return [];
+  if (n * m > 4e6) {
+    // Очень большой документ: попарно, пока типы совпадают
+    const pairs = [];
+    for (let k = 0; k < Math.min(n, m); k++) if (src[k].type === types[k]) pairs.push({ line: src[k].line, el: els[k] });
+    return pairs;
+  }
+  const L = new Uint16Array((n + 1) * (m + 1));
+  const at = (a, b) => a * (m + 1) + b;
+  for (let a = n - 1; a >= 0; a--) {
+    for (let b = m - 1; b >= 0; b--) {
+      L[at(a, b)] =
+        src[a].type === types[b] ? L[at(a + 1, b + 1)] + 1 : Math.max(L[at(a + 1, b)], L[at(a, b + 1)]);
+    }
+  }
+  const pairs = [];
+  let a = 0;
+  let b = 0;
+  while (a < n && b < m) {
+    if (src[a].type === types[b]) {
+      pairs.push({ line: src[a].line, el: els[b] });
+      a++;
+      b++;
+    } else if (L[at(a + 1, b)] >= L[at(a, b + 1)]) a++;
+    else b++;
+  }
+  return pairs;
+}
+
+// Вертикальные позиции строк редактора с учётом переноса длинных строк (через скрытую копию textarea)
+let _edMirror = null;
+function _editorLineTops(lineNums) {
+  if (!_edMirror) {
+    _edMirror = document.createElement('div');
+    _edMirror.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(_edMirror);
+  }
+  const cs = getComputedStyle(ed);
+  const props = [
+    'fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'fontVariantLigatures', 'fontFeatureSettings',
+    'lineHeight', 'letterSpacing', 'wordSpacing', 'tabSize', 'textIndent', 'textTransform',
+    'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft', 'wordBreak', 'overflowWrap'
+  ];
+  const st = _edMirror.style;
+  props.forEach(p => (st[p] = cs[p]));
+  st.position = 'absolute';
+  st.visibility = 'hidden';
+  st.left = '-99999px';
+  st.top = '0';
+  st.whiteSpace = 'pre-wrap';
+  st.boxSizing = 'content-box';
+  st.border = '0';
+  // Ширина строки — как у текста textarea (без полосы прокрутки)
+  st.width = Math.max(0, ed.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)) + 'px';
+  const lines = ed.value.split('\n');
+  const want = new Set(lineNums);
+  const frag = document.createDocumentFragment();
+  const marks = new Map();
+  let buf = '';
+  lines.forEach((l, i) => {
+    if (want.has(i)) {
+      if (buf) frag.appendChild(document.createTextNode(buf));
+      buf = '';
+      const s = document.createElement('span');
+      marks.set(i, s);
+      frag.appendChild(s);
+    }
+    buf += l + (i < lines.length - 1 ? '\n' : '');
+  });
+  if (buf) frag.appendChild(document.createTextNode(buf));
+  _edMirror.replaceChildren(frag);
+  const tops = new Map();
+  marks.forEach((s, i) => tops.set(i, s.offsetTop));
+  _edMirror.replaceChildren();
+  return tops;
+}
+
+// Опорные точки [{ e, p }] — позиции прокрутки редактора и превью, при которых совпадают блоки.
+// Пересчитываются лениво: после рендера, ввода, изменения размеров и загрузки шрифтов
+let _syncMap = null;
+function _invalidateScrollMap() {
+  _syncMap = null;
+}
+function _buildScrollMap() {
+  const eMax = Math.max(0, ed.scrollHeight - ed.clientHeight);
+  const pMax = Math.max(0, pv.scrollHeight - pv.clientHeight);
+  const points = [{ e: 0, p: 0 }];
+  if (mo.style.display !== 'none') {
+    const pairs = _matchBlocks(_scanSourceBlocks(ed.value), Array.from(mo.children));
+    const tops = _editorLineTops(pairs.map(x => x.line));
+    const pvTop = pv.getBoundingClientRect().top - pv.scrollTop;
+    const edPad = parseFloat(getComputedStyle(ed).paddingTop) || 0;
+    const pvPad = parseFloat(getComputedStyle(pv).paddingTop) || 0;
+    pairs.forEach(({ line, el }) => {
+      // Блок оказывается вверху видимой области: строка — под верхним отступом редактора,
+      // блок — под верхним отступом превью (поле блока не учитываем)
+      const e = tops.get(line) - edPad;
+      const p = el.getBoundingClientRect().top - pvTop - pvPad;
+      const last = points[points.length - 1];
+      // Только возрастающие точки внутри диапазона прокрутки
+      if (e > last.e + 0.5 && p > last.p + 0.5 && e < eMax && p < pMax) points.push({ e, p });
+    });
+  }
+  // В конце обе панели внизу
+  const last = points[points.length - 1];
+  if (eMax > last.e && pMax > last.p) points.push({ e: eMax, p: pMax });
+  return points;
+}
+// Переводит позицию прокрутки одной панели в позицию другой (кусочно-линейно между точками)
+function _mapScroll(points, from, to, v) {
+  if (points.length < 2) return 0;
+  let k = 1;
+  while (k < points.length - 1 && points[k][from] < v) k++;
+  const a = points[k - 1];
+  const b = points[k];
+  const span = b[from] - a[from];
+  const t = span > 0 ? Math.min(1, Math.max(0, (v - a[from]) / span)) : 0;
+  return a[to] + (b[to] - a[to]) * t;
+}
+
+// Защита от «эха»: прокрутка, которую выставили мы сами, не должна прокручивать обратно
+const _scrollExpect = new Map();
+function _expectScroll(el) {
+  _scrollExpect.set(el, el.scrollTop);
+}
+let _scrollDriver = ed;
+let _scrollRaf = 0;
+function _syncScrollNow() {
+  _scrollRaf = 0;
+  if (switchingDoc) return;
+  const source = _scrollDriver;
+  const target = source === ed ? pv : ed;
+  // Скрытая панель (мобильный режим) — сопоставлять нечего
+  if (!source.clientHeight || !target.clientHeight) return;
+  if (!_syncMap) _syncMap = _buildScrollMap();
+  const v = source === ed
+    ? _mapScroll(_syncMap, 'e', 'p', source.scrollTop)
+    : _mapScroll(_syncMap, 'p', 'e', source.scrollTop);
+  if (Math.abs(target.scrollTop - v) < 1) return;
+  target.scrollTop = v;
+  // Запоминаем выставленное значение без чтения scrollTop (чтение заставило бы пересчитать раскладку)
+  _scrollExpect.set(target, v);
+}
+function _scheduleScrollSync(driver) {
+  if (driver) _scrollDriver = driver;
+  if (!_scrollRaf) _scrollRaf = requestAnimationFrame(_syncScrollNow);
+}
+function _onPaneScroll(el) {
+  const exp = _scrollExpect.get(el);
+  _scrollExpect.delete(el);
+  if (exp !== undefined && Math.abs(el.scrollTop - exp) < 1) return;
+  _scheduleScrollSync(el);
+}
+ed.addEventListener('scroll', () => _onPaneScroll(ed));
+pv.addEventListener('scroll', () => _onPaneScroll(pv));
+// Изменился текст или раскладка — пересчитываем точки и выравниваем по панели, которую листали последней
+// Набор текста: ведущая панель — редактор (превью подстраивается под него после рендера)
+ed.addEventListener('input', () => {
+  _scrollDriver = ed;
+  _invalidateScrollMap();
+});
+// После изменения содержимого выравниваем с небольшой задержкой: при наборе текста точки
+// пересчитываются один раз после паузы, а не на каждое нажатие
+let _scrollResyncTimer = null;
+if (typeof ResizeObserver !== 'undefined') {
+  const ro = new ResizeObserver(() => {
+    _invalidateScrollMap();
+    clearTimeout(_scrollResyncTimer);
+    _scrollResyncTimer = setTimeout(() => _scheduleScrollSync(), 150);
+  });
+  ro.observe(ed);
+  ro.observe(mo);
+  ro.observe(pv);
+}
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(_invalidateScrollMap);
 
 var _render = render;
 render = function (v) {
   _render(v);
+  _invalidateScrollMap();
   scheduleAutosave();
 };
 
@@ -3422,22 +3634,24 @@ async function switchToDoc(id) {
   if (!data) return false;
   switchingDoc = true;
   await setCurrentDocId(id);
-  currentDocMeta = {
-    name: data.name,
-    isDefaultName: !!data.isDefaultName,
-    createdAt: data.createdAt
-  };
+  currentDocMeta = { name: data.name };
   ed.value = data.content;
-  fontSizes = Object.assign({ ...FONT_DEFAULTS }, legacyFontSizes || {}, data.fontSizes || {});
+  fontSizes = Object.assign({ ...FONT_DEFAULTS }, data.fontSizes || {});
   applyFontSizesToDOM();
   _render(data.content);
+  _invalidateScrollMap();
   setSaveStatus('saved');
   _aiPendingEdits = {};
-  await _loadAiHistory();
+  // У каждого разговора свои бэкенд и модель
+  await _loadAiConversation();
+  _applyAiSelection();
   _refreshAiChatPanel();
   requestAnimationFrame(() => {
     ed.scrollTop = data.scrollEd || 0;
     pv.scrollTop = data.scrollPv || 0;
+    // Восстановленная позиция — не прокрутка пользователя
+    _expectScroll(ed);
+    _expectScroll(pv);
     switchingDoc = false;
   });
   renderDocList();
@@ -3451,18 +3665,14 @@ async function renameDoc(id, newName) {
   const data = await loadDocRecord(id);
   if (!data) return;
   data.name = name;
-  data.isDefaultName = false;
-  data.updatedAt = Date.now();
   await persistDocRecord(id, data);
   const idxItem = docIndex.find(d => d.id === id);
   if (idxItem) {
     idxItem.name = name;
-    idxItem.isDefaultName = false;
   }
   await persistDocIndex();
   if (id === currentDocId && currentDocMeta) {
     currentDocMeta.name = name;
-    currentDocMeta.isDefaultName = false;
   }
   renderDocList();
 }
@@ -3543,7 +3753,7 @@ async function onDocDeleteClick(event, id) {
   if (!confirm(t.docsConfirmDelete || 'Delete this document? This cannot be undone.')) return;
   if (!(await confirmAiNav())) return;
   await removeDocRecord(id);
-  await _deleteAiHistory(id);
+  await _deleteAiConversation(id);
   docIndex = docIndex.filter(d => d.id !== id);
   await persistDocIndex();
   if (id === currentDocId) {
@@ -3599,8 +3809,8 @@ async function initDocuments() {
 // Promise завершения инициализации: нужен, чтобы файлы из ОС открывались только после загрузки документов
 const appReady = (async function initSave() {
   await loadLangSetting();
-  await loadLegacyFontSizes();
   await loadSettings();
+  await _loadAiModelsCaches();
   await initDocuments();
 })();
 // Потребитель очереди запуска регистрируем сразу, чтобы не пропустить файлы, переданные при старте
@@ -3993,31 +4203,43 @@ function _aiBuildGeminiParts(text, attachments) {
   return parts;
 }
 
-// Префикс ключа истории переписки с ИИ — своя история для каждого документа
-const AI_HISTORY_PREFIX = 'zmd_ai_history_';
+// Префикс ключа разговора с ИИ — свой разговор для каждого документа:
+// { backend, models: { бэкенд: модель }, history: [...] }
+const AI_CONV_PREFIX = 'zmd_ai_conv_';
 
-// Загружает историю переписки с ИИ-ассистентом для текущего документа
-async function _loadAiHistory() {
+// Загружает разговор текущего документа: историю, бэкенд и выбранные модели.
+// У документа без сохранённого разговора остаются бэкенд и модели, выбранные сейчас
+async function _loadAiConversation() {
   _aiConvHistory = [];
   if (!currentDocId) return;
+  let conv = null;
   try {
-    const raw = await idbGet(AI_HISTORY_PREFIX + currentDocId);
-    if (raw) _aiConvHistory = JSON.parse(raw) || [];
-  } catch (_) {
-    _aiConvHistory = [];
+    conv = JSON.parse((await idbGet(AI_CONV_PREFIX + currentDocId)) || 'null');
+  } catch (_) {}
+  if (conv && typeof conv === 'object') {
+    if (Array.isArray(conv.history)) _aiConvHistory = conv.history;
+    if (AI_MODELS[conv.backend]) AI_BACKEND = conv.backend;
+    _aiModelChoice = conv.models && typeof conv.models === 'object' ? { ...conv.models } : {};
+  } else {
+    // Копия: выбор в этом разговоре не должен менять объект предыдущего
+    _aiModelChoice = { ..._aiModelChoice };
   }
+  AI_MODEL = _pickAiModel();
 }
-// Сохраняет историю переписки с ИИ-ассистентом для текущего документа
-async function _saveAiHistory() {
+// Сохраняет разговор текущего документа (история + бэкенд + выбранные модели)
+async function _saveAiConversation() {
   if (!currentDocId) return;
   try {
-    await idbSet(AI_HISTORY_PREFIX + currentDocId, JSON.stringify(_aiConvHistory));
+    await idbSet(
+      AI_CONV_PREFIX + currentDocId,
+      JSON.stringify({ backend: AI_BACKEND, models: _aiModelChoice, history: _aiConvHistory })
+    );
   } catch (_) {}
 }
-// Удаляет сохранённую историю переписки с ИИ для указанного документа
-async function _deleteAiHistory(docId) {
+// Удаляет сохранённый разговор с ИИ для указанного документа
+async function _deleteAiConversation(docId) {
   try {
-    await idbDelete(AI_HISTORY_PREFIX + docId);
+    await idbDelete(AI_CONV_PREFIX + docId);
   } catch (_) {}
 }
 
@@ -4063,7 +4285,8 @@ async function resetAiConversation() {
   if (_aiConvHistory.length && !confirm(t.aiResetConfirm)) return;
   _aiConvHistory = [];
   _aiPendingEdits = {};
-  if (currentDocId) await _deleteAiHistory(currentDocId);
+  // Очищается только переписка: бэкенд и модель этого разговора остаются
+  await _saveAiConversation();
   _refreshAiChatPanel();
 }
 
@@ -4216,13 +4439,6 @@ function acceptAiEdit(id) {
 function rejectAiEdit(id) {
   _resolveDiffCard(id, 'aiEditDiscarded');
 }
-
-(async function loadAiKey() {
-  _populateAiSelects();
-  await _loadAiKeyForBackend();
-  _updateAiWelcomeText();
-  refreshAiModels(false);
-})();
 
 // Сохраняет введённый пользователем API-ключ отдельно для текущего бэкенда (Claude/Gemini) в IndexedDB
 async function saveApiKey() {
@@ -4588,7 +4804,7 @@ async function sendAi() {
       attachments: attachments.length ? attachments : undefined
     });
     _aiConvHistory.push({ role: 'model', text });
-    _saveAiHistory();
+    _saveAiConversation();
   } catch (err) {
     thinking.remove();
     if (err.name !== 'AbortError') {

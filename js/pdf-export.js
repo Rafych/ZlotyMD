@@ -2257,7 +2257,7 @@
     pdf.setProperties({ title, creator: 'Złoty MD', producer: 'Złoty MD (jsPDF)' });
     try { pdf.setLanguage(lang); } catch (e) { /* код языка не из списка jsPDF */ }
     pdf.viewerPreferences({ DisplayDocTitle: true });
-    return { buffer: pdf.output('arraybuffer'), pages: pdf.internal.getNumberOfPages() };
+    return { buffer: pdf.output('arraybuffer') };
   }
 
   // Адрес этого файла: тот же модуль загружается внутрь iframe
@@ -2274,11 +2274,9 @@
       await loadScript(doc, LIBS.html2canvas);
       await loadScript(doc, SELF_SRC);
       const res = await iframe.contentWindow.ZmdPdf.renderHere({ title: opts.title, lang: opts.lang });
-      const blob = new Blob([new Uint8Array(res.buffer)], { type: 'application/pdf' });
-      blob.pages = res.pages;
-      return blob;
+      return new Blob([new Uint8Array(res.buffer)], { type: 'application/pdf' });
     } finally {
-      if (!opts.keepFrame) iframe.remove();
+      iframe.remove();
     }
   }
 
@@ -2314,7 +2312,7 @@
   async function save(html, opts) {
     opts = opts || {};
     const blob = await generate(html, opts);
-    const name = (opts.fileName || ((opts.title || 'document').replace(/[\/:*?"<>|]/g, '_') + '.pdf'));
+    const name = (opts.title || 'document').replace(/[\/:*?"<>|]/g, '_') + '.pdf';
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -2323,8 +2321,7 @@
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 60000);
-    return blob;
   }
 
-  global.ZmdPdf = { generate, save, renderHere, countPages, countHere, PAGE };
+  global.ZmdPdf = { save, renderHere, countPages, countHere };
 })(window);
