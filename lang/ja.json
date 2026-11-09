@@ -2,6 +2,7 @@
   "chars": "文字",
   "words": "単語",
   "lines": "行",
+  "pdfPages": "PDFページ",
   "editorLabel": "エディター",
   "previewLabel": "プレビュー",
   "tabEdit": "編集",
@@ -107,7 +108,7 @@
   "downloadBtnTitle": "ダウンロード",
   "dlTitle": "形式を選択…",
   "dlHtmlDesc": "スタンドアロン HTML ファイル",
-  "dlPdfDesc": "印刷ダイアログ経由で保存",
+  "dlPdfDesc": "PDFファイルとして保存",
   "dlZmdDesc": "Markdown + エディタメタデータ",
   "dlMdDesc": "標準 Markdown ファイル",
   "dlHint": "形式を1つ以上選択してください",
@@ -174,5 +175,6 @@
   "errLangFormat": "言語ファイル「{file}」が壊れているか、形式が正しくありません。",
   "fileOpenFailed": "ファイル「{name}」を開けませんでした。",
   "loadingFile": "ファイルを読み込み中…",
+  "pdfGenerating": "PDFを作成中…",
   "loadingLang": "言語を読み込み中…"
 }

@@ -4,6 +4,7 @@
   "chars": "χαρακτήρες",
   "words": "λέξεις",
   "lines": "γραμμές",
+  "pdfPages": "σελίδες PDF",
   "editorLabel": "Επεξεργαστής",
   "previewLabel": "Προεπισκόπηση",
   "tabEdit": "Επεξεργασία",
@@ -109,7 +110,7 @@
   "downloadBtnTitle": "Λήψη",
   "dlTitle": "Λήψη ως…",
   "dlHtmlDesc": "Αυτόνομο αρχείο HTML",
-  "dlPdfDesc": "Αποθήκευση μέσω εκτύπωσης",
+  "dlPdfDesc": "Αποθήκευση ως αρχείο PDF",
   "dlZmdDesc": "Markdown + μεταδεδομένα επεξεργαστή",
   "dlMdDesc": "Τυπικό αρχείο Markdown",
   "dlHint": "Επιλέξτε μία ή περισσότερες μορφές",
@@ -166,5 +167,6 @@
   "errLangFormat": "Το αρχείο γλώσσας «{file}» είναι κατεστραμμένο ή έχει μη έγκυρη μορφή.",
   "fileOpenFailed": "Δεν ήταν δυνατό το άνοιγμα του αρχείου «{name}».",
   "loadingFile": "Φόρτωση αρχείου…",
+  "pdfGenerating": "Δημιουργία PDF…",
   "loadingLang": "Φόρτωση γλώσσας…"
 };

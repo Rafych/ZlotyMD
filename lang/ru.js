@@ -4,6 +4,7 @@
   "chars": "симв.",
   "words": "слов",
   "lines": "строк",
+  "pdfPages": "стр. PDF",
   "editorLabel": "Редактор",
   "previewLabel": "Просмотр",
   "tabEdit": "Редактировать",
@@ -109,7 +110,7 @@
   "downloadBtnTitle": "Скачать",
   "dlTitle": "Скачать как…",
   "dlHtmlDesc": "Автономный HTML-файл",
-  "dlPdfDesc": "Сохранить через диалог печати",
+  "dlPdfDesc": "Сохранить в файл PDF",
   "dlZmdDesc": "Markdown + метаданные редактора",
   "dlMdDesc": "Стандартный файл Markdown",
   "dlHint": "Выберите один или несколько форматов",
@@ -166,5 +167,6 @@
   "errLangFormat": "Языковой файл «{file}» повреждён или имеет неверный формат.",
   "fileOpenFailed": "Не удалось открыть файл «{name}».",
   "loadingFile": "Загрузка файла…",
+  "pdfGenerating": "Создание PDF…",
   "loadingLang": "Загрузка языка…"
 };

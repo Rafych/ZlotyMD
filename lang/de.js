@@ -4,6 +4,7 @@
   "chars": "Zeichen",
   "words": "Wörter",
   "lines": "Zeilen",
+  "pdfPages": "PDF-Seiten",
   "editorLabel": "Editor",
   "previewLabel": "Vorschau",
   "tabEdit": "Bearbeiten",
@@ -109,7 +110,7 @@
   "downloadBtnTitle": "Herunterladen",
   "dlTitle": "Herunterladen als…",
   "dlHtmlDesc": "Eigenständige HTML-Datei",
-  "dlPdfDesc": "Über Druckdialog speichern",
+  "dlPdfDesc": "Als PDF-Datei speichern",
   "dlZmdDesc": "Markdown + Editor-Metadaten",
   "dlMdDesc": "Standard-Markdown-Datei",
   "dlHint": "Wählen Sie ein oder mehrere Formate",
@@ -166,5 +167,6 @@
   "errLangFormat": "Die Sprachdatei „{file}“ ist beschädigt oder hat ein ungültiges Format.",
   "fileOpenFailed": "Die Datei „{name}“ konnte nicht geöffnet werden.",
   "loadingFile": "Datei wird geladen …",
+  "pdfGenerating": "PDF wird erstellt …",
   "loadingLang": "Sprache wird geladen …"
 };

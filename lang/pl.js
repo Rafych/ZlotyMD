@@ -4,6 +4,7 @@
   "chars": "znaki",
   "words": "słowa",
   "lines": "linie",
+  "pdfPages": "stron PDF",
   "editorLabel": "Edytor",
   "previewLabel": "Podgląd",
   "tabEdit": "Edycja",
@@ -109,7 +110,7 @@
   "downloadBtnTitle": "Pobierz",
   "dlTitle": "Pobierz jako…",
   "dlHtmlDesc": "Samodzielny plik HTML",
-  "dlPdfDesc": "Zapisz przez okno drukowania",
+  "dlPdfDesc": "Zapisz jako plik PDF",
   "dlZmdDesc": "Markdown + metadane edytora",
   "dlMdDesc": "Standardowy plik Markdown",
   "dlHint": "Wybierz jeden lub więcej formatów",
@@ -166,5 +167,6 @@
   "errLangFormat": "Plik językowy „{file}” jest uszkodzony lub ma nieprawidłowy format.",
   "fileOpenFailed": "Nie udało się otworzyć pliku „{name}”.",
   "loadingFile": "Wczytywanie pliku…",
+  "pdfGenerating": "Tworzenie pliku PDF…",
   "loadingLang": "Wczytywanie języka…"
 };
