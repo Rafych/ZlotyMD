@@ -299,6 +299,17 @@ body {
   font-weight: 700;
   color: var(--txt);
 }
+/* Число страниц PDF пересчитывается — значение приглушено */
+.chip.busy strong {
+  opacity: 0.45;
+  transition: opacity 0.15s;
+}
+/* Число страниц PDF — только на широких экранах: на более узких шапка не вмещает ещё один чип */
+@media (max-width: 1100px) {
+  .chip-pdf {
+    display: none;
+  }
+}
 .dot {
   width: 5px;
   height: 5px;
