@@ -33,6 +33,20 @@
     GPL-3.0-or-later — https://github.com/drgrice1/tikzjax
     It bundles TeX and TeX packages (e.g. PGF/TikZ, pgfplots) under their own licenses.
 
+  jsPDF v4.2.1 — used by the editor for PDF export
+    Copyright (c) 2010-2025 James Hall (https://github.com/parallax/jsPDF), (c) 2015-2025 yWorks GmbH (https://www.yworks.com/)
+    MIT License — https://github.com/parallax/jsPDF/blob/master/LICENSE
+
+  html2canvas v1.4.1 — used by jsPDF (html()) for PDF export
+    Copyright (c) 2012 Niklas von Hertzen
+    MIT License — https://github.com/niklasvh/html2canvas/blob/master/LICENSE
+
+  Noto Sans, Noto Serif, Noto Sans JP / KR / SC / TC, Noto Sans Arabic, Noto Sans Hebrew, Noto Sans Math,
+  Noto Sans Symbols 2 — embedded into exported PDF files
+  only for characters the document fonts do not cover
+    Copyright (c) Google LLC
+    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
+
   Content delivery / font services (no code included): cdnjs (Cloudflare), jsDelivr, Google Fonts.
 
   Optional AI features call external APIs with the user's own key (no code included; each
@@ -630,6 +644,11 @@
             <div class="dot" style="background: var(--gr)"></div>
             <strong id="lc">0</strong><span data-i18n="lines">lines</span>
           </div>
+          <!-- Число страниц при экспорте в PDF (считается в фоне) -->
+          <div class="chip chip-pdf">
+            <div class="dot" style="background: var(--gy)"></div>
+            <strong id="pc">0</strong><span data-i18n="pdfPages">PDF pages</span>
+          </div>
         </div>
 
         <button
@@ -893,6 +912,20 @@
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
+                <span class="about-lib-name">jsPDF <span class="about-lib-ver">v4.2.1</span></span>
+                <span class="about-lib-badge">MIT</span>
+              </div>
+              <span class="about-lib-copy">© 2010–2025 James Hall, © 2015–2025 yWorks GmbH</span>
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
+                <span class="about-lib-name">html2canvas <span class="about-lib-ver">v1.4.1</span></span>
+                <span class="about-lib-badge">MIT</span>
+              </div>
+              <span class="about-lib-copy">© 2012 Niklas von Hertzen</span>
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
                 <span class="about-lib-name">Google Sans</span>
                 <span
                   class="about-lib-badge about-lib-badge-alt"
@@ -914,6 +947,13 @@
               <span class="about-lib-copy" data-i18n="aboutLibJetbrainsCopy"
                 >© 2020 JetBrains s.r.o.</span
               >
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
+                <span class="about-lib-name">Noto Sans / Noto Serif</span>
+                <span class="about-lib-badge about-lib-badge-alt">SIL OFL 1.1</span>
+              </div>
+              <span class="about-lib-copy">© Google LLC — SIL Open Font License 1.1</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
@@ -1573,7 +1613,7 @@
                 <line x1="9" y1="17" x2="15" y2="17" />
               </svg>
               <span class="dl-opt-label">PDF</span>
-              <span class="dl-opt-desc" data-i18n="dlPdfDesc">Save via print dialog</span>
+              <span class="dl-opt-desc" data-i18n="dlPdfDesc">Save as a PDF file</span>
             </button>
             <button class="dl-opt" id="dlOptZmd" type="button" onclick="toggleDlOpt('zmd')">
               <span class="dl-opt-check"
@@ -1774,6 +1814,8 @@
       </div>
     </div>
 
+    <!-- Экспорт в PDF (jsPDF + html2canvas загружаются при первом использовании) -->
+    <script src="js/pdf-export.js"></script>
     <script src="js/app.js"></script>
     <script src="js/pwa.js"></script>
   </body>

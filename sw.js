@@ -1,8 +1,8 @@
 /* Złoty MD — Service Worker (offline support)
- * Локальные файлы и CDN-ресурсы (marked, KaTeX, Mermaid, шрифты) кэшируются
+ * Локальные файлы и CDN-ресурсы (marked, KaTeX, Mermaid, jsPDF, html2canvas, шрифты) кэшируются
  * при установке и при использовании, поэтому редактор работает без сети.
  * При изменении файлов приложения увеличьте CACHE_VERSION. */
-const CACHE_VERSION = 'zmd-v14';
+const CACHE_VERSION = 'zmd-v15';
 const CACHE = CACHE_VERSION;
 
 const LOCAL_ASSETS = [
@@ -11,6 +11,7 @@ const LOCAL_ASSETS = [
   'index.html',
   'css/styles.css',
   'js/app.js',
+  'js/pdf-export.js',
   'js/pwa.js',
   // Языковые файлы (английский встроен в app.js). Новый язык: добавьте сюда lang/<код>.json и lang/<код>.js
   'lang/ru.json',
@@ -34,7 +35,10 @@ const LOCAL_ASSETS = [
 const CDN_SCRIPTS = [
   'https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js'
+  'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js',
+  // Экспорт в PDF (загружаются внутри скрытого iframe при создании PDF)
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
 ];
 
 // CSS, из которого дополнительно кэшируются файлы шрифтов (url(...))
