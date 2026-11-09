@@ -617,6 +617,69 @@ body {
   white-space: pre;
 }
 
+/* Подсветка синтаксиса (классы highlight.js) — палитра Google для тёмного фона блока кода.
+   Те же цвета — в buildPreviewHTML (app.js) для HTML и PDF */
+.md pre .hljs-keyword,
+.md pre .hljs-selector-tag,
+.md pre .hljs-doctag,
+.md pre .hljs-template-tag,
+.md pre .hljs-meta .hljs-keyword {
+  color: #8ab4f8;
+}
+.md pre .hljs-built_in,
+.md pre .hljs-type,
+.md pre .hljs-title.class_,
+.md pre .hljs-title.class_.inherited__,
+.md pre .hljs-variable.language_ {
+  color: #78d9ec;
+}
+.md pre .hljs-string,
+.md pre .hljs-char.escape_,
+.md pre .hljs-addition,
+.md pre .hljs-meta .hljs-string {
+  color: #81c995;
+}
+.md pre .hljs-number,
+.md pre .hljs-literal,
+.md pre .hljs-symbol,
+.md pre .hljs-bullet,
+.md pre .hljs-variable.constant_ {
+  color: #fdd663;
+}
+.md pre .hljs-title,
+.md pre .hljs-title.function_,
+.md pre .hljs-section {
+  color: #c58af9;
+}
+.md pre .hljs-attr,
+.md pre .hljs-attribute,
+.md pre .hljs-property,
+.md pre .hljs-selector-attr,
+.md pre .hljs-selector-class,
+.md pre .hljs-selector-id,
+.md pre .hljs-selector-pseudo {
+  color: #fcad70;
+}
+.md pre .hljs-tag,
+.md pre .hljs-name,
+.md pre .hljs-meta,
+.md pre .hljs-regexp,
+.md pre .hljs-deletion,
+.md pre .hljs-link {
+  color: #f28b82;
+}
+.md pre .hljs-comment,
+.md pre .hljs-quote {
+  color: #9aa0a6;
+  font-style: italic;
+}
+.md pre .hljs-emphasis {
+  font-style: italic;
+}
+.md pre .hljs-strong {
+  font-weight: 700;
+}
+
 /* Значок языка программирования в блоке кода */
 .lang-badge {
   padding: 2px var(--s8);
@@ -1389,6 +1452,23 @@ body {
 .lang-drop.open {
   display: block;
   animation: slideDown 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+/* Пять и более языков: список прокручивается по вертикали (высоту задаёт fitLangDrop в app.js) */
+.lang-drop.scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bord) transparent;
+}
+.lang-drop.scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.lang-drop.scroll::-webkit-scrollbar-thumb {
+  background: var(--bord);
+  border-radius: 99px;
+}
+.lang-drop.scroll::-webkit-scrollbar-track {
+  background: transparent;
 }
 .lang-opt {
   display: flex;
@@ -3178,6 +3258,59 @@ body.ai-dot-on .ai-dot {
   }
   .md pre code {
     color: #222 !important;
+  }
+  /* Подсветка синтаксиса на светлом фоне печати — более тёмные оттенки той же палитры */
+  .md pre .hljs-keyword,
+  .md pre .hljs-selector-tag,
+  .md pre .hljs-doctag,
+  .md pre .hljs-template-tag,
+  .md pre .hljs-meta .hljs-keyword {
+    color: #1a73e8 !important;
+  }
+  .md pre .hljs-built_in,
+  .md pre .hljs-type,
+  .md pre .hljs-title.class_,
+  .md pre .hljs-variable.language_ {
+    color: #007b83 !important;
+  }
+  .md pre .hljs-string,
+  .md pre .hljs-char.escape_,
+  .md pre .hljs-addition,
+  .md pre .hljs-meta .hljs-string {
+    color: #188038 !important;
+  }
+  .md pre .hljs-number,
+  .md pre .hljs-literal,
+  .md pre .hljs-symbol,
+  .md pre .hljs-bullet,
+  .md pre .hljs-variable.constant_ {
+    color: #b06000 !important;
+  }
+  .md pre .hljs-title,
+  .md pre .hljs-title.function_,
+  .md pre .hljs-section {
+    color: #9334e6 !important;
+  }
+  .md pre .hljs-attr,
+  .md pre .hljs-attribute,
+  .md pre .hljs-property,
+  .md pre .hljs-selector-attr,
+  .md pre .hljs-selector-class,
+  .md pre .hljs-selector-id,
+  .md pre .hljs-selector-pseudo {
+    color: #c26401 !important;
+  }
+  .md pre .hljs-tag,
+  .md pre .hljs-name,
+  .md pre .hljs-meta,
+  .md pre .hljs-regexp,
+  .md pre .hljs-deletion,
+  .md pre .hljs-link {
+    color: #d93025 !important;
+  }
+  .md pre .hljs-comment,
+  .md pre .hljs-quote {
+    color: #5f6368 !important;
   }
   .pre-header {
     background: #ececec !important;
