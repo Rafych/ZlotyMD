@@ -31,7 +31,6 @@
   --s21: 21px;
   --s34: 34px;
   --s55: 55px;
-  --s89: 89px;
   --r5: 5px;
   --r8: 8px;
   --r13: 13px;
@@ -1552,52 +1551,7 @@ body {
   }
 }
 
-.restore-toast {
-  position: fixed;
-  bottom: var(--s21);
-  left: 50%;
-  transform: translateX(-50%) translateY(80px);
-  display: flex;
-  align-items: center;
-  gap: var(--s8);
-  padding: var(--s8) var(--s21);
-  border-radius: var(--r34);
-  background: #202124;
-  color: #e8eaed;
-  font-size: var(--f13);
-  font-weight: 600;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  z-index: 300;
-  transition:
-    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 0.3s;
-  opacity: 0;
-  pointer-events: none;
-}
-.restore-toast svg {
-  stroke: var(--gg);
-  flex-shrink: 0;
-}
-.restore-toast button {
-  background: none;
-  border: none;
-  color: #9aa0a6;
-  cursor: pointer;
-  font-size: 13px;
-  padding: 0 0 0 var(--s8);
-  line-height: 1;
-  transition: color 0.15s;
-}
-.restore-toast button:hover {
-  color: #fff;
-}
-.restore-toast.show {
-  transform: translateX(-50%) translateY(0);
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* Индикатор загрузки: плашка снизу по центру со спиннером (как и остальные тосты) */
+/* Индикатор загрузки: плашка снизу по центру со спиннером */
 .busy-indicator {
   position: fixed;
   bottom: var(--s21);
@@ -1638,10 +1592,6 @@ body {
   to {
     transform: rotate(360deg);
   }
-}
-/* Если одновременно виден и индикатор загрузки, и тост восстановления — тост поднимается выше, чтобы не перекрываться */
-.busy-indicator.show ~ .restore-toast {
-  bottom: calc(var(--s21) + 48px);
 }
 @media (prefers-reduced-motion: reduce) {
   .busy-indicator {
@@ -2309,91 +2259,6 @@ body {
 .dl-confirm-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-/* Модальное окно с параметрами экспорта в PDF */
-.dl-modal--pdf {
-  width: min(320px, calc(100vw - 2 * var(--s21)));
-  padding: var(--s21);
-}
-.pdf-field {
-  margin-bottom: var(--s13);
-}
-.pdf-label {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--sub);
-  margin-bottom: var(--s5);
-}
-.pdf-input {
-  cursor: text;
-  width: 100%;
-  height: 36px;
-  border: 1.5px solid var(--bord);
-  border-radius: var(--r8);
-  background: var(--bg);
-  font-family: var(--font);
-  font-size: var(--f13);
-  color: var(--txt);
-  padding: 0 var(--s13);
-  outline: none;
-  transition:
-    border-color 0.15s,
-    box-shadow 0.15s;
-}
-.pdf-input:focus {
-  border-color: var(--gb);
-  box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.12);
-}
-.pdf-actions {
-  display: flex;
-  gap: var(--s8);
-  margin-top: var(--s21);
-}
-.pdf-cancel-btn {
-  flex: 1;
-  height: 34px;
-  border-radius: var(--r8);
-  border: 1.5px solid var(--bord);
-  background: var(--bg);
-  font-family: var(--font);
-  font-size: var(--f13);
-  font-weight: 600;
-  color: var(--mut);
-  cursor: pointer;
-  transition:
-    border-color 0.15s,
-    color 0.15s,
-    background 0.15s;
-}
-.pdf-cancel-btn:hover {
-  border-color: var(--gr);
-  color: var(--gr);
-  background: var(--grt);
-}
-.pdf-ok-btn {
-  flex: 2;
-  height: 34px;
-  border-radius: var(--r8);
-  border: none;
-  background: var(--gb);
-  font-family: var(--font);
-  font-size: var(--f13);
-  font-weight: 700;
-  color: #fff;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    transform 0.1s;
-}
-.pdf-ok-btn:hover {
-  background: #1a73e8;
-}
-.pdf-ok-btn:active {
-  transform: scale(0.96);
 }
 
 /* Боковая панель ИИ-ассистента */
@@ -3205,7 +3070,6 @@ body.ai-dot-on .ai-dot {
   .ep,
   .rz,
   .tabbar,
-  .restore-toast,
   .busy-indicator,
   .about-overlay,
   .about-modal,
