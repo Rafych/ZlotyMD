@@ -116,7 +116,7 @@ function buildPreviewHTML(title, opts) {
     .md pre .hljs-emphasis{font-style:italic}
     .md pre .hljs-strong{font-weight:700}
     .diff-wrap{display:block;min-width:max-content}
-    .diff-add,.diff-del,.diff-meta,.diff-ctx{display:block;padding:0 var(--s21) 0 calc(var(--s8)*4 + 13px);position:relative;line-height:1.6;white-space:pre;min-width:100%;box-sizing:border-box}
+    .diff-add,.diff-del,.diff-meta,.diff-ctx{display:block;padding:0 var(--s21) 0 calc(var(--s8)*4 + 13px);position:relative;line-height:1.6;min-height:1.6em;white-space:pre;min-width:100%;box-sizing:border-box}
     .diff-add::before,.diff-del::before,.diff-meta::before,.diff-ctx::before{content:attr(data-mark);position:absolute;left:8px;width:13px;text-align:center;font-weight:700;font-size:11px;line-height:1.6;user-select:none;pointer-events:none;opacity:.9}
     .diff-add{background:rgba(52,168,83,.13);color:#B4EFCA;border-left:3px solid #34A853}
     .diff-add::before{color:#34A853}
@@ -179,6 +179,9 @@ function buildPreviewHTML(title, opts) {
       b.setAttribute('type', 'button');
       b.dataset.copy = LANGS[currentLang]?.codeCopy || 'Copy';
       b.dataset.copied = LANGS[currentLang]?.codeCopied || 'Copied';
+      // Исходное состояние кнопки (даже если в редакторе только что нажали «Копировать»)
+      b.classList.remove('ok');
+      b.innerHTML = COPY_SVG + _escText(b.dataset.copy);
     });
   } else {
     clone.querySelectorAll('.cpbtn').forEach(b => b.remove());
@@ -365,7 +368,11 @@ const DL_OPT_IDS = { html: 'dlOptHtml', pdf: 'dlOptPdf', zmd: 'dlOptZmd', md: 'd
 
 // Открывает модальное окно выбора форматов для скачивания (HTML/PDF/ZMD/MD)
 function openDownloadMenu() {
-  if (!ed.value.trim()) return;
+  // Пустой документ скачивать нечего — сообщаем об этом в модальном окне
+  if (!ed.value.trim()) {
+    showErrorModal(tr('dlEmptyMsg'), tr('dlEmptyTitle'));
+    return;
+  }
   const overlay = document.getElementById('dlOverlay');
   const modal = document.getElementById('dlModal');
   dlSelected.clear();
@@ -854,6 +861,7 @@ const HLJS_EXTRA = {
   powershell: 'powershell',
   ps1: 'powershell',
   pwsh: 'powershell',
+  // LaTeX подключается сразу в ZlotyMD.html; здесь — повторная попытка, если тот файл не загрузился
   latex: 'latex',
   tex: 'latex'
 };
@@ -911,6 +919,15 @@ function highlightCodeBlocks(root) {
   });
 }
 
+// Экранирует текст для вставки в innerHTML
+function _escText(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+// Подпись кнопки копирования, которую applyLang обновляет при смене языка
+function _cpLabel(key) {
+  return `<span data-i18n="${key}">${_escText(tr(key))}</span>`;
+}
+
 // Добавляет кнопки копирования к каждому блоку кода в превью
 function addCopyBtns() {
   mo.querySelectorAll('pre').forEach(pre => {
@@ -941,14 +958,15 @@ function addCopyBtns() {
 
     const btn = document.createElement('button');
     btn.className = 'cpbtn';
-    btn.innerHTML = COPY_SVG + (LANGS[currentLang]?.codeCopy || 'Copy');
+    // Подпись в <span data-i18n>: applyLang меняет её при смене языка без повторного рендера
+    btn.innerHTML = COPY_SVG + _cpLabel('codeCopy');
     btn.addEventListener('click', () => {
       const text = code ? code.innerText : pre.innerText;
       navigator.clipboard.writeText(text).then(() => {
-        btn.innerHTML = CHECK_SVG + (LANGS[currentLang]?.codeCopied || 'Copied');
+        btn.innerHTML = CHECK_SVG + _cpLabel('codeCopied');
         btn.classList.add('ok');
         setTimeout(() => {
-          btn.innerHTML = COPY_SVG + (LANGS[currentLang]?.codeCopy || 'Copy');
+          btn.innerHTML = COPY_SVG + _cpLabel('codeCopy');
           btn.classList.remove('ok');
         }, 2000);
       });
@@ -1441,15 +1459,23 @@ function _tikzCachePut(key, value) {
 }
 
 function _tikzShowError(wrap, item, kind) {
-  const t = LANGS[currentLang] || LANGS['en'];
   const div = document.createElement('div');
   div.className = 'mermaid-error tikz-error';
-  let msg = kind === 'load' ? t.tikzLoadError : t.tikzCompileError;
-  if (kind !== 'load' && item && item.unsupported.length) {
-    msg += '\n' + t.tikzUnsupportedPkgs.replace('{pkgs}', item.unsupported.join(', '));
-  }
-  div.textContent = msg;
+  // Вид ошибки и пакеты сохраняются, чтобы при смене языка пересобрать текст (_refreshTikzErrors)
+  div.dataset.kind = kind;
+  div.dataset.pkgs = kind !== 'load' && item && item.unsupported.length ? item.unsupported.join(', ') : '';
+  div.textContent = _tikzErrorText(div.dataset.kind, div.dataset.pkgs);
   wrap.replaceChildren(div);
+}
+function _tikzErrorText(kind, pkgs) {
+  let msg = tr(kind === 'load' ? 'tikzLoadError' : 'tikzCompileError');
+  if (pkgs) msg += '\n' + tr('tikzUnsupportedPkgs').replace('{pkgs}', pkgs);
+  return msg;
+}
+function _refreshTikzErrors() {
+  document.querySelectorAll('#mo .tikz-error[data-kind]').forEach(div => {
+    div.textContent = _tikzErrorText(div.dataset.kind, div.dataset.pkgs);
+  });
 }
 
 // Загружает TikZJax (≈6 МБ при первом использовании, дальше — из кэша браузера/Service Worker)
@@ -1638,6 +1664,7 @@ function render(v) {
                 if (wrap && !wrap.querySelector('svg') && !wrap.querySelector('.mermaid-error')) {
                   const errDiv = document.createElement('div');
                   errDiv.className = 'mermaid-error';
+                  errDiv.setAttribute('data-i18n', 'mermaidSyntaxError');
                   errDiv.textContent =
                     LANGS[currentLang]?.mermaidSyntaxError || LANGS['en'].mermaidSyntaxError;
                   wrap.appendChild(errDiv);
@@ -1914,6 +1941,8 @@ const LANGS = {
     loadingLang: 'Loading language…',
     errModalTitle: 'Error',
     errOk: 'OK',
+    dlEmptyTitle: 'Nothing to download',
+    dlEmptyMsg: 'The document is empty. Write something before downloading.',
     errLangInvalid: 'Invalid language code: “{lang}”.',
     errLangNotFound: 'The language file “{file}” was not found.',
     errLangHttp: 'Failed to load the language file “{file}” (HTTP {status}).',
@@ -1939,6 +1968,7 @@ const LANGS = {
     aiUnsupportedFile: '⚠ Unsupported file type: "{name}".',
     aiTooManyFiles: '⚠ Max {max} files per message.',
     aboutAuthor: 'Author',
+    aboutAnd: ' and ',
     aboutCopyright: 'Copyright',
     aboutVersion: 'Version',
     aboutLicense: 'License',
@@ -2448,6 +2478,11 @@ function applyLang(code) {
     const dotDescEl = document.querySelector('#settingsModal [data-i18n="settingsAiDotDesc"]');
     if (dotDescEl && t.settingsAiDotDesc) dotDescEl.textContent = t.settingsAiDotDesc;
   }
+  // Составные сообщения превью (TikZ) и индикатор загрузки, если он сейчас показан
+  if (typeof _refreshTikzErrors === 'function') _refreshTikzErrors();
+  try {
+    if (_busyStack.length) _renderBusy();
+  } catch (_) {}
   // Язык документа (lang) влияет на подбор шрифтов — пересчитываем страницы PDF
   schedulePdfPageCount();
 }
@@ -3438,7 +3473,7 @@ function renderDocList() {
   if (!listEl) return;
   const t = LANGS[currentLang] || LANGS['en'];
   if (!docIndex.length) {
-    listEl.innerHTML = `<div class="doc-item-empty">${t.docsEmpty || 'No documents yet'}</div>`;
+    listEl.innerHTML = `<div class="doc-item-empty" data-i18n="docsEmpty">${t.docsEmpty || 'No documents yet'}</div>`;
     return;
   }
   const sorted = [...docIndex].sort((a, b) => b.updatedAt - a.updatedAt);
@@ -3456,7 +3491,7 @@ function renderDocList() {
           <div class="doc-item-meta">${dateStr}</div>
         </div>
         <div class="doc-item-actions">
-          <button class="doc-item-btn del" title="${escapeAttr(t.docsDelete || 'Delete')}" onclick="onDocDeleteClick(event,'${d.id}')">
+          <button class="doc-item-btn del" data-i18n-title="docsDelete" title="${escapeAttr(t.docsDelete || 'Delete')}" onclick="onDocDeleteClick(event,'${d.id}')">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h10M6.5 4V2.5h3V4M4.5 4l.5 9.5a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1L11.5 4"/></svg>
           </button>
         </div>
@@ -3902,6 +3937,7 @@ function _buildAiAttachmentChip(a, removable) {
     rm.type = 'button';
     rm.className = 'ai-chip-rm';
     rm.title = t.aiRemoveFileTitle;
+    rm.setAttribute('data-i18n-title', 'aiRemoveFileTitle');
     rm.textContent = '×';
     rm.onclick = () => removeAiAttachment(a.id);
     chip.appendChild(rm);
@@ -4120,7 +4156,7 @@ function _aiOfferEdit(selS, selE, oldText, newText) {
   const card = document.createElement('div');
   card.className = 'ai-bubble a';
   card.id = 'diffCard_' + id;
-  card.innerHTML = `${_escDiffHtml(t.aiReviewEditMsg)} <button class="diff-open-btn" onclick="openDiffModal('${id}')">${_escDiffHtml(t.aiOpenReviewBtn)}</button>`;
+  card.innerHTML = `<span data-i18n="aiReviewEditMsg">${_escDiffHtml(t.aiReviewEditMsg)}</span> <button class="diff-open-btn" data-i18n="aiOpenReviewBtn" onclick="openDiffModal('${id}')">${_escDiffHtml(t.aiOpenReviewBtn)}</button>`;
   msgs.appendChild(card);
   msgs.scrollTop = msgs.scrollHeight;
 
@@ -4146,9 +4182,10 @@ function closeDiffModal() {
   _aiActiveModalEditId = null;
 }
 
-function _resolveDiffCard(id, message) {
+// key — ключ строки интерфейса (текст карточки меняется вместе с языком)
+function _resolveDiffCard(id, key) {
   const card = document.getElementById('diffCard_' + id);
-  if (card) card.innerHTML = _escDiffHtml(message);
+  if (card) card.innerHTML = `<span data-i18n="${key}">${_escDiffHtml(tr(key))}</span>`;
   delete _aiPendingEdits[id];
   if (_aiActiveModalEditId === id) closeDiffModal();
 }
@@ -4162,7 +4199,7 @@ function acceptAiEdit(id) {
   if (ed.value.slice(s, e) !== oldText) {
     const found = oldText ? ed.value.indexOf(oldText) : -1;
     if (found === -1) {
-      _resolveDiffCard(id, t.aiEditStale);
+      _resolveDiffCard(id, 'aiEditStale');
       return;
     }
     s = found;
@@ -4172,13 +4209,12 @@ function acceptAiEdit(id) {
   ed.selectionStart = ed.selectionEnd = s + newText.length;
   ed.focus();
   render(ed.value);
-  _resolveDiffCard(id, t.aiEditApplied);
+  _resolveDiffCard(id, 'aiEditApplied');
 }
 
 // Отклоняет предложенную ИИ правку
 function rejectAiEdit(id) {
-  const t = LANGS[currentLang] || LANGS['en'];
-  _resolveDiffCard(id, t.aiEditDiscarded);
+  _resolveDiffCard(id, 'aiEditDiscarded');
 }
 
 (async function loadAiKey() {
@@ -4199,10 +4235,12 @@ async function saveApiKey() {
   // Новый ключ может давать доступ к другим моделям — обновляем список сразу
   refreshAiModels(true);
   const btn = document.querySelector('.ai-ksave');
-  const t = LANGS[currentLang] || LANGS['en'];
-  btn.textContent = t.aiSavedBtn;
+  // Временная подпись тоже через data-i18n — при смене языка она сразу переводится
+  btn.setAttribute('data-i18n', 'aiSavedBtn');
+  btn.textContent = tr('aiSavedBtn');
   setTimeout(() => {
-    btn.textContent = t.aiSaveBtn;
+    btn.setAttribute('data-i18n', 'aiSaveBtn');
+    btn.textContent = tr('aiSaveBtn');
   }, 1500);
 }
 
@@ -4366,6 +4404,7 @@ function _aiAddInsertableMsg(text, pos) {
   const btn = document.createElement('button');
   btn.className = 'ai-insert vis';
   btn.style.marginTop = 'var(--s8)';
+  btn.setAttribute('data-i18n', 'aiInsertBtn');
   btn.textContent = t.aiInsertBtn;
   btn.onclick = () => {
     ed.value = ed.value.slice(0, pos) + text + ed.value.slice(pos);
@@ -4375,7 +4414,8 @@ function _aiAddInsertableMsg(text, pos) {
     btn.disabled = true;
     btn.style.opacity = '.5';
     btn.style.cursor = 'default';
-    btn.textContent = t.aiEditApplied;
+    btn.setAttribute('data-i18n', 'aiEditApplied');
+    btn.textContent = tr('aiEditApplied');
   };
   wrap.appendChild(textDiv);
   wrap.appendChild(btn);
