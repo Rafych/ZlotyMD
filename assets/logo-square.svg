@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Złoty MD logo
+    Copyright (c) 2026 Rafych (https://github.com/Rafych) and Hiromichi (https://github.com/hiromichipixel)
+    MIT License — https://github.com/Rafych/ZlotyMD/blob/main/LICENSE
+
+  Typeface: none. This logo contains only geometric shapes (no text, no font data).
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="512" height="512">
+  <title>Złoty MD</title>
+  <path d="M15 1H49A14 14 0 0 1 63 15V49A14 14 0 0 1 49 63H15A14 14 0 0 1 1 49V15A14 14 0 0 1 15 1Z" fill="#FFFFFF" stroke="#E3E6EA" stroke-width="2"/>
+  <path d="M12 20.57a8.57 8.57 0 1 0 17.14 0a8.57 8.57 0 1 0 -17.14 0Z" fill="#4285F4"/>
+  <path d="M34.86 20.57a8.57 8.57 0 1 0 17.14 0a8.57 8.57 0 1 0 -17.14 0Z" fill="#EA4335"/>
+  <path d="M12 43.43a8.57 8.57 0 1 0 17.14 0a8.57 8.57 0 1 0 -17.14 0Z" fill="#FBBC04"/>
+  <path d="M34.86 43.43a8.57 8.57 0 1 0 17.14 0a8.57 8.57 0 1 0 -17.14 0Z" fill="#34A853"/>
+</svg>
