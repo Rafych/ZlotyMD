@@ -623,7 +623,6 @@
         <!-- Индикатор статуса сохранения документа -->
         <div class="save-chip" id="saveChip">
           <svg
-            id="saveIcon"
             viewBox="0 0 16 16"
             fill="none"
             stroke="currentColor"
@@ -655,13 +654,12 @@
           <!-- Число страниц при экспорте в PDF (считается в фоне) -->
           <div class="chip chip-pdf">
             <div class="dot" style="background: var(--gy)"></div>
-            <strong id="pc">0</strong><span data-i18n="pdfPages">PDF pages</span>
+            <strong id="pc">0</strong><span data-i18n="pdfPages">pages</span>
           </div>
         </div>
 
         <button
           class="about-btn"
-          id="downloadBtn"
           title="Download as HTML"
           data-i18n-title="downloadBtnTitle"
           onclick="openDownloadMenu()"
@@ -1213,7 +1211,7 @@
             </button>
           </div>
 
-          <div class="settings-preview-box" id="settingsPreviewBox">
+          <div class="settings-preview-box">
             <div class="settings-preview-label" data-i18n="settingsPreviewLabel">Preview</div>
             <div class="settings-preview-output md" id="settingsPreviewOutput"></div>
           </div>
@@ -1313,7 +1311,7 @@
       <div class="panes" id="panes">
         <div class="ep v" id="eP">
           <div class="pl">
-            <span id="edBadge" class="badge bl">Markdown</span>
+            <span class="badge bl">Markdown</span>
             <span data-i18n="editorLabel">Editor</span>
           </div>
           <textarea
@@ -1327,7 +1325,6 @@
             <span class="badge gn">HTML</span> <span data-i18n="previewLabel">Preview</span>
             <button
               class="pv-pop-btn"
-              id="pvPopBtn"
               title="Open in new window"
               data-i18n-title="pvPopBtnTitle"
               onclick="openPreviewWindow()"
@@ -1382,7 +1379,6 @@
             </div>
             <button
               class="ai-close"
-              id="aiResetBtn"
               title="Reset conversation"
               data-i18n-title="aiResetBtnTitle"
               onclick="resetAiConversation()"
@@ -1725,24 +1721,6 @@
           <span id="busyText"></span>
         </div>
 
-        <div class="restore-toast" id="restoreToast">
-          <svg
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            width="14"
-            height="14"
-          >
-            <polyline points="2 9 6 13 14 4" />
-          </svg>
-          <span id="toastMsg">Content restored from saved session</span>
-          <button onclick="document.getElementById('restoreToast').classList.remove('show')">
-            ✕
-          </button>
-        </div>
       </div>
     </div>
 
