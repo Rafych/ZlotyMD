@@ -38,6 +38,7 @@ The libraries below are not part of this repository. The browser loads them from
 | [Mermaid](https://github.com/mermaid-js/mermaid) | 10.6.1 | MIT | cdnjs |
 | [jsPDF](https://github.com/parallax/jsPDF) | 4.2.1 | MIT | cdnjs, only when exporting to PDF |
 | [html2canvas](https://github.com/niklasvh/html2canvas) | 1.4.1 | MIT | cdnjs, only when exporting to PDF (used by jsPDF `html()`) |
+| [highlight.js](https://github.com/highlightjs/highlight.js) | 11.11.1 | BSD-3-Clause | cdnjs (extra languages are loaded only when a code block uses them) |
 | [Google Sans](https://fonts.google.com/) | — | SIL OFL 1.1 | Google Fonts |
 | [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | 2020 | SIL OFL 1.1 | Google Fonts |
 | [Noto fonts](https://github.com/notofonts) (Noto Sans, Noto Serif, Noto Sans JP, KR, SC, TC, Arabic, Hebrew, Math, Symbols 2) | — | SIL OFL 1.1 | jsDelivr, embedded into a PDF only for characters the document fonts do not cover |
