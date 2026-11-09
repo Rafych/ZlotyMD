@@ -251,19 +251,6 @@ function buildPreviewHTML(title, opts) {
     The distributed bundle includes dependencies (e.g. d3, dagre-d3-es, DOMPurify, dayjs, khroma)
     under their own permissive licenses (MIT / ISC / BSD-3-Clause / Apache-2.0 / MPL-2.0).
 
-  Google Sans
-    Copyright (c) Google Inc.
-    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
-
-  JetBrains Mono v2020
-    Copyright (c) 2020 JetBrains s.r.o.
-    SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
-
-  TikZJax (@drgrice1/tikzjax v1.0.0-beta24) — loaded only when a document contains TikZ
-    Copyright (c) Jim Fowler, Glenn Rice and contributors
-    GPL-3.0-or-later — https://github.com/drgrice1/tikzjax
-    It bundles TeX and TeX packages (e.g. PGF/TikZ, pgfplots) under their own licenses.
-
   jsPDF v4.2.1 — used by the editor for PDF export
     Copyright (c) 2010-2025 James Hall (https://github.com/parallax/jsPDF), (c) 2015-2025 yWorks GmbH (https://www.yworks.com/)
     MIT License — https://github.com/parallax/jsPDF/blob/master/LICENSE
@@ -272,11 +259,24 @@ function buildPreviewHTML(title, opts) {
     Copyright (c) 2012 Niklas von Hertzen
     MIT License — https://github.com/niklasvh/html2canvas/blob/master/LICENSE
 
+  Google Sans
+    Copyright (c) Google Inc.
+    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
+
+  JetBrains Mono v2020
+    Copyright (c) 2020 JetBrains s.r.o.
+    SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
+
   Noto Sans, Noto Serif, Noto Sans JP / KR / SC / TC, Noto Sans Arabic, Noto Sans Hebrew, Noto Sans Math,
   Noto Sans Symbols 2 — embedded into exported PDF files
   only for characters the document fonts do not cover
     Copyright (c) Google LLC
     SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
+
+  TikZJax (@drgrice1/tikzjax v1.0.0-beta24) — loaded only when a document contains TikZ
+    Copyright (c) Jim Fowler, Glenn Rice and contributors
+    GPL-3.0-or-later — https://github.com/drgrice1/tikzjax
+    It bundles TeX and TeX packages (e.g. PGF/TikZ, pgfplots) under their own licenses.
 
   Content delivery / font services (no code included): cdnjs (Cloudflare), jsDelivr, Google Fonts.
 
