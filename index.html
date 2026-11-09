@@ -56,18 +56,12 @@
   Optional AI features call external APIs with the user's own key (no code included; each
   provider's terms of service apply): Anthropic API, Google Gemini API.
 -->
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Złoty MD - The Most Beautiful Markdown Editor</title>
-<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#ffffff">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Złoty MD">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20x%3D%221%22%20y%3D%221%22%20width%3D%2262%22%20height%3D%2262%22%20rx%3D%2214%22%20fill%3D%22%23FFFFFF%22%20stroke%3D%22%23E3E6EA%22%20stroke-width%3D%222%22%2F%3E%3Cg%20transform%3D%22translate(12%2012)%20scale(1.905)%22%3E%3Ccircle%20cx%3D%224.5%22%20cy%3D%224.5%22%20r%3D%224.5%22%20fill%3D%22%234285F4%22%2F%3E%3Ccircle%20cx%3D%2216.5%22%20cy%3D%224.5%22%20r%3D%224.5%22%20fill%3D%22%23EA4335%22%2F%3E%3Ccircle%20cx%3D%224.5%22%20cy%3D%2216.5%22%20r%3D%224.5%22%20fill%3D%22%23FBBC04%22%2F%3E%3Ccircle%20cx%3D%2216.5%22%20cy%3D%2216.5%22%20r%3D%224.5%22%20fill%3D%22%2334A853%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
@@ -122,6 +116,16 @@
     .pre-body::-webkit-scrollbar-track{background:transparent}
     .lang-badge{padding:2px 8px;border-radius:5px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;background:rgba(255,255,255,.1);color:#9AA0A6;line-height:1.6;pointer-events:none;user-select:none;flex-shrink:0}
     .md pre code{background:transparent;color:inherit;padding:0;font-size:12.5px;white-space:pre}
+    .md pre .hljs-keyword,.md pre .hljs-selector-tag,.md pre .hljs-doctag,.md pre .hljs-template-tag,.md pre .hljs-meta .hljs-keyword{color:#8ab4f8}
+    .md pre .hljs-built_in,.md pre .hljs-type,.md pre .hljs-title.class_,.md pre .hljs-title.class_.inherited__,.md pre .hljs-variable.language_{color:#78d9ec}
+    .md pre .hljs-string,.md pre .hljs-char.escape_,.md pre .hljs-addition,.md pre .hljs-meta .hljs-string{color:#81c995}
+    .md pre .hljs-number,.md pre .hljs-literal,.md pre .hljs-symbol,.md pre .hljs-bullet,.md pre .hljs-variable.constant_{color:#fdd663}
+    .md pre .hljs-title,.md pre .hljs-title.function_,.md pre .hljs-section{color:#c58af9}
+    .md pre .hljs-attr,.md pre .hljs-attribute,.md pre .hljs-property,.md pre .hljs-selector-attr,.md pre .hljs-selector-class,.md pre .hljs-selector-id,.md pre .hljs-selector-pseudo{color:#fcad70}
+    .md pre .hljs-tag,.md pre .hljs-name,.md pre .hljs-meta,.md pre .hljs-regexp,.md pre .hljs-deletion,.md pre .hljs-link{color:#f28b82}
+    .md pre .hljs-comment,.md pre .hljs-quote{color:#9aa0a6;font-style:italic}
+    .md pre .hljs-emphasis{font-style:italic}
+    .md pre .hljs-strong{font-weight:700}
     .diff-wrap{display:block;min-width:max-content}
     .diff-add,.diff-del,.diff-meta,.diff-ctx{display:block;padding:0 var(--s21) 0 calc(var(--s8)*4 + 13px);position:relative;line-height:1.6;white-space:pre;min-width:100%;box-sizing:border-box}
     .diff-add::before,.diff-del::before,.diff-meta::before,.diff-ctx::before{content:attr(data-mark);position:absolute;left:8px;width:13px;text-align:center;font-weight:700;font-size:11px;line-height:1.6;user-select:none;pointer-events:none;opacity:.9}
@@ -138,6 +142,8 @@
     .md .mermaid svg{display:block;max-width:100%;height:auto;overflow:hidden;margin:0 auto;font-family:var(--font) !important}
     .md .mermaid svg text,.md .mermaid svg .label{font-family:var(--font) !important}
     .md .mermaid svg .edgePath .path{stroke-width:1.5px}
+    .md .tikz-wrap{text-align:center;margin-bottom:var(--s21);overflow-x:auto}
+    .md .tikz-wrap svg{display:inline-block;max-width:100%;height:auto}
     .md .mermaid-error{background:var(--grt);border:1px solid var(--gr);border-radius:var(--r8);padding:var(--s13) var(--s21);color:var(--gr);font-size:12px;font-family:var(--mono);text-align:left}
     .md blockquote{border-left:3px solid var(--gy);background:var(--gyt);padding:var(--s13) var(--s21);border-radius:0 var(--r8) var(--r8) 0;margin-bottom:var(--s13);color:var(--mut);font-style:italic}
     .md table{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13);background:#fff}
@@ -175,6 +181,14 @@
       box-shadow:0 2px 8px rgba(66,133,244,.08)
     }
     .md .katex:not(.katex-display .katex){padding:1px 4px}
+  
+    .cpbtn{margin-left:auto;flex-shrink:0;display:flex;align-items:center;gap:var(--s5);padding:var(--s5) var(--s8);border-radius:var(--r8);border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#9aa0a6;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;opacity:0;transition:opacity .15s,background .15s,color .15s,transform .12s;line-height:1;white-space:nowrap}
+    .cpbtn svg{width:13px;height:13px;flex-shrink:0}
+    .md pre:hover .cpbtn,.cpbtn:focus-visible{opacity:1}
+    .cpbtn:hover{background:rgba(255,255,255,.16);color:#fff}
+    .cpbtn:active{transform:scale(.93)}
+    .cpbtn.ok{background:rgba(52,168,83,.25);color:#34a853;border-color:rgba(52,168,83,.4)}
+    @media print{.cpbtn{display:none!important}}
   </style>
 </head>
 <body>
@@ -182,37 +196,39 @@
 <blockquote>
 <p>A Markdown editor with golden ratio proportions and a Google-style color palette.</p>
 </blockquote>
-<h1><a href="https://rafych.github.io/ZlotyMD/ZlotyMD.html">Open web editor</a></h1>
+<h1><a href="ZlotyMD.html">Open web editor</a></h1>
 <h2>About the project</h2>
-<p><strong>Złoty MD</strong> is a modern web-based Markdown editor that combines writing convenience with the aesthetics of the golden ratio. The interface is inspired by Google’s color palette and is designed for comfortable work with technical documentation, notes, and publications.</p>
+<p><strong>Złoty MD</strong> is a modern web-based Markdown editor that combines writing convenience with the aesthetics of the golden ratio. The interface is inspired by Google's color palette and is designed for comfortable work with technical documentation, notes, and publications.</p>
 <h2>Features</h2>
 <h3><strong>Markdown</strong></h3>
 <p>Standard Markdown syntax is supported:</p>
-<pre><div class="pre-header"><span class="lang-badge">Markdown</span></div><div class="pre-body"><code class="language-Markdown"># Heading
-**Bold text**
-*Italic*
-- List
-- Item
+<pre><div class="pre-header"><span class="lang-badge">Markdown</span><button class="cpbtn" type="button" data-copy="Copy" data-copied="Copied"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"></rect><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"></path></svg>Copy</button></div><div class="pre-body"><code class="language-markdown" data-hl="markdown"><span class="hljs-section"># Heading</span>
+<span class="hljs-strong">**Bold text**</span>
+<span class="hljs-emphasis">*Italic*</span>
+<span class="hljs-bullet">-</span> List
+<span class="hljs-bullet">-</span> Item
 </code></div></pre>
 <h3><strong>LaTeX</strong></h3>
 <p>The editor supports mathematical formulas via LaTeX.</p>
 <p>Inline formulas:</p>
-<pre><div class="pre-header"><span class="lang-badge">LaTeX</span></div><div class="pre-body"><code class="language-LaTeX">E = mc^2
+<pre><div class="pre-header"><span class="lang-badge">LaTeX</span><button class="cpbtn" type="button" data-copy="Copy" data-copied="Copied"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"></rect><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"></path></svg>Copy</button></div><div class="pre-body"><code class="language-latex" data-hl="latex">E = mc<span class="hljs-built_in">^</span>2
 </code></div></pre>
 <p>Block formulas:</p>
-<pre><div class="pre-header"><span class="lang-badge">LaTeX</span></div><div class="pre-body"><code class="language-LaTeX">\int_{a}^{b} f(x)\,dx
+<pre><div class="pre-header"><span class="lang-badge">LaTeX</span><button class="cpbtn" type="button" data-copy="Copy" data-copied="Copied"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"></rect><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"></path></svg>Copy</button></div><div class="pre-body"><code class="language-latex" data-hl="latex"><span class="hljs-keyword">\int</span><span class="hljs-built_in">_</span>{a}<span class="hljs-built_in">^</span>{b} f(x)<span class="hljs-keyword">\,</span>dx
 </code></div></pre>
 <h3><strong>Mermaid</strong></h3>
 <p>Create diagrams directly inside the document.</p>
-<pre><div class="pre-header"><span class="lang-badge">Mermeid</span></div><div class="pre-body"><code class="language-Mermeid">flowchart TD
+<div class="mermaid-wrap"><div class="mermaid" id="mmd-1794198492922-0-ouk3z" data-src="flowchart TD
     A[Start] --&gt; B{Check}
     B --&gt;|Yes| C[Continue]
-    B --&gt;|No| D[Finish]
-</code></div></pre>
+    B --&gt;|No| D[Finish]">flowchart TD
+    A[Start] --&gt; B{Check}
+    B --&gt;|Yes| C[Continue]
+    B --&gt;|No| D[Finish]</div></div>
 <h3><strong>Code highlighting</strong></h3>
 <p>Various programming languages are supported.</p>
-<pre><div class="pre-header"><span class="lang-badge">JavaScript</span></div><div class="pre-body"><code class="language-javascript">function hello() {
-    console.log("Hello, world!");
+<pre><div class="pre-header"><span class="lang-badge">JavaScript</span><button class="cpbtn" type="button" data-copy="Copy" data-copied="Copied"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"></rect><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"></path></svg>Copy</button></div><div class="pre-body"><code class="language-javascript" data-hl="javascript"><span class="hljs-keyword">function</span> <span class="hljs-title function_">hello</span>(<span class="hljs-params"></span>) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"Hello, world!"</span>);
 }
 </code></div></pre>
 <h3><strong>Live preview</strong></h3>
@@ -220,7 +236,7 @@
 <h2>Design</h2>
 <ul>
 <li>Interface proportions are based on the golden ratio.</li>
-<li>The color scheme is inspired by Material Design and Google’s palette.</li>
+<li>The color scheme is inspired by Material Design and Google's palette.</li>
 <li>Responsive interface for desktop and mobile devices.</li>
 <li>Minimalist and user-friendly workflow.</li>
 </ul>
@@ -273,6 +289,32 @@ if(typeof mermaid!=='undefined'){
   })();
 }
 </script>
-<script src="js/pwa.js"></script>
+<script>
+(function(){
+  var COPY="<svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"5\" y=\"4\" width=\"9\" height=\"11\" rx=\"1.5\"/><path d=\"M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1\"/></svg>",CHECK="<svg viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polyline points=\"2 9 6 13 14 4\"/></svg>";
+  function copyText(text,done){
+    if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(done,function(){legacy(text,done);});}
+    else legacy(text,done);
+  }
+  function legacy(text,done){
+    var ta=document.createElement('textarea');
+    ta.value=text;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{if(document.execCommand('copy'))done();}catch(e){}
+    document.body.removeChild(ta);
+  }
+  document.querySelectorAll('.cpbtn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var pre=btn.closest('pre'),code=pre&&pre.querySelector('code');
+      var text=code?code.innerText:(pre?pre.innerText:'');
+      copyText(text,function(){
+        btn.innerHTML=CHECK+(btn.dataset.copied||'Copied');
+        btn.classList.add('ok');
+        setTimeout(function(){btn.innerHTML=COPY+(btn.dataset.copy||'Copy');btn.classList.remove('ok');},2000);
+      });
+    });
+  });
+})();
+</script>
 </body>
 </html>
