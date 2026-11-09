@@ -105,6 +105,16 @@ function buildPreviewHTML(title, opts) {
     .pre-body::-webkit-scrollbar-track{background:transparent}
     .lang-badge{padding:2px 8px;border-radius:5px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;background:rgba(255,255,255,.1);color:#9AA0A6;line-height:1.6;pointer-events:none;user-select:none;flex-shrink:0}
     .md pre code{background:transparent;color:inherit;padding:0;font-size:12.5px;white-space:pre}
+    .md pre .hljs-keyword,.md pre .hljs-selector-tag,.md pre .hljs-doctag,.md pre .hljs-template-tag,.md pre .hljs-meta .hljs-keyword{color:#8ab4f8}
+    .md pre .hljs-built_in,.md pre .hljs-type,.md pre .hljs-title.class_,.md pre .hljs-title.class_.inherited__,.md pre .hljs-variable.language_{color:#78d9ec}
+    .md pre .hljs-string,.md pre .hljs-char.escape_,.md pre .hljs-addition,.md pre .hljs-meta .hljs-string{color:#81c995}
+    .md pre .hljs-number,.md pre .hljs-literal,.md pre .hljs-symbol,.md pre .hljs-bullet,.md pre .hljs-variable.constant_{color:#fdd663}
+    .md pre .hljs-title,.md pre .hljs-title.function_,.md pre .hljs-section{color:#c58af9}
+    .md pre .hljs-attr,.md pre .hljs-attribute,.md pre .hljs-property,.md pre .hljs-selector-attr,.md pre .hljs-selector-class,.md pre .hljs-selector-id,.md pre .hljs-selector-pseudo{color:#fcad70}
+    .md pre .hljs-tag,.md pre .hljs-name,.md pre .hljs-meta,.md pre .hljs-regexp,.md pre .hljs-deletion,.md pre .hljs-link{color:#f28b82}
+    .md pre .hljs-comment,.md pre .hljs-quote{color:#9aa0a6;font-style:italic}
+    .md pre .hljs-emphasis{font-style:italic}
+    .md pre .hljs-strong{font-weight:700}
     .diff-wrap{display:block;min-width:max-content}
     .diff-add,.diff-del,.diff-meta,.diff-ctx{display:block;padding:0 var(--s21) 0 calc(var(--s8)*4 + 13px);position:relative;line-height:1.6;white-space:pre;min-width:100%;box-sizing:border-box}
     .diff-add::before,.diff-del::before,.diff-meta::before,.diff-ctx::before{content:attr(data-mark);position:absolute;left:8px;width:13px;text-align:center;font-weight:700;font-size:11px;line-height:1.6;user-select:none;pointer-events:none;opacity:.9}
@@ -258,6 +268,10 @@ function buildPreviewHTML(title, opts) {
   html2canvas v1.4.1 — used by jsPDF (html()) for PDF export
     Copyright (c) 2012 Niklas von Hertzen
     MIT License — https://github.com/niklasvh/html2canvas/blob/master/LICENSE
+
+  highlight.js v11.11.1 — syntax highlighting in code blocks
+    Copyright (c) 2006, Ivan Sagalaev
+    BSD 3-Clause License — https://github.com/highlightjs/highlight.js/blob/main/LICENSE
 
   Google Sans
     Copyright (c) Google Inc.
@@ -817,6 +831,84 @@ function applyDiff(pre, code) {
     })
     .join('');
   code.innerHTML = `<span class="diff-wrap">${inner}</span>`;
+}
+
+// Подсветка синтаксиса (highlight.js). Основная сборка содержит распространённые языки;
+// остальные из LANG_NAMES подгружаются по требованию при первом блоке на этом языке
+const HLJS_LANG_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/';
+// Имена языков, которых нет в основной сборке → файл языка
+const HLJS_EXTRA = {
+  julia: 'julia',
+  scala: 'scala',
+  haskell: 'haskell',
+  hs: 'haskell',
+  elixir: 'elixir',
+  ex: 'elixir',
+  exs: 'elixir',
+  erlang: 'erlang',
+  erl: 'erlang',
+  dart: 'dart',
+  vim: 'vim',
+  dockerfile: 'dockerfile',
+  docker: 'dockerfile',
+  powershell: 'powershell',
+  ps1: 'powershell',
+  pwsh: 'powershell',
+  latex: 'latex',
+  tex: 'latex'
+};
+// Языки без собственного описания — ближайший по синтаксису
+const HLJS_ALIAS = { fish: 'bash', zsh: 'bash', sass: 'scss', toml: 'ini' };
+const _hljsLoading = new Map();
+
+function loadHljsLanguage(name) {
+  if (_hljsLoading.has(name)) return _hljsLoading.get(name);
+  const p = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = HLJS_LANG_BASE + name + '.min.js';
+    s.onload = resolve;
+    s.onerror = reject;
+    document.head.appendChild(s);
+  }).catch(e => {
+    // Без сети язык остаётся без подсветки; следующая попытка — при следующем рендере
+    _hljsLoading.delete(name);
+    throw e;
+  });
+  _hljsLoading.set(name, p);
+  return p;
+}
+
+function highlightCode(code, lang) {
+  try {
+    code.innerHTML = hljs.highlight(code.textContent, { language: lang, ignoreIllegals: true }).value;
+    code.dataset.hl = lang;
+  } catch (e) {
+    console.warn('Highlight failed:', lang, e);
+  }
+}
+
+// Раскрашивает блоки кода с указанным языком (diff — отдельная разметка, его не трогаем)
+function highlightCodeBlocks(root) {
+  if (typeof hljs === 'undefined') return;
+  root.querySelectorAll('pre code').forEach(code => {
+    if (code.dataset.hl) return;
+    const cls = (code.className.match(/language-(\S+)/) || [])[1];
+    if (!cls) return;
+    let lang = cls.toLowerCase();
+    if (lang === 'diff' || lang === 'patch' || lang.startsWith('diff_')) return;
+    lang = HLJS_ALIAS[lang] || lang;
+    if (hljs.getLanguage(lang)) {
+      highlightCode(code, lang);
+      return;
+    }
+    const extra = HLJS_EXTRA[lang];
+    if (!extra) return;
+    loadHljsLanguage(extra)
+      .then(() => {
+        if (code.isConnected && !code.dataset.hl && hljs.getLanguage(extra)) highlightCode(code, extra);
+      })
+      .catch(() => {});
+  });
 }
 
 // Добавляет кнопки копирования к каждому блоку кода в превью
@@ -1557,6 +1649,7 @@ function render(v) {
       });
     }
     _mountTikz();
+    highlightCodeBlocks(mo);
     addCopyBtns();
   }
   // Статистика — по исходному тексту (а не по тексту с токенами и экранированием)
@@ -2614,6 +2707,36 @@ function toggleLang() {
   drop.style.top = r.bottom + 6 + 'px';
   drop.style.right = window.innerWidth - r.right + 'px';
   drop.classList.add('open');
+  fitLangDrop(drop, r.bottom + 6);
+}
+
+// Пять и более языков: высота списка ограничена (видно 5,5 пункта — последний обрезан,
+// чтобы было понятно, что список прокручивается) и появляется вертикальная полоса прокрутки
+const LANG_SCROLL_MIN = 5;
+const LANG_VISIBLE_ITEMS = 5.5;
+function fitLangDrop(drop, top) {
+  const opts = drop.querySelectorAll('.lang-opt');
+  if (opts.length < LANG_SCROLL_MIN) {
+    drop.classList.remove('scroll');
+    drop.style.maxHeight = '';
+    return;
+  }
+  const cs = getComputedStyle(drop);
+  const frame =
+    parseFloat(cs.paddingTop) + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+  // offsetHeight, а не getBoundingClientRect: при открытии идёт анимация с transform
+  const itemH = opts[0].offsetHeight;
+  // Не выходим за нижний край окна (но показываем не меньше двух пунктов)
+  const vh = window.innerHeight || document.documentElement.clientHeight;
+  const room = vh > 0 ? vh - top - 8 : Infinity;
+  drop.style.maxHeight = Math.max(itemH * 2 + frame, Math.min(itemH * LANG_VISIBLE_ITEMS + frame, room)) + 'px';
+  drop.classList.add('scroll');
+  // Текущий язык — в видимой части списка (прокручиваем только сам список, не страницу)
+  const active = drop.querySelector('.lang-opt.active');
+  drop.scrollTop = 0;
+  if (active && active.offsetTop + active.offsetHeight > drop.clientHeight) {
+    drop.scrollTop = active.offsetTop - (drop.clientHeight - active.offsetHeight) / 2;
+  }
 }
 // Закрывает панель выбора языка
 function closeLang() {

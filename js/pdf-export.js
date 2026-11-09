@@ -696,6 +696,42 @@
       }
       plan.push({ col: c, item: it, anchorB, offset, y: it.y });
     }
+
+    // Подгонка остальных блоков: после разрыва внутренняя геометрия разделённого контейнера
+    // (например, шапки блока кода) может отличаться от обычного потока. Для первой строки каждого
+    // блока заранее находим, перед чем можно поставить поправочную распорку (только на границе
+    // блока, никогда посреди строки)
+    const planItems = new Set(plan.map(p => p.item));
+    const isBlockDisp = d => d !== 'contents' && !/^inline/.test(d);
+    const hasPrevRendered = a => {
+      for (let prev = a.previousSibling; prev; prev = prev.previousSibling) {
+        if (prev.nodeType === 3) { if (prev.data.trim()) return true; continue; }
+        if (prev.nodeType !== 1) continue;
+        const pcs = win.getComputedStyle(prev);
+        if (!(pcs.display === 'none' || pcs.position === 'absolute' || pcs.position === 'fixed')) return true;
+      }
+      return false;
+    };
+    const fixAnchorB = (node, col) => {
+      let a = node;
+      for (;;) {
+        const parent = a.parentNode;
+        const aBlock = a.nodeType === 1 && isBlockDisp(win.getComputedStyle(a).display);
+        if (a.nodeType === 1 && /^(TR|TD|TH|TBODY|THEAD|TFOOT|CAPTION)$/.test(a.tagName)) return null;
+        if (hasPrevRendered(a)) return aBlock ? a : null;
+        if (!parent || parent === R2) return a;
+        const pcs = win.getComputedStyle(parent);
+        const rowFlex = /^(inline-)?flex$/.test(pcs.display) && !pcs.flexDirection.startsWith('column');
+        if (pcs.display === 'inline' || rowFlex || boxCol(parent) === col) { a = parent; continue; }
+        return a;
+      }
+    };
+    const fixups = [];
+    for (const it of items) {
+      if (planItems.has(it)) continue;
+      const anchorB = fixAnchorB(it.node, it.col);
+      if (anchorB) fixups.push({ item: it, anchorB, target: it.col * H + it.y });
+    }
     M.remove();
 
     // Вставляем распорки в оригинал
@@ -748,7 +784,16 @@
         } else if (/^(TD|TH|TBODY|THEAD|TFOOT)$/.test(tag)) {
           continue;
         } else {
-          anchorA.parentNode.insertBefore(spacer, anchorA);
+          // Строка flex-контейнера (например, шапка блока кода) при печати не делится: контейнер
+          // целиком сдвигается вниз. Распорка внутри встала бы в строку сбоку — ставим её перед контейнером
+          let at = anchorA;
+          for (;;) {
+            const par = at.parentNode;
+            const pcs = par && par.nodeType === 1 && par !== root ? win.getComputedStyle(par) : null;
+            if (pcs && /^(inline-)?flex$/.test(pcs.display) && !pcs.flexDirection.startsWith('column')) at = par;
+            else break;
+          }
+          at.parentNode.insertBefore(spacer, at);
         }
         if (leafA.nodeType === 3) {
           const { seg, local } = resolveText(leafA, Math.max(0, p.item.offset));
@@ -769,6 +814,39 @@
         if (h >= 0) { box.style.height = h + 'px'; box.style.marginTop = '0px'; }
         else { box.style.height = '0px'; box.style.marginTop = h + 'px'; }
       }
+    }
+
+    // Поправочные распорки: первая строка блока — на той же высоте, что и в раскладке по колонкам
+    for (const f of fixups) {
+      const leafA = toA.get(f.item.node);
+      if (!leafA) continue;
+      let mNode = leafA, mOff = -1;
+      if (leafA.nodeType === 3) {
+        const { seg, local } = resolveText(leafA, Math.max(0, f.item.offset));
+        mNode = seg.node; mOff = local;
+      }
+      const y0 = measureA(mNode, mOff);
+      if (y0 === null || Math.abs(f.target - y0) < 0.5) continue;
+      let anchorA = toA.get(f.anchorB);
+      if (anchorA === leafA && leafA.nodeType === 3 && splitMap.has(leafA)) anchorA = splitMap.get(leafA)[0].node;
+      if (!anchorA || !anchorA.parentNode) continue;
+      const sp = doc.createElement('div');
+      sp.setAttribute('data-zpdf-spacer', '');
+      sp.style.cssText = 'display:block;height:1px;margin:0;padding:0;border:0;background:none;width:auto';
+      anchorA.parentNode.insertBefore(sp, anchorA);
+      let h = 1;
+      for (let k = 0; k < 6; k++) {
+        const y = measureA(mNode, mOff);
+        if (y === null) break;
+        const d = f.target - y;
+        if (Math.abs(d) < 0.01) break;
+        h += d;
+        if (h >= 0) { sp.style.height = h + 'px'; sp.style.marginTop = '0px'; }
+        else { sp.style.height = '0px'; sp.style.marginTop = h + 'px'; }
+      }
+      // Поправка не помогла (раскладку так не сдвинуть) — убираем её
+      const y1 = measureA(mNode, mOff);
+      if (y1 === null || Math.abs(f.target - y1) > Math.abs(f.target - y0)) sp.remove();
     }
     return pageCount;
   }
