@@ -36,11 +36,11 @@ The libraries below are not part of this repository. The browser loads them from
 | [marked](https://github.com/markedjs/marked) | 9.1.6 | MIT | cdnjs |
 | [KaTeX](https://github.com/KaTeX/KaTeX) | 0.16.9 | MIT | cdnjs |
 | [Mermaid](https://github.com/mermaid-js/mermaid) | 10.6.1 | MIT | cdnjs |
-| [Google Sans](https://fonts.google.com/) | — | SIL OFL 1.1 | Google Fonts |
-| [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | 2020 | SIL OFL 1.1 | Google Fonts |
-| [TikZJax](https://github.com/drgrice1/tikzjax) (`@drgrice1/tikzjax`) | 1.0.0-beta24 | GPL-3.0-or-later | jsDelivr, only when a document contains TikZ |
 | [jsPDF](https://github.com/parallax/jsPDF) | 4.2.1 | MIT | cdnjs, only when exporting to PDF |
 | [html2canvas](https://github.com/niklasvh/html2canvas) | 1.4.1 | MIT | cdnjs, only when exporting to PDF (used by jsPDF `html()`) |
+| [Google Sans](https://fonts.google.com/) | — | SIL OFL 1.1 | Google Fonts |
+| [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | 2020 | SIL OFL 1.1 | Google Fonts |
 | [Noto fonts](https://github.com/notofonts) (Noto Sans, Noto Serif, Noto Sans JP, KR, SC, TC, Arabic, Hebrew, Math, Symbols 2) | — | SIL OFL 1.1 | jsDelivr, embedded into a PDF only for characters the document fonts do not cover |
+| [TikZJax](https://github.com/drgrice1/tikzjax) (`@drgrice1/tikzjax`) | 1.0.0-beta24 | GPL-3.0-or-later | jsDelivr, only when a document contains TikZ |
 
 TikZJax runs TeX in the browser (WebAssembly) and bundles TeX packages such as PGF/TikZ and pgfplots under their own licenses; see its repository for details. None of its files are copied into this repository.
