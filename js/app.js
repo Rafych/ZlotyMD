@@ -51,9 +51,11 @@ function escapeHtmlTags(str) {
 const FAVICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="1" y="1" width="62" height="62" rx="14" fill="#FFFFFF" stroke="#E3E6EA" stroke-width="2"/><g transform="translate(12 12) scale(1.905)"><circle cx="4.5" cy="4.5" r="4.5" fill="#4285F4"/><circle cx="16.5" cy="4.5" r="4.5" fill="#EA4335"/><circle cx="4.5" cy="16.5" r="4.5" fill="#FBBC04"/><circle cx="16.5" cy="16.5" r="4.5" fill="#34A853"/></g></svg>';
 const FAVICON_HREF = 'data:image/svg+xml,' + encodeURIComponent(FAVICON_SVG);
 
-// Сборка полного HTML-документа для экспорта/печати: включает лицензии, шрифты и стили превью
-function buildPreviewHTML(title) {
+// Сборка полного HTML-документа для экспорта/печати: включает лицензии, шрифты и стили превью.
+// opts.copyButtons === false — без кнопок копирования кода (для PDF и печати)
+function buildPreviewHTML(title, opts) {
   title = title || 'Złoty MD Preview';
+  const withCopy = !opts || opts.copyButtons !== false;
   const PREVIEW_CSS = `
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;webkit-print-color-adjust:exact;print-color-adjust:exact;}
     :root{
@@ -161,7 +163,59 @@ function buildPreviewHTML(title) {
   `;
 
   const clone = mo.cloneNode(true);
-  clone.querySelectorAll('.cpbtn').forEach(b => b.remove());
+  if (withCopy) {
+    // Кнопки копирования остаются; подписи на текущем языке передаются через data-атрибуты
+    clone.querySelectorAll('.cpbtn').forEach(b => {
+      b.setAttribute('type', 'button');
+      b.dataset.copy = LANGS[currentLang]?.codeCopy || 'Copy';
+      b.dataset.copied = LANGS[currentLang]?.codeCopied || 'Copied';
+    });
+  } else {
+    clone.querySelectorAll('.cpbtn').forEach(b => b.remove());
+  }
+  // Стили кнопки копирования — как в редакторе; при печати кнопка скрыта
+  const COPY_CSS = withCopy
+    ? `
+    .cpbtn{margin-left:auto;flex-shrink:0;display:flex;align-items:center;gap:var(--s5);padding:var(--s5) var(--s8);border-radius:var(--r8);border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#9aa0a6;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;opacity:0;transition:opacity .15s,background .15s,color .15s,transform .12s;line-height:1;white-space:nowrap}
+    .cpbtn svg{width:13px;height:13px;flex-shrink:0}
+    .md pre:hover .cpbtn,.cpbtn:focus-visible{opacity:1}
+    .cpbtn:hover{background:rgba(255,255,255,.16);color:#fff}
+    .cpbtn:active{transform:scale(.93)}
+    .cpbtn.ok{background:rgba(52,168,83,.25);color:#34a853;border-color:rgba(52,168,83,.4)}
+    @media print{.cpbtn{display:none!important}}
+  `
+    : '';
+  // Обработчик кнопок копирования в сохранённом документе (с запасным вариантом без Clipboard API)
+  const COPY_JS = withCopy
+    ? `<script>
+(function(){
+  var COPY=${JSON.stringify(COPY_SVG)},CHECK=${JSON.stringify(CHECK_SVG)};
+  function copyText(text,done){
+    if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(done,function(){legacy(text,done);});}
+    else legacy(text,done);
+  }
+  function legacy(text,done){
+    var ta=document.createElement('textarea');
+    ta.value=text;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{if(document.execCommand('copy'))done();}catch(e){}
+    document.body.removeChild(ta);
+  }
+  document.querySelectorAll('.cpbtn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var pre=btn.closest('pre'),code=pre&&pre.querySelector('code');
+      var text=code?code.innerText:(pre?pre.innerText:'');
+      copyText(text,function(){
+        btn.innerHTML=CHECK+(btn.dataset.copied||'Copied');
+        btn.classList.add('ok');
+        setTimeout(function(){btn.innerHTML=COPY+(btn.dataset.copy||'Copy');btn.classList.remove('ok');},2000);
+      });
+    });
+  });
+})();
+<\/script>
+`
+    : '';
   // TikZ уже нарисован в SVG; незаконченные компиляции в экспорт не попадают
   clone.querySelectorAll('script[type="text/tikz"]').forEach(n => n.remove());
   const tikzFonts = clone.querySelector('.tikz-wrap')
@@ -210,6 +264,20 @@ function buildPreviewHTML(title) {
     GPL-3.0-or-later — https://github.com/drgrice1/tikzjax
     It bundles TeX and TeX packages (e.g. PGF/TikZ, pgfplots) under their own licenses.
 
+  jsPDF v4.2.1 — used by the editor for PDF export
+    Copyright (c) 2010-2025 James Hall (https://github.com/parallax/jsPDF), (c) 2015-2025 yWorks GmbH (https://www.yworks.com/)
+    MIT License — https://github.com/parallax/jsPDF/blob/master/LICENSE
+
+  html2canvas v1.4.1 — used by jsPDF (html()) for PDF export
+    Copyright (c) 2012 Niklas von Hertzen
+    MIT License — https://github.com/niklasvh/html2canvas/blob/master/LICENSE
+
+  Noto Sans, Noto Serif, Noto Sans JP / KR / SC / TC, Noto Sans Arabic, Noto Sans Hebrew, Noto Sans Math,
+  Noto Sans Symbols 2 — embedded into exported PDF files
+  only for characters the document fonts do not cover
+    Copyright (c) Google LLC
+    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
+
   Content delivery / font services (no code included): cdnjs (Cloudflare), jsDelivr, Google Fonts.
 
   Optional AI features call external APIs with the user's own key (no code included; each
@@ -226,7 +294,7 @@ function buildPreviewHTML(title) {
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-${tikzFonts}<style>${PREVIEW_CSS}</style>
+${tikzFonts}<style>${PREVIEW_CSS}${COPY_CSS}</style>
 </head>
 <body>
 ${bodyInner}
@@ -264,7 +332,7 @@ if(typeof mermaid!=='undefined'){
   })();
 }
 <\/script>
-</body>
+${COPY_JS}</body>
 </html>`;
 }
 
@@ -529,12 +597,11 @@ function initLaunchQueue() {
     }).catch(err => console.warn('Launch queue error:', err));
   });
 }
-// Определяет заголовок документа: явное имя или первый заголовок H1
+// Заголовок документа для HTML, PDF и .zmd — имя документа из списка сохранённых документов
+// (первый заголовок H1 не используется)
 function getDocTitle() {
   const name = ((currentDocMeta && currentDocMeta.name) || '').trim();
-  const isDefaultName = !name || (currentDocMeta && currentDocMeta.isDefaultName);
-  if (!isDefaultName) return name;
-  return (ed.value.match(/^#\s+(.+)/m) || [])[1]?.trim() || name || 'document';
+  return name || untitledDocName() || 'document';
 }
 // Скачивает документ как автономный HTML-файл
 function downloadHTML() {
@@ -549,19 +616,103 @@ function downloadHTML() {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 3000);
 }
-// Готовит и запускает диалог печати/экспорта в PDF
-function executePdfDownload() {
-  const title = getDocTitle();
-
+// HTML документа для PDF и печати: превью без кнопок копирования кода + поля страницы
+function buildPdfHTML(title) {
   const pdfCSS = `
     @page{margin:20mm}
     body{font-family:'Google Sans',sans-serif;background:#fff;color:#202124;padding:0;max-width:none;margin:0;line-height:1.85}
     @media print{body{padding:0}}
   `;
+  const baseHTML = buildPreviewHTML(title, { copyButtons: false });
+  return baseHTML.replace('</style>', pdfCSS + '</style>');
+}
 
-  const baseHTML = buildPreviewHTML(title);
-  const pdfHTML = baseHTML.replace('</style>', pdfCSS + '</style>');
+// Число страниц PDF в строке статистики. Считается в фоне после паузы в наборе
+// (та же раскладка и те же разрывы страниц, что и при экспорте в PDF)
+const PDF_PAGES_DELAY_MS = 1200;
+let _pdfPagesTimer = null;
+let _pdfPagesRunning = false;
+let _pdfPagesDirty = false;
+let _pdfPagesSeq = 0;
+let _pdfPagesSkipped = false;
+// Чип появляется/скрывается по ширине окна (см. styles.css: 768 и 1100 px)
+const _pdfPagesOnShow = () => {
+  if (_pdfPagesSkipped) schedulePdfPageCount();
+};
+window.addEventListener('resize', _pdfPagesOnShow);
+['(max-width: 768px)', '(max-width: 1100px)'].forEach(q => {
+  const mq = window.matchMedia && window.matchMedia(q);
+  if (mq && mq.addEventListener) mq.addEventListener('change', _pdfPagesOnShow);
+});
+function schedulePdfPageCount() {
+  const pc = document.getElementById('pc');
+  if (!pc) return;
+  _pdfPagesSeq++;
+  clearTimeout(_pdfPagesTimer);
+  if (!ed.value.trim()) {
+    pc.textContent = '0';
+    pc.parentElement.classList.remove('busy');
+    return;
+  }
+  pc.parentElement.classList.add('busy');
+  _pdfPagesTimer = setTimeout(runPdfPageCount, PDF_PAGES_DELAY_MS);
+}
+async function runPdfPageCount() {
+  const pc = document.getElementById('pc');
+  if (!pc || !window.ZmdPdf || !window.ZmdPdf.countPages) return;
+  // Чип скрыт (узкий экран) — не тратим ресурсы; пересчёт при его появлении
+  if (!pc.getClientRects().length) {
+    pc.parentElement.classList.remove('busy');
+    _pdfPagesSkipped = true;
+    return;
+  }
+  _pdfPagesSkipped = false;
+  if (_pdfPagesRunning) {
+    _pdfPagesDirty = true;
+    return;
+  }
+  _pdfPagesRunning = true;
+  const seq = _pdfPagesSeq;
+  try {
+    const n = await window.ZmdPdf.countPages(buildPdfHTML(getDocTitle()));
+    if (seq === _pdfPagesSeq) pc.textContent = Number(n).toLocaleString();
+  } catch (e) {
+    console.warn('PDF page count failed:', e);
+    if (seq === _pdfPagesSeq) pc.textContent = '—';
+  } finally {
+    _pdfPagesRunning = false;
+    if (seq === _pdfPagesSeq) pc.parentElement.classList.remove('busy');
+    if (_pdfPagesDirty || seq !== _pdfPagesSeq) {
+      _pdfPagesDirty = false;
+      clearTimeout(_pdfPagesTimer);
+      _pdfPagesTimer = setTimeout(runPdfPageCount, PDF_PAGES_DELAY_MS);
+    }
+  }
+}
 
+// Создаёт PDF через jsPDF + html() (js/pdf-export.js) из того же HTML, что и печать,
+// и скачивает его под именем документа. Если экспорт невозможен (например, без сети при пустом кэше),
+// используется прежний способ — диалог печати
+async function executePdfDownload() {
+  const title = getDocTitle();
+  const pdfHTML = buildPdfHTML(title);
+
+  if (window.ZmdPdf) {
+    const stopBusy = startBusy('pdfGenerating');
+    try {
+      await window.ZmdPdf.save(pdfHTML, { title, lang: currentLang });
+      return;
+    } catch (e) {
+      console.warn('PDF export failed, falling back to the print dialog:', e);
+    } finally {
+      stopBusy();
+    }
+  }
+  printPdfViaDialog(pdfHTML);
+}
+
+// Запасной вариант: диалог печати браузера (сохранение в PDF средствами браузера)
+function printPdfViaDialog(pdfHTML) {
   let iframe = document.getElementById('_pdfIframe');
   if (!iframe) {
     iframe = document.createElement('iframe');
@@ -1412,6 +1563,7 @@ function render(v) {
   cc.textContent = raw.length.toLocaleString();
   wc.textContent = (raw.trim() ? raw.trim().split(/\s+/).length : 0).toLocaleString();
   lc.textContent = raw.split('\n').length.toLocaleString();
+  schedulePdfPageCount();
 }
 
 ed.addEventListener('input', () => render(ed.value));
@@ -1607,6 +1759,7 @@ const LANGS = {
     chars: 'chars',
     words: 'words',
     lines: 'lines',
+    pdfPages: 'PDF pages',
     editorLabel: 'Editor',
     previewLabel: 'Preview',
     tabEdit: 'Edit',
@@ -1664,6 +1817,7 @@ const LANGS = {
     aiNavYes: 'Yes',
     aiNavNo: 'No',
     loadingFile: 'Loading file…',
+    pdfGenerating: 'Creating PDF…',
     loadingLang: 'Loading language…',
     errModalTitle: 'Error',
     errOk: 'OK',
@@ -1729,7 +1883,7 @@ const LANGS = {
     downloadBtnTitle: 'Download',
     dlTitle: 'Download as…',
     dlHtmlDesc: 'Standalone HTML file',
-    dlPdfDesc: 'Save via print dialog',
+    dlPdfDesc: 'Save as a PDF file',
     dlZmdDesc: 'Markdown + editor metadata',
     dlMdDesc: 'Standard Markdown file',
     dlHint: 'Select one or more formats',
@@ -2201,6 +2355,8 @@ function applyLang(code) {
     const dotDescEl = document.querySelector('#settingsModal [data-i18n="settingsAiDotDesc"]');
     if (dotDescEl && t.settingsAiDotDesc) dotDescEl.textContent = t.settingsAiDotDesc;
   }
+  // Язык документа (lang) влияет на подбор шрифтов — пересчитываем страницы PDF
+  schedulePdfPageCount();
 }
 
 // Допустимый формат кода языка (защита от подстановки произвольного пути в fetch)
@@ -2712,6 +2868,8 @@ function applyFontSizesToDOM() {
   `;
 
   syncFontPanelUI();
+  // Размер шрифта меняет раскладку — пересчитываем страницы PDF
+  schedulePdfPageCount();
 }
 
 // Синхронизирует значения слайдеров/полей панели шрифтов с текущими размерами
