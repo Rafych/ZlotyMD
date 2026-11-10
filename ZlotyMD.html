@@ -28,6 +28,17 @@
     Copyright (c) 2012 Niklas von Hertzen
     MIT License — https://github.com/niklasvh/html2canvas/blob/master/LICENSE
 
+  svg2pdf.js v2.9.0 — used by the editor for PDF export (SVG diagrams and formulas as vectors)
+    Copyright (c) 2015-2026 yWorks GmbH
+    MIT License — https://github.com/yWorks/svg2pdf.js/blob/master/LICENSE
+
+  harfbuzzjs v0.4.12 (HarfBuzz) — used by the editor for PDF export (text shaping: ligatures)
+    Copyright (c) 2019 Ebrahim Byagowi; HarfBuzz: Copyright (c) the HarfBuzz authors
+    MIT License — https://github.com/harfbuzz/harfbuzzjs/blob/main/LICENSE
+    HarfBuzz: "Old MIT" License — https://github.com/harfbuzz/harfbuzz/blob/main/COPYING
+    The WebAssembly build also contains emmalloc (from Emscripten) and Zephyr libc string functions
+    under the Apache License 2.0.
+
   highlight.js v11.11.1 — syntax highlighting in code blocks
     Copyright (c) 2006, Ivan Sagalaev
     BSD 3-Clause License — https://github.com/highlightjs/highlight.js/blob/main/LICENSE
@@ -40,7 +51,7 @@
     Copyright (c) 2020 JetBrains s.r.o.
     SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
 
-  Noto Sans, Noto Serif, Noto Sans JP / KR / SC / TC, Noto Sans Arabic, Noto Sans Hebrew, Noto Sans Math,
+  Noto Sans, Noto Sans JP / KR / SC / TC, Noto Sans Arabic, Noto Sans Hebrew, Noto Sans Math,
   Noto Sans Symbols 2 — embedded into exported PDF files
   only for characters the document fonts do not cover
     Copyright (c) Google LLC
@@ -579,7 +590,7 @@
           <div class="tg">
             <button
               class="btn g"
-              title="Mermaid diagram (```mermaid ... ```)"
+              title="Mermaid diagram (:::mermaid ... :::)"
               data-i18n-title="ttMermaid"
               onclick="iMermaid()"
               style="
@@ -593,7 +604,7 @@
             </button>
             <button
               class="btn g"
-              title="TikZ figure (```tikz ... ```)"
+              title="TikZ figure (:::tikz ... :::)"
               data-i18n-title="ttTikz"
               onclick="iTikz()"
               style="
@@ -932,6 +943,20 @@
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
+                <span class="about-lib-name">svg2pdf.js <span class="about-lib-ver">v2.9.0</span></span>
+                <span class="about-lib-badge">MIT</span>
+              </div>
+              <span class="about-lib-copy">© 2015–2026 yWorks GmbH</span>
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
+                <span class="about-lib-name">harfbuzzjs (HarfBuzz) <span class="about-lib-ver">v0.4.12</span></span>
+                <span class="about-lib-badge">MIT</span>
+              </div>
+              <span class="about-lib-copy">© 2019 Ebrahim Byagowi, © HarfBuzz authors</span>
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
                 <span class="about-lib-name">highlight.js <span class="about-lib-ver">v11.11.1</span></span>
                 <span class="about-lib-badge">BSD-3-Clause</span>
               </div>
@@ -963,7 +988,7 @@
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
-                <span class="about-lib-name">Noto Sans / Noto Serif</span>
+                <span class="about-lib-name">Noto Sans</span>
                 <span class="about-lib-badge about-lib-badge-alt">SIL OFL 1.1</span>
               </div>
               <span class="about-lib-copy">© Google LLC — SIL Open Font License 1.1</span>

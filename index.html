@@ -28,6 +28,17 @@
     Copyright (c) 2012 Niklas von Hertzen
     MIT License — https://github.com/niklasvh/html2canvas/blob/master/LICENSE
 
+  svg2pdf.js v2.9.0 — used by the editor for PDF export (SVG diagrams and formulas as vectors)
+    Copyright (c) 2015-2026 yWorks GmbH
+    MIT License — https://github.com/yWorks/svg2pdf.js/blob/master/LICENSE
+
+  harfbuzzjs v0.4.12 (HarfBuzz) — used by the editor for PDF export (text shaping: ligatures)
+    Copyright (c) 2019 Ebrahim Byagowi; HarfBuzz: Copyright (c) the HarfBuzz authors
+    MIT License — https://github.com/harfbuzz/harfbuzzjs/blob/main/LICENSE
+    HarfBuzz: "Old MIT" License — https://github.com/harfbuzz/harfbuzz/blob/main/COPYING
+    The WebAssembly build also contains emmalloc (from Emscripten) and Zephyr libc string functions
+    under the Apache License 2.0.
+
   highlight.js v11.11.1 — syntax highlighting in code blocks
     Copyright (c) 2006, Ivan Sagalaev
     BSD 3-Clause License — https://github.com/highlightjs/highlight.js/blob/main/LICENSE
@@ -40,7 +51,7 @@
     Copyright (c) 2020 JetBrains s.r.o.
     SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
 
-  Noto Sans, Noto Serif, Noto Sans JP / KR / SC / TC, Noto Sans Arabic, Noto Sans Hebrew, Noto Sans Math,
+  Noto Sans, Noto Sans JP / KR / SC / TC, Noto Sans Arabic, Noto Sans Hebrew, Noto Sans Math,
   Noto Sans Symbols 2 — embedded into exported PDF files
   only for characters the document fonts do not cover
     Copyright (c) Google LLC
@@ -74,7 +85,7 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     :root{
       --gb:#4285F4;--gr:#EA4335;--gy:#FBBC04;--gg:#34A853;
       --gbt:#E8F0FE;--grt:#FCE8E6;--gyt:#FEF7E0;--ggt:#E6F4EA;
@@ -274,6 +285,7 @@ if(typeof mermaid!=='undefined'){
     flowchart:{htmlLabels:true,curve:'basis'},
     pie:{useMaxWidth:true}});
   (async function(){
+    if(document.fonts&&document.fonts.ready){try{await document.fonts.ready;}catch(e){}}
     var nodes=Array.from(document.querySelectorAll('.mermaid'));
     for(var idx=0;idx<nodes.length;idx++){
       var node=nodes[idx];
