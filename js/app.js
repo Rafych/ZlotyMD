@@ -7,8 +7,16 @@ const cc = document.getElementById('cc'),
   lc = document.getElementById('lc');
 
 // aiDot — показывать фиолетовую точку («шишку») на значке ИИ (по умолчанию скрыта)
-const SETTINGS_DEFAULTS = { htmlRendering: false, aiDot: false };
+// autoSave — автосохранение при наборе (выключено — только кнопкой «Сохранить» и Ctrl+S)
+const SETTINGS_DEFAULTS = { htmlRendering: false, aiDot: false, autoSave: true };
 let appSettings = { ...SETTINGS_DEFAULTS };
+
+// Несколько окон (см. раздел «Несколько окон»): документ в этом окне только для просмотра,
+// текст документа в том виде, в каком он сохранён, канал связи с другими окнами
+let docReadOnly = false;
+let _savedContent = '';
+const _bc = typeof BroadcastChannel === 'function' ? new BroadcastChannel('zmd-docs') : null;
+const _hasLocks = !!(navigator.locks && typeof navigator.locks.request === 'function');
 
 const FONT_DEFAULTS = {
   h1: 34,
@@ -592,8 +600,7 @@ async function openFileObject(file) {
   const { meta, content } = parseZmdText(text);
   const baseName = file.name.replace(ZMD_FILE_EXT_RE, '');
 
-  await flushCurrentDocSave();
-  const now = Date.now();
+  if (!(await confirmLeaveDoc())) return;
   const id = genDocId();
   const data = {
     name: (meta && meta.name) || baseName || untitledDocName(),
@@ -603,12 +610,7 @@ async function openFileObject(file) {
     scrollPv: 0
   };
   await persistDocRecord(id, data);
-  docIndex.unshift({
-    id,
-    name: data.name,
-    updatedAt: now
-  });
-  await persistDocIndex();
+  await updateDocIndex(list => list.unshift({ id, name: data.name, updatedAt: Date.now() }));
   await switchToDoc(id);
   closeDocsPanel();
 }
@@ -2009,6 +2011,7 @@ function render(v) {
 ed.addEventListener('input', () => render(ed.value));
 ed.addEventListener('keydown', e => {
   if (e.key === 'Tab') {
+    if (docReadOnly) return;
     e.preventDefault();
     const s = ed.selectionStart,
       en = ed.selectionEnd;
@@ -2024,6 +2027,7 @@ const gs = () => ({
 });
 // Оборачивает выделенный текст в редакторе указанными до/после подстроками
 function wr(b, a) {
+  if (_roGuard()) return;
   const dt = LANGS[currentLang]?.defaultText || 'text';
   const { s, e, t } = gs(),
     r = b + (t || dt) + a;
@@ -2035,6 +2039,7 @@ function wr(b, a) {
 }
 // Вставляет фрагмент текста в текущую позицию курсора
 function ins(p, sf) {
+  if (_roGuard()) return;
   const { s, e, t } = gs(),
     r = p + (t || '') + sf;
   ed.value = ed.value.slice(0, s) + r + ed.value.slice(e);
@@ -2044,6 +2049,7 @@ function ins(p, sf) {
 }
 // Вставляет шаблон ссылки [текст](url)
 function iLink() {
+  if (_roGuard()) return;
   const dl = LANGS[currentLang]?.defaultLink || 'link';
   const { s, e, t } = gs(),
     l = t || dl,
@@ -2057,6 +2063,7 @@ function iLink() {
 }
 // Вставляет шаблон изображения с атрибутом размера
 function iImg() {
+  if (_roGuard()) return;
   const da = LANGS[currentLang]?.defaultImgAlt || 'alt';
   const { s, e, t } = gs();
   const snip = `![${t || da}](https://example.com/img.png){width=300px}`;
@@ -2067,6 +2074,7 @@ function iImg() {
 }
 // Вставляет инлайн-формулу LaTeX
 function iLatexInline() {
+  if (_roGuard()) return;
   const { s, e, t } = gs(),
     m = t || 'x^2';
   const r = `$${m}$`;
@@ -2078,6 +2086,7 @@ function iLatexInline() {
 }
 // Вставляет блочную формулу LaTeX
 function iLatexBlock() {
+  if (_roGuard()) return;
   const { s, e, t } = gs(),
     m = t || '\\int_0^\\infty f(x)\\,dx';
   const r = `$$\n${m}\n$$`;
@@ -2089,6 +2098,7 @@ function iLatexBlock() {
 }
 // Вставляет шаблон diff-блока
 function iDiff() {
+  if (_roGuard()) return;
   const t0 = LANGS[currentLang] || LANGS['en'];
   const lang = prompt(t0.diffPrompt || 'Enter language name (leave blank for plain diff):', '');
   const fence = lang && lang.trim() ? `diff_${lang.trim()}` : 'diff';
@@ -2103,6 +2113,7 @@ function iDiff() {
 }
 // Вставляет шаблон Mermaid-диаграммы
 function iMermaid() {
+  if (_roGuard()) return;
   const { s, e, t } = gs();
   const body = t || 'flowchart LR\n  A[Start] --> B[End]';
   const head = ':::mermaid\n';
@@ -2134,6 +2145,7 @@ const TIKZ_DEFAULT = [
 ].join('\n');
 // Вставляет шаблон рисунка TikZ
 function iTikz() {
+  if (_roGuard()) return;
   const { s, e, t } = gs();
   const body = t || TIKZ_DEFAULT;
   const head = ':::tikz\n';
@@ -2321,6 +2333,18 @@ const LANGS = {
     mermaidSyntaxError: '⚠ Mermaid: syntax error (diagram syntax error)',
     savedLabel: 'Saved',
     unsavedLabel: 'Unsaved',
+    saveBtnTitle: 'Save (Ctrl+S)',
+    readOnlyLabel: 'Read-only',
+    roBarText: 'This document is being edited in another window. Here it is read-only.',
+    roBarEdit: 'Edit here',
+    settingsSaveTitle: 'Saving',
+    settingsAutoSaveLabel: 'Autosave',
+    settingsAutoSaveDesc: 'Save the document automatically while you type. When off, save with the Save button or Ctrl+S.',
+    unsavedMsg: 'This document has unsaved changes. Save them before leaving?',
+    unsavedSave: 'Save',
+    unsavedDiscard: 'Don\'t save',
+    unsavedCancel: 'Cancel',
+    docsDeleteLocked: 'This document is open for editing in another window. Close it there or open another document there, then delete it.',
     tooLargeMsg: 'Content too large to save in cookie',
     downloadBtnTitle: 'Download',
     dlTitle: 'Download as…',
@@ -3269,6 +3293,7 @@ function setSaveStatus(state) {
   if (state === 'saved') label.textContent = t.savedLabel || 'Saved';
   if (state === 'unsaved') label.textContent = t.unsavedLabel || 'Unsaved';
   if (state === 'error') label.textContent = t.tooLargeMsg || 'Too large';
+  if (state === 'readonly') label.textContent = t.readOnlyLabel || 'Read-only';
 }
 
 // Применяет текущие размеры шрифтов к CSS-переменным документа
@@ -3386,13 +3411,13 @@ function defaultFontSizesForNewDoc() {
   return { ...FONT_DEFAULTS };
 }
 // Сохраняет текущие размеры шрифтов в запись текущего документа
+// (в режиме просмотра размеры меняются только в этом окне)
 async function saveFontSizes() {
-  if (!currentDocId) return;
+  if (!currentDocId || docReadOnly) return;
   try {
-    const data = await loadDocRecord(currentDocId);
-    if (!data) return;
-    data.fontSizes = { ...fontSizes };
-    await persistDocRecord(currentDocId, data);
+    await updateDocRecord(currentDocId, d => {
+      d.fontSizes = { ...fontSizes };
+    });
   } catch (e) {}
 }
 
@@ -3407,6 +3432,8 @@ function applySettings() {
   document.body.classList.toggle('ai-dot-on', !!appSettings.aiDot);
   const dotTog = document.getElementById('aiDotToggle');
   if (dotTog) dotTog.setAttribute('aria-checked', appSettings.aiDot ? 'true' : 'false');
+  const saveTog = document.getElementById('autoSaveToggle');
+  if (saveTog) saveTog.setAttribute('aria-checked', appSettings.autoSave ? 'true' : 'false');
   updateSettingsPreview();
   if (ed.value) _render(ed.value);
 }
@@ -3438,18 +3465,27 @@ function toggleAiDot() {
   saveSettings();
 }
 
-// Сохраняет настройки приложения в IndexedDB
+// Включает/выключает автосохранение; при включении несохранённые изменения сохраняются
+function toggleAutoSave() {
+  appSettings.autoSave = !appSettings.autoSave;
+  applySettings();
+  saveSettings();
+  scheduleAutosave();
+}
+
+// Сохраняет настройки приложения в IndexedDB; другие окна применяют их сразу
 async function saveSettings() {
   try {
     await idbSet(IDB_SETTINGS_KEY, JSON.stringify(appSettings));
+    _bcPost({ type: 'settings' });
   } catch (e) {}
 }
 
-// Загружает настройки приложения из IndexedDB
+// Загружает настройки приложения из IndexedDB (настройки, которых ещё нет в сохранённых, — по умолчанию)
 async function loadSettings() {
   try {
     const raw = await idbGet(IDB_SETTINGS_KEY);
-    if (raw) appSettings = JSON.parse(raw);
+    if (raw) appSettings = { ...SETTINGS_DEFAULTS, ...JSON.parse(raw) };
   } catch (e) {}
   applySettings();
 }
@@ -3467,7 +3503,7 @@ function toggleSettings() {
     document.getElementById('settingsBtn').style.color = 'var(--gb)';
     updateSettingsPreview();
     const t = LANGS[currentLang] || LANGS['en'];
-    ['settingsHtmlDesc', 'settingsAiDotDesc'].forEach(key => {
+    ['settingsHtmlDesc', 'settingsAiDotDesc', 'settingsAutoSaveDesc'].forEach(key => {
       const el = document.querySelector(`#settingsModal [data-i18n="${key}"]`);
       if (el && t[key]) el.textContent = t[key];
     });
@@ -3558,10 +3594,10 @@ function untitledDocName() {
   return t.untitledDoc || 'Untitled Document';
 }
 
-// Создаёт новый документ и делает его текущим
+
+// Создаёт новый документ (список документов обновляется во всех окнах)
 async function createNewDoc() {
   const t = LANGS[currentLang] || LANGS['en'];
-  const now = Date.now();
   const id = genDocId();
   const data = {
     name: untitledDocName(),
@@ -3571,12 +3607,7 @@ async function createNewDoc() {
     scrollPv: 0
   };
   await persistDocRecord(id, data);
-  docIndex.unshift({
-    id,
-    name: data.name,
-    updatedAt: now
-  });
-  await persistDocIndex();
+  await updateDocIndex(list => list.unshift({ id, name: data.name, updatedAt: Date.now() }));
   return id;
 }
 
@@ -3588,54 +3619,459 @@ async function flushCurrentDocSave() {
   await saveContent();
 }
 
-// Сохраняет содержимое, положение прокрутки и метаданные текущего документа
+// Сохраняет содержимое, положение прокрутки и размеры шрифтов текущего документа.
+// Имя берётся из сохранённой записи: его могли изменить в другом окне
 async function saveContent() {
-  if (!currentDocId || switchingDoc) return;
+  if (!currentDocId || switchingDoc || docReadOnly) return;
+  const id = currentDocId;
+  const content = ed.value;
   try {
-    const now = Date.now();
-    const data = {
-      name: (currentDocMeta && currentDocMeta.name) || untitledDocName(),
-      content: ed.value,
-      fontSizes: { ...fontSizes },
-      scrollEd: ed.scrollTop,
-      scrollPv: pv.scrollTop
+    const fill = d => {
+      d.content = content;
+      d.fontSizes = { ...fontSizes };
+      d.scrollEd = ed.scrollTop;
+      d.scrollPv = pv.scrollTop;
     };
-    await persistDocRecord(currentDocId, data);
-    const idxItem = docIndex.find(d => d.id === currentDocId);
-    if (idxItem) {
-      idxItem.updatedAt = now;
+    const data = await updateDocRecord(id, fill);
+    if (!data) {
+      const fresh = { name: (currentDocMeta && currentDocMeta.name) || untitledDocName() };
+      fill(fresh);
+      await persistDocRecord(id, fresh);
     }
-    await persistDocIndex();
-    setSaveStatus('saved');
+    if (id !== currentDocId) return;
+    _savedContent = content;
+    await updateDocIndex(list => {
+      const item = list.find(d => d.id === id);
+      if (item) item.updatedAt = Date.now();
+    });
+    if (id === currentDocId && !docReadOnly) setSaveStatus(ed.value === _savedContent ? 'saved' : 'unsaved');
   } catch (e) {
     setSaveStatus('error');
   }
 }
 
-let saveTimer = null;
-// Планирует автосохранение содержимого с задержкой (debounce)
-function scheduleAutosave() {
-  if (switchingDoc) return;
-  setSaveStatus('unsaved');
+// Сохранение вручную: кнопка «Сохранить» и Ctrl+S
+async function saveNow() {
+  if (_roGuard()) return;
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(saveContent, 1500);
+  await saveContent();
+}
+
+let saveTimer = null;
+// После каждого изменения: статус «сохранено/не сохранено», передача текста окнам просмотра
+// и автосохранение с задержкой (если оно включено)
+function scheduleAutosave() {
+  if (switchingDoc || docReadOnly || !currentDocId) return;
+  _broadcastContent();
+  clearTimeout(saveTimer);
+  if (ed.value === _savedContent) {
+    setSaveStatus('saved');
+    return;
+  }
+  setSaveStatus('unsaved');
+  if (appSettings.autoSave) saveTimer = setTimeout(saveContent, 1500);
 }
 
 let scrollSaveTimer = null;
 // Планирует сохранение позиции прокрутки отдельным лёгким debounce
 function scheduleScrollSave() {
-  if (switchingDoc || !currentDocId) return;
+  if (switchingDoc || !currentDocId || docReadOnly) return;
   clearTimeout(scrollSaveTimer);
-  scrollSaveTimer = setTimeout(async () => {
-    const data = await loadDocRecord(currentDocId);
-    if (!data) return;
-    data.scrollEd = ed.scrollTop;
-    data.scrollPv = pv.scrollTop;
-    await persistDocRecord(currentDocId, data);
+  scrollSaveTimer = setTimeout(() => {
+    if (docReadOnly || !currentDocId) return;
+    updateDocRecord(currentDocId, d => {
+      d.scrollEd = ed.scrollTop;
+      d.scrollPv = pv.scrollTop;
+    }).catch(() => {});
   }, 400);
 }
 ed.addEventListener('scroll', scheduleScrollSave);
 pv.addEventListener('scroll', scheduleScrollSave);
+
+// ---------- Несколько окон ----------
+// Документ редактирует только одно окно: на каждый открытый документ берётся блокировка Web Locks.
+// Другие окна с тем же документом показывают его только для просмотра и получают текст через
+// BroadcastChannel; кнопка «Редактировать здесь» передаёт право редактирования этому окну.
+// Когда окно-редактор закрывается или переходит к другому документу, право получает следующее окно.
+// Список документов и настройки обновляются во всех окнах сразу.
+// Без Web Locks (старые браузеры) каждое окно редактирует документ само, как раньше
+
+function _bcPost(msg) {
+  if (!_bc) return;
+  try {
+    _bc.postMessage(msg);
+  } catch (e) {}
+}
+
+// Взаимоисключение между окнами (без Web Locks функция просто выполняется)
+function _withLock(name, fn) {
+  return _hasLocks ? navigator.locks.request(name, () => fn()) : fn();
+}
+
+// Изменение списка документов: свежая копия из IndexedDB → правка → запись → уведомление окон
+async function updateDocIndex(mutate) {
+  await _withLock('zmd-index', async () => {
+    await loadDocIndex();
+    mutate(docIndex);
+    await persistDocIndex();
+  });
+  _bcPost({ type: 'index' });
+}
+
+// Изменение записи документа по свежей копии из IndexedDB; null — записи нет
+function updateDocRecord(id, mutate) {
+  return _withLock('zmd-rec-' + id, async () => {
+    const data = await loadDocRecord(id);
+    if (!data) return null;
+    mutate(data);
+    await persistDocRecord(id, data);
+    return data;
+  });
+}
+
+let _lockGen = 0; // поколение: запросы прежних поколений (до смены документа) не действуют
+let _lockRelease = null; // освобождает удерживаемую блокировку
+let _lockWait = null; // AbortController ожидания блокировки
+let _takeover = null; // идёт передача права редактирования этому окну
+let _lastBroadcast = null;
+let _mirrorTimer = null;
+let _docListStale = false;
+
+function _lockName(id) {
+  return 'zmd-doc-' + id;
+}
+
+// Запрос блокировки документа; onGranted(true/false) — получена ли она
+function _lockRequest(id, gen, opts, onGranted) {
+  navigator.locks
+    .request(_lockName(id), opts, lock => {
+      if (!lock) {
+        onGranted(false);
+        return undefined;
+      }
+      if (gen !== _lockGen) return undefined; // устаревший запрос — блокировка сразу освобождается
+      return new Promise(release => {
+        _lockRelease = release;
+        onGranted(true);
+      });
+    })
+    .catch(() => {
+      // Ожидание отменено (смена документа) или блокировку отобрало другое окно (steal)
+      if (gen !== _lockGen) return;
+      if (opts.ifAvailable && !_lockRelease) {
+        onGranted(false);
+        return;
+      }
+      if (_lockRelease) {
+        _lockRelease = null;
+        _becomeViewer(id, gen);
+      }
+    });
+}
+
+// Отпускает блокировку текущего документа и отменяет ожидание; возвращает новое поколение
+function _dropDocLock() {
+  _lockGen++;
+  if (_lockRelease) {
+    const release = _lockRelease;
+    _lockRelease = null;
+    release();
+  }
+  if (_lockWait) {
+    _lockWait.abort();
+    _lockWait = null;
+  }
+  return _lockGen;
+}
+
+// Ожидание блокировки: окно станет редактором, когда её отпустит другое окно
+function _waitDocLock(id, gen) {
+  if (typeof AbortController !== 'function') return;
+  const ac = new AbortController();
+  _lockWait = ac;
+  _lockRequest(id, gen, { signal: ac.signal }, () => {
+    _lockWait = null;
+    _becomeEditor(id, gen, null);
+  });
+}
+
+// Открытие документа: true — это окно редактирует его, false — только просмотр
+function _claimDocLock(id) {
+  const gen = _dropDocLock();
+  if (!_hasLocks) return Promise.resolve(true);
+  return new Promise(resolve => {
+    _lockRequest(id, gen, { ifAvailable: true }, ok => {
+      if (!ok && gen === _lockGen) _waitDocLock(id, gen);
+      resolve(ok);
+    });
+  });
+}
+
+// Режим просмотра: редактор только для чтения, полоса с кнопкой «Редактировать здесь»
+function _setReadOnly(on) {
+  docReadOnly = on;
+  ed.readOnly = on;
+  document.body.classList.toggle('doc-ro', on);
+  const btn = document.getElementById('saveBtn');
+  if (btn) btn.disabled = on;
+  if (on) {
+    clearTimeout(saveTimer);
+    setSaveStatus('readonly');
+  } else {
+    scheduleAutosave();
+  }
+}
+
+// Правки в режиме просмотра не выполняются: полоса над редактором коротко подсвечивается
+function _roGuard() {
+  if (!docReadOnly) return false;
+  const bar = document.getElementById('roBar');
+  if (bar) {
+    bar.classList.remove('ro-flash');
+    void bar.offsetWidth;
+    bar.classList.add('ro-flash');
+  }
+  return true;
+}
+
+// Текст из другого окна: позиции прокрутки сохраняются, автосохранение не запускается
+function _applyRemoteContent(text) {
+  if (ed.value === text) return;
+  const st = ed.scrollTop;
+  const ps = pv.scrollTop;
+  ed.value = text;
+  _render(text);
+  _invalidateScrollMap();
+  ed.scrollTop = st;
+  pv.scrollTop = ps;
+  _expectScroll(ed);
+  _expectScroll(pv);
+}
+
+// Окно-редактор передаёт текст окнам просмотра (не чаще раза в 120 мс)
+function _broadcastContent(force) {
+  if (!_bc || docReadOnly || !currentDocId) return;
+  clearTimeout(_mirrorTimer);
+  const send = () => {
+    if (docReadOnly || !currentDocId) return;
+    if (!force && ed.value === _lastBroadcast) return;
+    _lastBroadcast = ed.value;
+    _bcPost({ type: 'content', id: currentDocId, content: ed.value });
+  };
+  if (force) send();
+  else _mirrorTimer = setTimeout(send, 120);
+}
+
+// Это окно стало редактором: текст — переданный прежним редактором или сохранённый
+async function _becomeEditor(id, gen, handover) {
+  if (gen !== _lockGen || id !== currentDocId) return;
+  const data = await loadDocRecord(id);
+  if (gen !== _lockGen || id !== currentDocId) return;
+  let content = ed.value;
+  let saved = ed.value;
+  if (handover) {
+    content = handover.content;
+    saved = handover.saved;
+  } else if (data) {
+    content = data.content;
+    saved = data.content;
+  }
+  if (data && currentDocMeta) currentDocMeta.name = data.name;
+  _applyRemoteContent(content);
+  _savedContent = saved;
+  _lastBroadcast = null;
+  _setReadOnly(false);
+}
+
+// Право редактирования ушло в другое окно: просмотр и ожидание блокировки
+function _becomeViewer(id, gen) {
+  if (gen !== _lockGen || id !== currentDocId) return;
+  clearTimeout(saveTimer);
+  clearTimeout(_mirrorTimer);
+  _setReadOnly(true);
+  _waitDocLock(id, gen);
+}
+
+// Кнопка «Редактировать здесь»: редактор передаёт текст (с несохранёнными изменениями) и
+// отпускает блокировку. Если окно-редактор не отвечает (например, заморожено), блокировка отбирается
+function takeOverDoc() {
+  if (!docReadOnly || !currentDocId || !_hasLocks) return;
+  const id = currentDocId;
+  const gen = _dropDocLock();
+  let gotHandover;
+  const handover = new Promise(resolve => (gotHandover = resolve));
+  _takeover = { id, resolve: gotHandover };
+  let granted = false;
+  const onGranted = async ok => {
+    if (!ok || granted || gen !== _lockGen) return;
+    granted = true;
+    clearTimeout(timer);
+    _lockWait = null;
+    // Сообщение о передаче может прийти чуть позже самой блокировки
+    const h = await Promise.race([handover, new Promise(r => setTimeout(() => r(null), 400))]);
+    _takeover = null;
+    _becomeEditor(id, gen, h);
+  };
+  const ac = typeof AbortController === 'function' ? new AbortController() : null;
+  _lockWait = ac;
+  _lockRequest(id, gen, ac ? { signal: ac.signal } : {}, onGranted);
+  _bcPost({ type: 'takeover', id });
+  const timer = setTimeout(() => {
+    if (granted || gen !== _lockGen) return;
+    if (ac) ac.abort();
+    _lockWait = null;
+    _lockRequest(id, gen, { steal: true }, onGranted);
+  }, 1500);
+}
+
+// Другое окно просит право редактирования: передаём текст и становимся окном просмотра
+function _handOver() {
+  const id = currentDocId;
+  clearTimeout(saveTimer);
+  clearTimeout(_mirrorTimer);
+  _bcPost({ type: 'handover', id, content: ed.value, saved: _savedContent });
+  const gen = _dropDocLock();
+  _setReadOnly(true);
+  _waitDocLock(id, gen);
+}
+
+// Документ открыт для редактирования в другом окне (удалять его нельзя)
+async function _docLockedElsewhere(id) {
+  if (!_hasLocks || typeof navigator.locks.query !== 'function') return false;
+  if (id === currentDocId && !docReadOnly) return false;
+  try {
+    const state = await navigator.locks.query();
+    return (state.held || []).some(l => l.name === _lockName(id));
+  } catch (e) {
+    return false;
+  }
+}
+
+// Список документов изменён в другом окне: обновляем его здесь
+async function _onRemoteIndex() {
+  await loadDocIndex();
+  if (currentDocId && !docIndex.some(d => d.id === currentDocId)) {
+    // Текущий документ удалён в другом окне
+    const next = [...docIndex].sort((a, b) => b.updatedAt - a.updatedAt)[0];
+    if (next) {
+      await switchToDoc(next.id);
+      return;
+    }
+  }
+  const item = docIndex.find(d => d.id === currentDocId);
+  if (item && currentDocMeta) currentDocMeta.name = item.name;
+  // Имя документа сейчас редактируется в списке — обновим список после ввода
+  const active = document.activeElement;
+  if (active && active.classList && active.classList.contains('doc-item-name')) {
+    _docListStale = true;
+    return;
+  }
+  renderDocList();
+}
+
+if (_bc) {
+  _bc.onmessage = e => {
+    const m = e.data || {};
+    if (m.type === 'content') {
+      if (docReadOnly && m.id === currentDocId) _applyRemoteContent(m.content);
+    } else if (m.type === 'hello') {
+      // Новое окно открыло документ для просмотра — отправляем ему текущий текст
+      if (!docReadOnly && m.id === currentDocId) _broadcastContent(true);
+    } else if (m.type === 'takeover') {
+      if (!docReadOnly && m.id === currentDocId && _lockRelease) _handOver();
+    } else if (m.type === 'handover') {
+      if (_takeover && m.id === _takeover.id) _takeover.resolve(m);
+    } else if (m.type === 'index') {
+      _onRemoteIndex();
+    } else if (m.type === 'settings') {
+      loadSettings().then(() => scheduleAutosave());
+    }
+  };
+}
+
+// Несохранённые изменения при уходе от документа: Сохранить / Не сохранять / Отмена
+function _askUnsaved() {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('unsavedOverlay');
+    const modal = document.getElementById('unsavedModal');
+    const btns = {
+      save: document.getElementById('unsavedSaveBtn'),
+      discard: document.getElementById('unsavedDiscardBtn'),
+      cancel: document.getElementById('unsavedCancelBtn')
+    };
+    document.getElementById('unsavedMsg').textContent = tr('unsavedMsg');
+    btns.save.textContent = tr('unsavedSave');
+    btns.discard.textContent = tr('unsavedDiscard');
+    btns.cancel.textContent = tr('unsavedCancel');
+    overlay.classList.add('open');
+    modal.classList.add('open');
+    const handlers = {};
+    const done = result => {
+      overlay.classList.remove('open');
+      modal.classList.remove('open');
+      Object.keys(btns).forEach(k => btns[k].removeEventListener('click', handlers[k]));
+      overlay.removeEventListener('click', handlers.cancel);
+      document.removeEventListener('keydown', onKey, true);
+      resolve(result);
+    };
+    const onKey = e => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        done('cancel');
+      }
+    };
+    Object.keys(btns).forEach(k => {
+      handlers[k] = () => done(k);
+      btns[k].addEventListener('click', handlers[k]);
+    });
+    overlay.addEventListener('click', handlers.cancel);
+    document.addEventListener('keydown', onKey, true);
+    btns.save.focus();
+  });
+}
+
+// Переход к другому документу: при автосохранении — сохранить; без него — спросить.
+// false — пользователь отменил переход
+async function confirmLeaveDoc() {
+  clearTimeout(scrollSaveTimer);
+  if (!currentDocId || docReadOnly) return true;
+  if (ed.value === _savedContent) {
+    clearTimeout(saveTimer);
+    return true;
+  }
+  if (appSettings.autoSave) {
+    await flushCurrentDocSave();
+    return true;
+  }
+  const choice = await _askUnsaved();
+  if (choice === 'cancel') return false;
+  if (choice === 'save') await saveNow();
+  return true;
+}
+
+// Закрытие окна: без автосохранения браузер предупреждает о несохранённых изменениях
+window.addEventListener('beforeunload', e => {
+  if (docReadOnly || !currentDocId || appSettings.autoSave || ed.value === _savedContent) return;
+  e.preventDefault();
+  e.returnValue = '';
+});
+// С автосохранением изменения последних секунд записываются при закрытии окна
+// (напрямую: ждать блокировку между окнами при выгрузке страницы нельзя)
+window.addEventListener('pagehide', () => {
+  if (docReadOnly || !currentDocId || !appSettings.autoSave || ed.value === _savedContent) return;
+  clearTimeout(saveTimer);
+  try {
+    persistDocRecord(currentDocId, {
+      name: (currentDocMeta && currentDocMeta.name) || untitledDocName(),
+      content: ed.value,
+      fontSizes: { ...fontSizes },
+      scrollEd: ed.scrollTop,
+      scrollPv: pv.scrollTop
+    }).catch(() => {});
+    _savedContent = ed.value;
+  } catch (e) {}
+});
 
 // ---------- Синхронная прокрутка редактора и превью ----------
 // Вместо пропорции (из-за картинок, диаграмм и формул высоты блоков в превью и в редакторе разные)
@@ -3958,24 +4394,33 @@ render = function (v) {
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 's') {
     e.preventDefault();
-    clearTimeout(saveTimer);
-    saveContent();
+    saveNow();
   }
 });
 
-// Переключает приложение на другой сохранённый документ
+// Переключает приложение на другой сохранённый документ. Если документ уже редактируется
+// в другом окне, здесь он открывается только для просмотра
 async function switchToDoc(id) {
   const data = await loadDocRecord(id);
   if (!data) return false;
   switchingDoc = true;
+  clearTimeout(saveTimer);
+  clearTimeout(_mirrorTimer);
   await setCurrentDocId(id);
   currentDocMeta = { name: data.name };
+  const editable = await _claimDocLock(id);
   ed.value = data.content;
+  _savedContent = data.content;
+  _lastBroadcast = null;
   fontSizes = { ...data.fontSizes };
   applyFontSizesToDOM();
   _render(data.content);
   _invalidateScrollMap();
-  setSaveStatus('saved');
+  docReadOnly = !editable;
+  _setReadOnly(!editable);
+  if (editable) setSaveStatus('saved');
+  // Окно просмотра получает текст с ещё не сохранёнными изменениями от окна-редактора
+  else _bcPost({ type: 'hello', id });
   _aiPendingEdits = {};
   // У каждого разговора свои бэкенд и модель
   await _loadAiConversation();
@@ -3997,18 +4442,18 @@ async function switchToDoc(id) {
 async function renameDoc(id, newName) {
   const name = newName.trim();
   if (!name) return;
-  const data = await loadDocRecord(id);
+  const data = await updateDocRecord(id, d => {
+    d.name = name;
+  });
   if (!data) return;
-  data.name = name;
-  await persistDocRecord(id, data);
-  const idxItem = docIndex.find(d => d.id === id);
-  if (idxItem) {
-    idxItem.name = name;
-  }
-  await persistDocIndex();
+  await updateDocIndex(list => {
+    const item = list.find(d => d.id === id);
+    if (item) item.name = name;
+  });
   if (id === currentDocId && currentDocMeta) {
     currentDocMeta.name = name;
   }
+  _docListStale = false;
   renderDocList();
 }
 
@@ -4051,7 +4496,7 @@ async function onDocItemClick(event, id) {
     return;
   }
   if (!(await confirmAiNav())) return;
-  await flushCurrentDocSave();
+  if (!(await confirmLeaveDoc())) return;
   await switchToDoc(id);
   closeDocsPanel();
 }
@@ -4074,23 +4519,44 @@ function onDocNameBlur(event, id) {
     event.target.value = item ? item.name : '';
     return;
   }
-  if (item && val === item.name) return;
+  if (item && val === item.name) {
+    // Пока имя редактировалось, список изменили в другом окне
+    if (_docListStale) {
+      _docListStale = false;
+      renderDocList();
+    }
+    return;
+  }
   renameDoc(id, val);
 }
 
 async function onDocDeleteClick(event, id) {
   event.stopPropagation();
   const t = LANGS[currentLang] || LANGS['en'];
+  await loadDocIndex();
   if (docIndex.length <= 1) {
     alert(t.docsCantDeleteLast || 'You must have at least one document.');
     return;
   }
+  // Документ, который редактируется в другом окне, удалить нельзя
+  if (await _docLockedElsewhere(id)) {
+    showErrorModal(tr('docsDeleteLocked'));
+    return;
+  }
   if (!confirm(t.docsConfirmDelete || 'Delete this document? This cannot be undone.')) return;
   if (!(await confirmAiNav())) return;
+  if (id === currentDocId) {
+    // Отложенное сохранение не должно вернуть удалённую запись
+    clearTimeout(saveTimer);
+    clearTimeout(scrollSaveTimer);
+    _savedContent = ed.value;
+  }
   await removeDocRecord(id);
   await _deleteAiConversation(id);
-  docIndex = docIndex.filter(d => d.id !== id);
-  await persistDocIndex();
+  await updateDocIndex(list => {
+    const i = list.findIndex(d => d.id === id);
+    if (i >= 0) list.splice(i, 1);
+  });
   if (id === currentDocId) {
     const next = [...docIndex].sort((a, b) => b.updatedAt - a.updatedAt)[0];
     if (next) await switchToDoc(next.id);
@@ -4101,7 +4567,7 @@ async function onDocDeleteClick(event, id) {
 
 async function onNewDocClick() {
   if (!(await confirmAiNav())) return;
-  await flushCurrentDocSave();
+  if (!(await confirmLeaveDoc())) return;
   const id = await createNewDoc();
   await switchToDoc(id);
 }
@@ -4207,6 +4673,7 @@ function closeTblDialog() {
 }
 // Вставляет сформированную таблицу в редактор
 function insertCustomTable() {
+  if (_roGuard()) return;
   const cols = Math.max(1, Math.min(10, parseInt(document.getElementById('tblCols').value) || 3));
   const rows = Math.max(1, Math.min(20, parseInt(document.getElementById('tblRows').value) || 3));
   const stripe = document.getElementById('tblStripe').checked ? ' stripe' : '';
@@ -4750,6 +5217,7 @@ function _resolveDiffCard(id, key) {
 
 // Принимает предложенную ИИ правку и применяет её к тексту редактора
 function acceptAiEdit(id) {
+  if (_roGuard()) return;
   const t = LANGS[currentLang] || LANGS['en'];
   const edit = _aiPendingEdits[id];
   if (!edit) return;
@@ -4958,6 +5426,7 @@ function _aiAddInsertableMsg(text, pos) {
   btn.setAttribute('data-i18n', 'aiInsertBtn');
   btn.textContent = t.aiInsertBtn;
   btn.onclick = () => {
+    if (_roGuard()) return;
     ed.value = ed.value.slice(0, pos) + text + ed.value.slice(pos);
     ed.selectionStart = ed.selectionEnd = pos + text.length;
     ed.focus();
