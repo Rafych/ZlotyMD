@@ -218,6 +218,16 @@ body {
 .tb::-webkit-scrollbar {
   display: none;
 }
+/* Не помещается даже первая группа кнопок: панель скрыта (место в шапке сохраняется,
+   поэтому её ширину можно измерять и снова показать панель, когда места станет больше) */
+.tb.tb-off {
+  visibility: hidden;
+  pointer-events: none;
+}
+/* Тесная шапка: сначала убирается статистика, чтобы панели инструментов хватило места */
+.hd.hd-nostats .stats {
+  display: none;
+}
 .tg {
   display: flex;
   align-items: center;
