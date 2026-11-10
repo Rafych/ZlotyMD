@@ -669,6 +669,28 @@
           </div>
         </div>
 
+        <!-- Сохранение документа вручную (Ctrl+S) -->
+        <button
+          class="about-btn"
+          id="saveBtn"
+          title="Save (Ctrl+S)"
+          data-i18n-title="saveBtnTitle"
+          onclick="saveNow()"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M13 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V5l-3-3z" />
+            <path d="M11 2v3H5V2" />
+            <rect x="4" y="9" width="8" height="4" rx=".5" />
+          </svg>
+        </button>
+
         <button
           class="about-btn"
           title="Download as HTML"
@@ -1258,6 +1280,26 @@
               <span class="settings-toggle-knob"></span>
             </button>
           </div>
+
+          <div class="settings-section-title settings-section-gap" data-i18n="settingsSaveTitle">Saving</div>
+
+          <div class="settings-row">
+            <div class="settings-row-text">
+              <div class="settings-row-label" data-i18n="settingsAutoSaveLabel">Autosave</div>
+              <div class="settings-row-desc" data-i18n="settingsAutoSaveDesc">
+                Save the document automatically while you type. When off, save with the Save button or Ctrl+S.
+              </div>
+            </div>
+            <button
+              class="settings-toggle"
+              id="autoSaveToggle"
+              onclick="toggleAutoSave()"
+              role="switch"
+              aria-checked="true"
+            >
+              <span class="settings-toggle-knob"></span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1338,6 +1380,26 @@
           <div class="pl">
             <span class="badge bl">Markdown</span>
             <span data-i18n="editorLabel">Editor</span>
+          </div>
+          <!-- Документ редактируется в другом окне: здесь только просмотр -->
+          <div class="ro-bar" id="roBar" role="status">
+            <svg
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.7"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="7" width="10" height="7" rx="1.5" />
+              <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" />
+            </svg>
+            <span class="ro-bar-text" data-i18n="roBarText">
+              This document is being edited in another window. Here it is read-only.
+            </span>
+            <button class="ro-bar-btn" type="button" data-i18n="roBarEdit" onclick="takeOverDoc()">
+              Edit here
+            </button>
           </div>
           <textarea
             id="ed"
@@ -1737,6 +1799,17 @@
           <div class="ai-nav-msg" id="errMsg"></div>
           <div class="ai-nav-actions">
             <button class="ai-nav-btn ai-nav-btn-yes" id="errOkBtn" type="button"></button>
+          </div>
+        </div>
+
+        <!-- Несохранённые изменения при переходе к другому документу (автосохранение выключено) -->
+        <div class="ai-nav-overlay" id="unsavedOverlay"></div>
+        <div class="ai-nav-modal" id="unsavedModal" role="alertdialog" aria-modal="true" aria-describedby="unsavedMsg">
+          <div class="ai-nav-msg" id="unsavedMsg"></div>
+          <div class="ai-nav-actions">
+            <button class="ai-nav-btn ai-nav-btn-no" id="unsavedCancelBtn" type="button"></button>
+            <button class="ai-nav-btn ai-nav-btn-no" id="unsavedDiscardBtn" type="button"></button>
+            <button class="ai-nav-btn ai-nav-btn-save" id="unsavedSaveBtn" type="button"></button>
           </div>
         </div>
 
