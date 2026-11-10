@@ -11,13 +11,22 @@
  *  4. Весь текст выводится отдельным слоем настоящим текстом PDF (Identity-H, встроенные TTF-шрифты
  *     с подмножеством глифов) в точных координатах из раскладки браузера: текст можно выделять,
  *     копировать и искать, а кириллица, японский и прочие письменности не превращаются в «кракозябры».
+ *     Символы, которых нет в веб-шрифтах страницы (браузер рисует их системными шрифтами), выводятся
+ *     изображением отрисовки браузера с невидимым текстом поверх: никаких разрешений не требуется.
+ *  5. Глифы формирует HarfBuzz (лигатуры и контекстные формы — как у Chrome), SVG (диаграммы Mermaid,
+ *     формулы) выводится векторами через svg2pdf.js. Без этих библиотек — глифы по cmap и растр SVG.
  */
 (function (global) {
   'use strict';
 
   const LIBS = {
     jspdf: 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js',
-    html2canvas: 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
+    html2canvas: 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+    // HarfBuzz (формирование глифов: лигатуры, контекстные формы — как у Chrome)
+    // svg2pdf.js — SVG (диаграммы Mermaid, формулы) векторами, как у Chrome
+    svg2pdf: 'https://cdn.jsdelivr.net/npm/svg2pdf.js@2.9.0/dist/svg2pdf.umd.min.js',
+    hb: 'https://cdn.jsdelivr.net/npm/harfbuzzjs@0.4.12/hb.js',
+    hbjs: 'https://cdn.jsdelivr.net/npm/harfbuzzjs@0.4.12/hbjs.js'
   };
   const EXPO = 'https://cdn.jsdelivr.net/npm/@expo-google-fonts/';
   const KATEX_FONTS = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/fonts/';
@@ -76,7 +85,6 @@
     },
     'jetbrains mono': { faces: faces(['400', '500']), src: w => [JBM[w]].concat(expo('jetbrains-mono@0.4.1', 'JetBrainsMono')(w, false)) },
     'noto sans': { faces: faces(['400', '700', '400i', '700i']), src: expo('noto-sans@0.4.2', 'NotoSans') },
-    'noto serif': { faces: faces(['400', '700', '400i', '700i']), src: expo('noto-serif@0.4.2', 'NotoSerif') },
     'noto sans math': { faces: faces(['400']), src: expo('noto-sans-math@0.4.2', 'NotoSansMath') },
     'noto sans symbols 2': { faces: faces(['400']), src: expo('noto-sans-symbols-2@0.4.1', 'NotoSansSymbols2') },
     'noto sans arabic': { faces: faces(['400']), src: expo('noto-sans-arabic@0.4.3', 'NotoSansArabic') },
@@ -100,7 +108,7 @@
     };
   });
   // Системные шрифты браузера подменяются ближайшими встраиваемыми
-  const GENERIC = { 'sans-serif': 'noto sans', 'system-ui': 'noto sans', arial: 'noto sans', serif: 'noto serif', 'times new roman': 'noto serif', times: 'noto serif', monospace: 'jetbrains mono', cursive: 'noto sans', fantasy: 'noto sans' };
+  const GENERIC = { 'sans-serif': 'noto sans', 'system-ui': 'noto sans', arial: 'noto sans', monospace: 'jetbrains mono', cursive: 'noto sans', fantasy: 'noto sans' };
 
   // Подбор начертания по правилам CSS Fonts (стиль, затем насыщенность) + синтетические жирный/курсив
   function matchFace(fam, weight, italic, sizePx) {
@@ -332,6 +340,15 @@
     let h = Math.max(0, Math.round((r.height - bt - bb - el.clientHeight) * 64) / 64);
     let w = Math.max(0, Math.round((r.width - bl - br - el.clientWidth) * 64) / 64);
     if (h < 1 || !(el.scrollWidth > el.clientWidth || cs.overflowX === 'scroll')) h = 0;
+    if (h) {
+      // clientHeight округлён до целых px, поэтому высота полосы выходит дробной (5,4375 вместо 5):
+      // точная высота — разница высоты блока с полосой и без неё
+      const ov = el.style.getPropertyValue('overflow-x'), pr = el.style.getPropertyPriority('overflow-x');
+      el.style.setProperty('overflow-x', 'hidden', 'important');
+      const exact = r.height - el.getBoundingClientRect().height;
+      if (ov) el.style.setProperty('overflow-x', ov, pr); else el.style.removeProperty('overflow-x');
+      if (exact > 0.5) h = exact;
+    }
     if (w < 1 || !(el.scrollHeight > el.clientHeight || cs.overflowY === 'scroll')) w = 0;
     return { h, w };
   }
@@ -506,6 +523,10 @@
       if (/(auto|scroll|hidden)/.test(cs.overflowX + cs.overflowY)) {
         const bars = scrollbarSizes(win, origEls[i]);
         el.style.setProperty('overflow', 'clip', 'important');
+        // Внутри прокручиваемых блоков Chrome при печати соблюдает orphans, но не widows (когда
+        // оба правила сразу выполнить нельзя, строка кода может остаться одна в начале страницы),
+        // а в колонках блок целиком ушёл бы на следующую страницу
+        el.style.setProperty('widows', '1', 'important');
         if (cs.display === 'block') el.style.setProperty('display', 'flow-root', 'important');
         if (bars.h) el.style.setProperty('padding-bottom', (parseFloat(cs.paddingBottom) + bars.h) + 'px', 'important');
         if (bars.w) el.style.setProperty('padding-right', (parseFloat(cs.paddingRight) + bars.w) + 'px', 'important');
@@ -660,17 +681,47 @@
       const rs = el.getClientRects();
       return rs.length ? colOf(rs[0]) : 0;
     };
+    // В блоках с сохранёнными пробелами (код) строка начинается сразу после перевода строки:
+    // отступ в начале строки переходит на новую страницу вместе с ней (как при печати).
+    // Возвращает {node, offset} начала строки или null, если сдвигать точку разрыва не нужно
+    const lineStartOf = (node, offset) => {
+      if (node.nodeType !== 3 || offset < 0) return null;
+      const pel = node.parentElement;
+      if (!pel || !/^(pre|pre-wrap|break-spaces)$/.test(win.getComputedStyle(pel).whiteSpace)) return null;
+      let blk = pel;
+      while (blk.parentElement && blk !== R2 && /^inline/.test(win.getComputedStyle(blk).display)) blk = blk.parentElement;
+      const tw = doc.createTreeWalker(blk, 4);
+      tw.currentNode = node;
+      let n = node, i = offset;
+      for (;;) {
+        const d = n.data;
+        for (let k = i - 1; k >= 0; k--) {
+          if (d[k] === '\n') {
+            if (n === node && k + 1 === offset) return null; // отступа нет
+            if (k + 1 === d.length) return null; // перевод строки в конце другого узла — не делим
+            return { node: n, offset: k + 1 };
+          }
+          if (d[k] !== ' ' && d[k] !== '\t') return null; // перенос длинной строки, а не начало строки
+        }
+        n = tw.previousNode();
+        if (!n) return null;
+        i = n.data.length;
+      }
+    };
     const plan = [];
     for (let c = 1; c <= maxCol; c++) {
       const it = items.find(x => x.col >= c);
       if (!it || it.col !== c) continue;
       if (plan.length && plan[plan.length - 1].item === it) continue;
+      const ls = lineStartOf(it.node, it.offset);
+      const sNode = ls ? ls.node : it.node, sOff = ls ? ls.offset : it.offset;
       // Поднимаемся к самому внешнему предку, который целиком начинается в этой колонке
-      let anchorB = it.node, offset = it.offset;
-      if (it.node.nodeType === 3 && it.offset > 0) {
-        const before = it.node.data.slice(0, it.offset);
-        if (/\S/.test(before)) {
-          plan.push({ col: c, item: it, anchorB: it.node, offset: it.offset, y: it.y });
+      let anchorB = sNode, offset = sOff;
+      if (sNode.nodeType === 3 && sOff > 0) {
+        const before = sNode.data.slice(0, sOff);
+        // Разрыв сразу после перевода строки делит узел, даже если до него только пробелы
+        if (/\S/.test(before) || before.endsWith('\n')) {
+          plan.push({ col: c, item: it, node: sNode, anchorB: sNode, offset: sOff, y: it.y });
           continue;
         }
         offset = -1;
@@ -761,13 +812,20 @@
       spacer.setAttribute('data-zpdf-spacer', '');
       spacer.style.cssText = 'display:block;height:1px;margin:0;padding:0;border:0;background:none;width:auto';
       if (p.offset > 0 && p.anchorB.nodeType === 3) {
-        const { segs, seg, local } = resolveText(leafA, p.offset);
+        // Узел разрыва может быть раньше узла строки (отступ строки — в предыдущем текстовом узле)
+        const splitA = toA.get(p.node || p.item.node);
+        const { segs, seg, local } = resolveText(splitA, p.offset);
         const second = seg.node.splitText(local);
         segs.push({ start: p.offset, node: second });
         segs.sort((a, b) => a.start - b.start);
-        splitMap.set(leafA, segs);
+        splitMap.set(splitA, segs);
         second.parentNode.insertBefore(spacer, second);
-        measureNode = second; measureOff = 0;
+        if (splitA === leafA) { measureNode = second; measureOff = 0; }
+        else {
+          // Высоту выравниваем по первому видимому символу строки
+          const r = resolveText(leafA, Math.max(0, p.item.offset));
+          measureNode = r.seg.node; measureOff = r.local;
+        }
       } else {
         let anchorA = toA.get(p.anchorB);
         if (anchorA === leafA && leafA.nodeType === 3 && splitMap.has(leafA)) anchorA = splitMap.get(leafA)[0].node;
@@ -895,6 +953,7 @@
   }
 
   // ---------- Сбор текста из раскладки ----------
+  // Intl.Segmenter нет в старых браузерах (Firefox до 125): тогда делим по кодовым точкам
   const segmenter = typeof Intl !== 'undefined' && Intl.Segmenter ? new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : null;
   function graphemes(str) {
     if (segmenter) return Array.from(segmenter.segment(str), s => ({ s: s.segment, i: s.index }));
@@ -992,8 +1051,12 @@
       const sizePx = parseFloat(cs.fontSize);
       const weight = parseInt(cs.fontWeight, 10) || 400;
       const italic = cs.fontStyle !== 'normal';
+      const langEl = el.closest('[lang]');
       const style = {
         families: parseFamilies(cs.fontFamily), familyCss: cs.fontFamily, sizePx, weight, italic,
+        lang: langEl ? langEl.getAttribute('lang') : '',
+        letterSpacing: cs.letterSpacing, ligatures: cs.fontVariantLigatures, featureSettings: cs.fontFeatureSettings,
+        kerning: cs.fontKerning, numeric: cs.fontVariantNumeric,
         fontStyle: cs.fontStyle, color, opacity, scale: sc.s, angle: sc.angle,
         cssFont: `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`
       };
@@ -1026,9 +1089,11 @@
           flush();
           cur = {
             text: '', left, top, right: left, height: r.height, cjk, node, nodeStart: g.i, style, ascent: m.ascent * sc.s, clip,
-            svgText: isSvgText, el
+            svgText: isSvgText, el, gx: []
           };
         }
+        // Положение каждой графемы — как в раскладке браузера (с кернингом и сжатием пунктуации)
+        cur.gx.push({ o: cur.text.length, len: g.s.length, x: left, w: r.width });
         cur.text += g.s;
         cur.left = Math.min(cur.left, left);
         cur.right = Math.max(cur.right, rx);
@@ -1116,6 +1181,8 @@
       const style = {
         families: parseFamilies(fam), familyCss: fam, sizePx: size, weight: parseInt(ms.fontWeight, 10) || 400,
         italic: ms.fontStyle !== 'normal', fontStyle: ms.fontStyle, color, opacity: color.a, scale: 1, angle: 0,
+        // ::marker в Chromium по умолчанию — табличные цифры
+        numeric: 'tabular-nums',
         cssFont: `${ms.fontStyle} ${ms.fontWeight} ${ms.fontSize} ${fam}`
       };
       if (type === 'disc' || type === 'circle' || type === 'square') {
@@ -1200,7 +1267,9 @@
           const k = faceKey(f);
           try {
             let bytes = null, lastErr = null;
-            for (const url of FAMILIES[f.fam].src(f.w, f.italic, f.opsz)) {
+            const def = FAMILIES[f.fam];
+            // Веб-шрифт — по адресам (основной, затем запасные)
+            for (const url of def.src(f.w, f.italic, f.opsz)) {
               try { bytes = await fetchBytes(url); break; } catch (e) { lastErr = e; }
             }
             if (!bytes) throw lastErr || new Error('font');
@@ -1219,7 +1288,7 @@
               ulPos: md.post && md.post.underlinePosition ? md.post.underlinePosition / upm : null,
               ulSize: md.post && md.post.underlineThickness ? md.post.underlineThickness / upm : null
             };
-            loaded.set(k, { name, cmap, face: f, metrics });
+            loaded.set(k, { name, cmap, face: f, metrics, bytes, upm });
           } catch (e) {
             console.warn('[pdf] font load failed', f, e);
             failed.add(k);
@@ -1227,6 +1296,28 @@
         }));
       }
     };
+  }
+
+  // Диапазоны символов (unicode-range) веб-шрифтов документа: семейство → [[от, до], …].
+  // Google Fonts делит шрифт на наборы по письменностям, и символ вне объявленных диапазонов браузер
+  // берёт из другого шрифта, даже если в самом файле шрифта он есть
+  function webFontRanges(doc) {
+    const map = new Map();
+    if (!doc.fonts || !doc.fonts.forEach) return map;
+    doc.fonts.forEach(face => {
+      const fam = (face.family || '').replace(/^["']|["']$/g, '').trim().toLowerCase();
+      if (!fam) return;
+      const list = map.get(fam) || [];
+      String(face.unicodeRange || 'U+0-10FFFF').split(',').forEach(part => {
+        const m = /U\+([0-9a-f?]+)(?:-([0-9a-f]+))?/i.exec(part.trim());
+        if (!m) return;
+        const lo = parseInt(m[1].replace(/\?/g, '0'), 16);
+        const hi = m[2] ? parseInt(m[2], 16) : parseInt(m[1].replace(/\?/g, 'F'), 16);
+        list.push([lo, hi]);
+      });
+      map.set(fam, list);
+    });
+    return map;
   }
 
   // Язык для иероглифов — как LayoutLocale::LocaleForHan в Chromium: язык документа,
@@ -1265,30 +1356,47 @@
     return out;
   }
 
-  async function assignFonts(registry, runs, extraItems, lang) {
-    // Этап 1: основные шрифты из font-family
+  // Шрифты прогона, которые встраиваются векторами: только веб-шрифты, загруженные самой страницей
+  // (ranges — семейства из document.fonts). Общие семейства (sans-serif, monospace…) и всё,
+  // что браузер берёт из системы, рисуются так, как их нарисовал браузер (см. assignFonts)
+  function webCandidates(style, ranges) {
+    return style.families.filter(f => FAMILIES[f] && ranges.has(f));
+  }
+
+  async function assignFonts(registry, runs, extraItems, lang, ranges) {
+    // Этап 1: веб-шрифты страницы из font-family
     const want = [];
     const all = runs.concat(extraItems);
     all.forEach(run => {
-      const fams = familyCandidates(run.style);
-      run._cands = fams.map(f => matchFace(f, run.style.weight, run.style.italic, run.style.sizePx)).filter(Boolean);
+      run._cands = webCandidates(run.style, ranges)
+        .map(f => matchFace(f, run.style.weight, run.style.italic, run.style.sizePx)).filter(Boolean);
       run._cands.forEach(f => want.push(f));
     });
     await registry.load(want);
-    // Этап 2: символы, которых нет в основных шрифтах → резервная цепочка.
-    // Шрифты цепочки подгружаются по одному звену: следующий — только для ещё не покрытых символов
     const cover = (f, cp) => {
       const e = registry.get(f);
       return !!(e && e.cmap[cp]);
     };
+    // Символ должен быть и в файле шрифта, и в объявленном unicode-range
+    const coverWeb = (f, cp) => {
+      if (!cover(f, cp)) return false;
+      const list = ranges.get(f.fam);
+      return !list || !list.length || list.some(([lo, hi]) => cp >= lo && cp <= hi);
+    };
+    // Символы вне веб-шрифтов Chrome рисует системными шрифтами. Читать системные шрифты без
+    // разрешения нельзя, поэтому такие символы выводятся изображением той же отрисовки браузера
+    // (тот же шрифт и те же формы глифов), а поверх — невидимый текст шрифтом Noto
+    // для выделения, копирования и поиска.
+    // Этап 2: шрифты Noto для невидимого слоя — по одному звену цепочки, только для непокрытых символов
+    const invisChain = cp => fallbackChain(cp, lang).map(fam => matchFace(fam, 400, false, 16)).filter(Boolean);
     for (let depth = 0; depth < 6; depth++) {
       const want2 = new Map();
       all.forEach(run => {
         for (const ch of run.text) {
           const cp = ch.codePointAt(0);
           if (cp > 0xFFFF || isSpace(ch) || needsShaping(cp)) continue;
-          if (run._cands.some(f => cover(f, cp))) continue;
-          const chain = fallbackChain(cp, lang).map(fam => matchFace(fam, run.style.weight, run.style.italic, run.style.sizePx)).filter(Boolean);
+          if (run._cands.some(f => coverWeb(f, cp))) continue;
+          const chain = invisChain(cp);
           if (chain.some(f => cover(f, cp))) continue;
           const next = chain.find(f => !registry.has(f) && !registry.isFailed(f));
           if (next) want2.set(faceKey(next), next);
@@ -1297,50 +1405,36 @@
       if (!want2.size) break;
       await registry.load(Array.from(want2.values()));
     }
-    // Этап 3: разбиение прогонов по шрифтам
+    // Этап 3: разбиение прогонов на куски: вектор (веб-шрифт) или изображение (+ невидимый шрифт)
     const pieces = [];
     all.forEach(run => {
-      const chars = Array.from(run.text);
       let cur = null;
       let offset = 0;
       const push = () => { if (cur) pieces.push(cur); cur = null; };
-      for (const ch of chars) {
+      for (const ch of Array.from(run.text)) {
         const cp = ch.codePointAt(0);
-        let face = null, raster = false;
-        const f0 = run.style.families[0];
         if (isSpace(ch)) {
-          face = cur ? cur.face : null;
-          raster = !!(cur && cur.raster);
-          if (!face && !raster) { offset += ch.length; continue; }
-        } else if (cp > 0xFFFF || needsShaping(cp) || (f0 && !FAMILIES[f0] && !GENERIC[f0])) {
-          // Веб-шрифт, которого нет среди встраиваемых (например, шрифты TikZ), — рисуем как в браузере
-          raster = true;
-        } else {
-          face = run._cands.find(f => cover(f, cp)) || null;
-          if (!face) {
-            for (const fam of fallbackChain(cp, lang)) {
-              const f = matchFace(fam, run.style.weight, run.style.italic, run.style.sizePx);
-              if (f && cover(f, cp)) { face = f; break; }
-            }
-          }
-          if (!face) raster = true;
+          if (cur) cur.text += ch;
+          offset += ch.length;
+          continue;
         }
-        const key = raster ? 'raster' : faceKey(face);
+        let face = null, invis = null;
+        if (cp <= 0xFFFF && !needsShaping(cp)) face = run._cands.find(f => coverWeb(f, cp)) || null;
+        if (!face && cp <= 0xFFFF && !needsShaping(cp)) invis = invisChain(cp).find(f => cover(f, cp)) || null;
+        const key = face ? faceKey(face) : 'raster:' + (invis ? faceKey(invis) : '');
         if (!cur || cur.key !== key) {
           push();
-          cur = { key, run, face, raster, text: '', start: offset };
+          cur = { key, run, face, raster: !face, invisFace: invis, text: '', start: offset, lang: run.style.lang || lang };
         }
         cur.text += ch;
         offset += ch.length;
       }
       push();
     });
-    // Для растровых кусков — невидимый текст поверх (поиск и копирование), если есть шрифт с этими символами
-    const invisPool = ['google sans', 'noto sans', 'noto sans arabic', 'noto sans hebrew', 'noto sans jp', 'noto sans sc', 'noto sans kr', 'noto sans math', 'noto sans symbols 2'];
-    // Для арабского письма и иврита подгружаем шрифт Noto только ради невидимого слоя
+    // Арабское письмо и иврит: шрифт Noto подгружается только ради невидимого слоя
     const extra = new Map();
     pieces.forEach(p => {
-      if (!p.raster) return;
+      if (!p.raster || p.invisFace) return;
       for (const ch of p.text) {
         const cp = ch.codePointAt(0);
         const fam = (cp >= 0x0600 && cp <= 0x08FF) || (cp >= 0xFB50 && cp <= 0xFDFF) || (cp >= 0xFE70 && cp <= 0xFEFF) ? 'noto sans arabic'
@@ -1349,8 +1443,9 @@
       }
     });
     if (extra.size) await registry.load(Array.from(extra.values()));
+    const invisPool = ['google sans', 'noto sans', 'noto sans arabic', 'noto sans hebrew', 'noto sans jp', 'noto sans sc', 'noto sans kr', 'noto sans math', 'noto sans symbols 2'];
     pieces.forEach(p => {
-      if (!p.raster) return;
+      if (!p.raster || p.invisFace) return;
       const cps = Array.from(p.text).filter(ch => !isSpace(ch)).map(ch => ch.codePointAt(0));
       if (cps.some(cp => cp > 0xFFFF)) return;
       const cands = p.run._cands.concat(invisPool.map(f => matchFace(f, 400, false, p.run.style.sizePx)));
@@ -1358,6 +1453,7 @@
     });
     return pieces;
   }
+
 
   // ---------- Вывод текста в PDF ----------
   function pageOf(y) {
@@ -1408,9 +1504,58 @@
     return size * (1 / 24 + (1 / 32 - 1 / 24) * t);
   }
 
-  function drawPieces(pdf, win, doc, pieces, registry) {
+  function drawPieces(pdf, win, doc, pieces, registry, shaper) {
     const range = doc.createRange();
+    // Текст внутри SVG (подписи диаграмм) сдвигается вместе с корнем SVG, который Chrome ставит в целые пиксели
+    const svgShift = new Map();
+    const shiftFor = el => {
+      const svg = el && el.closest && el.closest('svg');
+      if (!svg) return null;
+      let root = svg;
+      while (root.parentElement && root.parentElement.closest('svg')) root = root.parentElement.closest('svg');
+      if (!svgShift.has(root)) {
+        const r = root.getBoundingClientRect();
+        const x = r.left + win.scrollX, y = r.top + win.scrollY;
+        svgShift.set(root, { dx: Math.round(x) - x, dy: Math.round(y) - y });
+      }
+      return svgShift.get(root);
+    };
+    // Холст в документе (скрытый): атрибут lang на нём действует как на тексте страницы
     const rasterCanvas = doc.createElement('canvas');
+    rasterCanvas.style.cssText = 'position:absolute;left:-99999px;top:0;visibility:hidden';
+    doc.body.appendChild(rasterCanvas);
+    // Растровые куски одной строки одного текстового узла рисуются одним изображением: текст CJK
+    // собран из прогонов по одному символу, а выбор шрифта для пунктуации и её сжатие
+    // (text-spacing-trim) зависят от соседних символов
+    const batchOf = new Map();
+    let open = null;
+    pieces.forEach(p => {
+      const r = p.run;
+      const vis = p.text.replace(/[\s 　]+$/, '');
+      const ok = p.raster && p.invisFace && vis && r.node && !r.isMarker && !r.style.angle && r.gx && !RTL_RE.test(p.text);
+      const s = ok ? (r.nodeStart || 0) + p.start : -1;
+      if (ok && open && open.node === r.node && open.style === r.style && open.clip === r.clip &&
+        Math.abs(open.top - r.top) < 0.6 && s >= open.end && !/[^ \t　]/.test(r.node.data.slice(open.end, s))) {
+        open.pieces.push(p);
+        open.end = s + vis.length;
+      } else {
+        open = ok ? { node: r.node, style: r.style, clip: r.clip, top: r.top, start: s, end: s + vis.length, pieces: [p] } : null;
+      }
+      if (open) batchOf.set(p, open);
+    });
+    batchOf.forEach((b, p) => {
+      if (b.pieces.length < 2) { batchOf.delete(p); return; }
+      if (b.text) return;
+      b.text = b.node.data.slice(b.start, b.end);
+      b.glyphs = [];
+      b.pieces.forEach(q => {
+        const base = q.run.nodeStart || 0;
+        q.run.gx.forEach(g => {
+          if (g.o >= q.start && g.o < q.start + q.text.length && base + g.o < b.end) b.glyphs.push(Object.assign({}, g, { o: base + g.o }));
+        });
+      });
+      b.right = Math.max(...b.glyphs.map(g => g.x + g.w));
+    });
     pieces.forEach(p => {
       const run = p.run;
       const st = run.style;
@@ -1432,13 +1577,29 @@
       }
       // При печати Chromium ставит базовую линию обычного (не масштабированного) текста на целый пиксель
       let baseline = run.baselineY !== undefined ? run.baselineY : run.top + run.ascent;
-      if (!run.svgText && (st.scale || 1) === 1 && !st.angle) baseline = Math.round(baseline);
+      const sh = !run.isMarker ? shiftFor(run.el) : null;
+      let snapped = false;
+      if (sh) {
+        // Подпись в foreignObject: базовая линия округляется в координатах самого foreignObject
+        // (его сдвиг transform дробный), а не страницы
+        const fo = !run.svgText && run.el && run.el.closest && run.el.closest('foreignObject');
+        if (fo) {
+          const foTop = fo.getBoundingClientRect().top + win.scrollY;
+          baseline = foTop + sh.dy + Math.round(baseline - foTop);
+          snapped = true;
+        } else baseline += sh.dy;
+        left += sh.dx;
+      }
+      if (!snapped && !run.svgText && (st.scale || 1) === 1 && !st.angle) baseline = Math.round(baseline);
       const page = pageOf(run.top + run.height / 2);
       ensurePages(pdf, page + 1);
       pdf.setPage(page + 1);
       const sizePx = st.sizePx * (st.scale || 1);
       const pt = toPt(left, baseline, page);
       const c = st.color;
+      // Позиции графем куска из раскладки браузера
+      let pgl = !st.angle && run.gx ? run.gx.filter(g => g.o >= p.start && g.o < p.start + visText.length) : null;
+      if (pgl && sh) pgl = pgl.map(g => Object.assign({}, g, { x: g.x + sh.dx }));
       let invisible = false;
       if (p.raster) {
         if (!p.invisFace) {
@@ -1447,7 +1608,7 @@
           let hex = 'FEFF';
           for (let i = 0; i < visText.length; i++) hex += visText.charCodeAt(i).toString(16).toUpperCase().padStart(4, '0');
           pdf.internal.write('/Span <</ActualText <' + hex + '>>> BDC');
-          drawRasterText(pdf, doc, rasterCanvas, visText, st, left, baseline, width, page, run.clip);
+          drawRasterText(pdf, doc, rasterCanvas, visText, st, left, baseline, width, page, run.clip, pgl, p.start, p.lang);
           const sp = (p.run._cands || []).map(f => registry.get(f)).find(e => e && e.cmap[32]);
           if (sp) {
             // q/Q: масштаб (Tz) и режим вывода входят в графическое состояние и не должны «утечь»
@@ -1463,7 +1624,12 @@
           pdf.internal.write('EMC');
           return;
         }
-        drawRasterText(pdf, doc, rasterCanvas, visText, st, left, baseline, width, page, run.clip);
+        const bt = batchOf.get(p);
+        if (!bt) drawRasterText(pdf, doc, rasterCanvas, visText, st, left, baseline, width, page, run.clip, pgl, p.start, p.lang);
+        else if (bt.pieces[0] === p) {
+          const bg = sh ? bt.glyphs.map(g => Object.assign({}, g, { x: g.x + sh.dx })) : bt.glyphs;
+          drawRasterText(pdf, doc, rasterCanvas, bt.text, st, left, baseline, bt.right + (sh ? sh.dx : 0) - left, page, run.clip, bg, bt.start, p.lang);
+        }
         invisible = true;
       }
       const face = invisible ? p.invisFace : p.face;
@@ -1509,6 +1675,14 @@
           pt.x = px;
           pt.y = PAGE.hPt - py;
         }
+        // Видимый текст: каждый глиф — в точке из раскладки браузера, без растяжения (оператор TJ).
+        // Кернинг шрифта и сжатие пунктуации сдвигают соседей, но не меняют форму глифа — как у Chrome
+        // Невидимый слой над изображением — тоже по позициям глифов (кроме письма справа налево)
+        const gl = invisible && RTL_RE.test(p.text) ? null : pgl;
+        if (gl && gl.length) {
+          writeGlyphRun(pdf, entry, run.text, gl, sizePx, baseline, page, c, opts.renderingMode, face.synthItalic ? 0.25 : 0, shaper, st);
+          return;
+        }
         if (invisible && RTL_RE.test(p.text)) {
           // Невидимый слой для письма справа налево: символы в зрительном порядке (как у Chromium),
           // программы просмотра сами восстанавливают логический. Пишем сами — jsPDF заменил бы
@@ -1518,9 +1692,147 @@
         } else pdf.text(p.text, pt.x, pt.y, opts);
       });
     });
+    rasterCanvas.remove();
   }
 
   const RTL_RE = /[֐-ࣿיִ-﷿ﹰ-﻿]/;
+  // ---------- Формирование глифов (HarfBuzz) ----------
+  // Chrome формирует текст HarfBuzz: лигатуры и контекстные формы (например, «=>» в JetBrains Mono
+  // становится стрелкой), табличные цифры и т. п. Тот же HarfBuzz выбирает глифы для PDF;
+  // если библиотека недоступна (нет сети и кэша), глифы берутся по таблице cmap, как раньше
+
+  // Возможности OpenType из CSS — как их включает Chrome
+  function featureString(style) {
+    const f = [];
+    const off = ['-liga', '-clig', '-dlig', '-hlig', '-calt'];
+    const ls = style.letterSpacing;
+    // При ненулевом letter-spacing Chrome отключает необязательные лигатуры
+    if (ls && ls !== 'normal' && parseFloat(ls)) f.push(...off);
+    const lig = style.ligatures || 'normal';
+    if (/\bnone\b/.test(lig)) f.push(...off);
+    if (/no-common-ligatures/.test(lig)) f.push('-liga', '-clig');
+    if (/no-contextual/.test(lig)) f.push('-calt');
+    if (/(^|\s)discretionary-ligatures/.test(lig)) f.push('dlig');
+    if (/(^|\s)historical-ligatures/.test(lig)) f.push('hlig');
+    if (style.kerning === 'none') f.push('-kern');
+    const num = style.numeric || '';
+    [['tabular-nums', 'tnum'], ['proportional-nums', 'pnum'], ['lining-nums', 'lnum'], ['oldstyle-nums', 'onum'],
+      ['slashed-zero', 'zero'], ['diagonal-fractions', 'frac'], ['ordinal', 'ordn']].forEach(([k, t]) => {
+      if (num.indexOf(k) >= 0) f.push(t);
+    });
+    const fs = style.featureSettings;
+    if (fs && fs !== 'normal') {
+      fs.split(',').forEach(part => {
+        const m = /["']([\x20-\x7e]{4})["']\s*(on|off|\d+)?/.exec(part.trim());
+        if (m) f.push(m[1] + '=' + (m[2] === 'off' ? 0 : m[2] === undefined || m[2] === 'on' ? 1 : +m[2]));
+      });
+    }
+    return f.join(',');
+  }
+
+  // Загружает HarfBuzz (скрипты уже подключены в iframe); null — формирование недоступно
+  async function loadShaper(win, lang) {
+    if (typeof win.createHarfBuzz !== 'function' || typeof win.hbjs !== 'function') return null;
+    let hb;
+    try {
+      const base = LIBS.hb.replace(/[^/]+$/, '');
+      hb = win.hbjs(await win.createHarfBuzz({ locateFile: f => base + f }));
+    } catch (e) {
+      console.warn('[pdf] HarfBuzz unavailable', e);
+      return null;
+    }
+    const fonts = new Map();
+    return {
+      // Глифы строки: [{ g, cl, ax, dx }] в единицах шрифта; cl — смещение символа (UTF-16)
+      shape(entry, str, style) {
+        let font = fonts.get(entry.name);
+        if (font === undefined) {
+          try { font = entry.bytes ? hb.createFont(hb.createFace(hb.createBlob(entry.bytes), 0)) : null; } catch (e) { font = null; }
+          fonts.set(entry.name, font);
+        }
+        if (!font) return null;
+        const buf = hb.createBuffer();
+        try {
+          buf.addText(str);
+          buf.setDirection('ltr');
+          buf.setLanguage(style.lang || lang || 'en');
+          buf.guessSegmentProperties();
+          hb.shape(font, buf, featureString(style));
+          return buf.json();
+        } catch (e) {
+          return null;
+        } finally {
+          buf.destroy();
+        }
+      }
+    };
+  }
+
+  // Глифы куска по позициям из раскладки браузера: [<глиф> сдвиг <глиф> …] TJ.
+  // Сдвиг — разница между позицией следующего глифа и концом предыдущего по его собственной ширине.
+  // Первый глиф каждого символа (кластера) ставится туда, где символ стоит в раскладке; лигатура —
+  // на место первого символа. Если глифы не совпадают с символами один к одному, исходный текст
+  // сохраняется в /ActualText (копирование и поиск)
+  function writeGlyphRun(pdf, entry, text, glyphs, sizePx, baseline, page, color, mode, skew, shaper, style) {
+    const font = pdf.internal.getFont(entry.name, 'normal');
+    const md = font.metadata;
+    const sizePt = sizePx * PAGE.k;
+    const upm = entry.upm || 1000;
+    const from = glyphs[0].o;
+    const last = glyphs[glyphs.length - 1];
+    const str = text.slice(from, last.o + last.len);
+    const posAt = new Map(glyphs.map(g => [g.o - from, g]));
+    let shaped = shaper ? shaper.shape(entry, str, style) : null;
+    if (!shaped || !shaped.length || shaped.some(G => !G.g)) {
+      shaped = glyphs.map(g => ({ g: md.characterToGlyph(text.charCodeAt(g.o)), cl: g.o - from, ax: null, dx: 0 }));
+    }
+    let natural = shaped.length === str.length;
+    let tj = '';
+    let prevEnd = null, firstX = null, cursor = 0, lastCl = -1;
+    shaped.forEach(G => {
+      const ch = str[G.cl] || '';
+      if (natural && G.g !== md.characterToGlyph(ch.charCodeAt(0))) natural = false;
+      const w1000 = md.widthOfGlyph(G.g);
+      const nat = w1000 / 1000 * sizePx;
+      const p = G.cl !== lastCl ? posAt.get(G.cl) : null;
+      let x = p ? p.x : cursor;
+      // Открывающая скобка CJK, сжатая браузером (text-spacing-trim): убрана пустая левая половина
+      if (p && CJK_OPEN.test(ch) && nat > p.w + 0.5) x -= nat - p.w;
+      cursor = x + (G.ax !== null && G.ax !== undefined ? G.ax / upm * sizePx : nat);
+      x += (G.dx || 0) / upm * sizePx;
+      if (prevEnd === null) firstX = x;
+      else {
+        const gap = x - prevEnd;
+        if (Math.abs(gap) > 0.0005) tj += (-gap * 1000 / sizePx).toFixed(3);
+      }
+      // Глиф попадает в подмножество шрифта, ширину (W) и ToUnicode — как в jsPDF pdfEscape16
+      md.glyIdsUsed.push(G.g);
+      if (md.toUnicode[G.g] === undefined && ch) md.toUnicode[G.g] = ch.charCodeAt(0);
+      if (md.Unicode.widths.indexOf(G.g) === -1) {
+        md.Unicode.widths.push(G.g);
+        md.Unicode.widths.push([parseInt(w1000, 10)]);
+      }
+      tj += '<' + G.g.toString(16).padStart(4, '0') + '>';
+      prevEnd = x + nat;
+      lastCl = G.cl;
+    });
+    const pt = toPt(firstX, baseline, page);
+    const X = pt.x.toFixed(3), Y = (PAGE.hPt - pt.y).toFixed(3);
+    const rgb = [color.r, color.g, color.b].map(v => (v / 255).toFixed(4)).join(' ');
+    // Параметры текста входят в графическое состояние: сбрасываем то, что мог оставить предыдущий вывод
+    let s = 'BT\n/' + font.id + ' ' + sizePt.toFixed(3) + ' Tf\n100 Tz\n0 Tc\n0 Tw\n0 Ts\n' +
+      (mode === 'fillThenStroke' ? 2 : mode === 'invisible' ? 3 : 0) + ' Tr\n' + rgb + ' rg\n';
+    // Синтетический курсив — наклон как у Skia
+    s += skew ? '1 0 ' + skew + ' 1 ' + X + ' ' + Y + ' Tm\n' : X + ' ' + Y + ' Td\n';
+    s += '[' + tj + '] TJ\nET';
+    if (!natural) {
+      let hex = 'FEFF';
+      for (let i = 0; i < str.length; i++) hex += str.charCodeAt(i).toString(16).toUpperCase().padStart(4, '0');
+      s = '/Span <</ActualText <' + hex + '>>> BDC\n' + s + '\nEMC';
+    }
+    pdf.internal.write(s);
+  }
+
   // Невидимый текст (режим 3 Tr) напрямую в поток страницы; кодирование глифов и ToUnicode — средствами jsPDF
   function writeRawText(pdf, entry, text, x, y, sizePt, hs) {
     const font = pdf.internal.getFont(entry.name, 'normal');
@@ -1531,28 +1843,76 @@
     pdf.internal.write(s);
   }
 
-  // Фрагменты без подходящего встраиваемого шрифта (эмодзи, сложные письменности) — растр как в браузере
-  function drawRasterText(pdf, doc, canvas, text, st, left, baseline, width, page, clip) {
+  // Текст, которого нет во встраиваемых веб-шрифтах (системные шрифты, эмодзи, сложные письменности), —
+  // изображение отрисовки самого браузера: canvas с тем же font-family и языком выбирает тот же
+  // системный шрифт, что и раскладка страницы, поэтому формы глифов совпадают с Chrome.
+  // glyphs — позиции графем из раскладки (сдвиги от кернинга и сжатия пунктуации), start — смещение куска
+  function drawRasterText(pdf, doc, canvas, text, st, left, baseline, width, page, clip, glyphs, start, lang) {
     const SCALE = 4;
     const ctx = canvas.getContext('2d');
     const size = st.sizePx * (st.scale || 1);
     const font = `${st.fontStyle} ${st.weight} ${size}px ${st.familyCss}`;
-    ctx.font = font;
+    // Язык влияет на выбор шрифта и форм иероглифов (как атрибут lang у текста страницы)
+    const setup = () => {
+      ctx.font = font;
+      if (lang) {
+        canvas.setAttribute('lang', lang);
+        if ('lang' in ctx) ctx.lang = lang;
+      }
+      if ('letterSpacing' in ctx && st.letterSpacing && st.letterSpacing !== 'normal') ctx.letterSpacing = st.letterSpacing;
+      if ('fontKerning' in ctx && st.kerning) ctx.fontKerning = st.kerning;
+    };
+    setup();
     const m = ctx.measureText(text);
+    // Группы графем с одинаковым сдвигом относительно canvas: каждая рисуется всей строкой
+    // (контекст сохраняет тот же выбор шрифта для пунктуации), но видна только в своих границах
+    const groups = [];
+    if (glyphs && glyphs.length && !RTL_RE.test(text)) {
+      glyphs.forEach(g => {
+        const lo = g.o - (start || 0);
+        if (lo < 0 || lo >= text.length) return;
+        const adv = ctx.measureText(text.slice(0, lo)).width;
+        // Ширина графемы в контексте строки: canvas тоже сжимает пунктуацию CJK (text-spacing-trim)
+        const cw = ctx.measureText(text.slice(0, lo + g.len)).width - adv;
+        const xd = g.x - left;
+        // Открывающая скобка CJK, сжатая раскладкой сильнее, чем на canvas: убрана пустая левая половина
+        const origin = CJK_OPEN.test(text.substr(lo, g.len)) && g.w < cw - 0.5 ? xd + g.w - cw : xd;
+        const d = origin - adv;
+        const last = groups[groups.length - 1];
+        if (last && Math.abs(last.d - d) < 0.25) last.x1 = xd + g.w;
+        else groups.push({ d, x0: xd, x1: xd + g.w });
+      });
+    }
+    if (!groups.length) groups.push({ d: 0, x0: 0, x1: m.width });
+    const minD = Math.min(0, ...groups.map(g => g.d));
+    const maxD = Math.max(0, ...groups.map(g => g.d));
     const asc = Math.ceil(Math.max(m.actualBoundingBoxAscent || size, m.fontBoundingBoxAscent || 0)) + 2;
     const desc = Math.ceil(Math.max(m.actualBoundingBoxDescent || 0, m.fontBoundingBoxDescent || 0)) + 2;
-    const padL = Math.ceil(Math.max(0, m.actualBoundingBoxLeft || 0)) + 2;
-    const w = Math.ceil(Math.max(m.width, (m.actualBoundingBoxRight || 0)) ) + padL + 2;
+    const padL = Math.ceil(Math.max(0, m.actualBoundingBoxLeft || 0) - minD) + 2;
+    const w = Math.ceil(Math.max(m.width, m.actualBoundingBoxRight || 0, width) + maxD) + padL + 2;
     if (w <= 0) return;
     canvas.width = w * SCALE;
     canvas.height = (asc + desc) * SCALE;
     ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
     ctx.clearRect(0, 0, w, asc + desc);
-    ctx.font = font;
+    setup();
     ctx.textBaseline = 'alphabetic';
     const c = st.color;
     ctx.fillStyle = `rgb(${c.r},${c.g},${c.b})`;
-    ctx.fillText(text, padL, asc);
+    if (groups.length === 1) ctx.fillText(text, padL + groups[0].d, asc);
+    else {
+      groups.forEach((g, i) => {
+        // Граница между группами — по границе графем в раскладке браузера
+        const a = i ? padL + g.x0 : 0;
+        const b = i < groups.length - 1 ? padL + groups[i + 1].x0 : w;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(a, 0, b - a, asc + desc);
+        ctx.clip();
+        ctx.fillText(text, padL + g.d, asc);
+        ctx.restore();
+      });
+    }
     const data = canvas.toDataURL('image/png');
     const pt = toPt(left - padL, baseline - asc, page);
     withClip(pdf, clip, page, () => {
@@ -1741,6 +2101,8 @@
       return origAddImage.call(this, data, format, x, y, w, h, alias, compression && compression !== 'NONE' ? compression : 'FAST', rotation);
     };
     const origDrawImage = ctx.drawImage;
+    // Обрезка jsPDF без откладывания (см. «Отложенная обрезка» ниже)
+    const clipNow = ctx.clip;
     const origFill = ctx.fill;
     const origFillRect = ctx.fillRect;
     const origSave = ctx.save, origRestore = ctx.restore;
@@ -1825,7 +2187,7 @@
         const src = patterns.get(style);
         const img = toPng(src);
         this.save();
-        this.clip();
+        clipNow.call(this);
         withAlpha.call(this, ga, ga, () => origDrawImage.call(this, img.data, 0, 0, img.pw, img.ph, 0, 0, img.w, img.h));
         this.restore();
         return;
@@ -1861,8 +2223,8 @@
       const dx = (this.shadowOffsetX || 0) * k, dy = (this.shadowOffsetY || 0) * k;
       const blur = (this.shadowBlur || 0) * k;
       const pad = blur * 1.5 + 2;
-      // Размытая тень плавная — высокое разрешение ей не нужно
-      const S = 1.5;
+      // Разрешение растра тени — 300 dpi, как у Chrome при печати (при меньшем край размытия заметно другой)
+      const S = 300 / 72;
       const wPt = maxX - minX + pad * 2, hPt = maxY - minY + pad * 2;
       if (wPt <= 0 || hPt <= 0 || wPt * hPt * S * S > 4e7) return;
       canvas.width = Math.ceil(wPt * S);
@@ -1914,7 +2276,7 @@
     ctx.drawImage = function () {
       lastWasText = false;
       const ga = this.ctx.globalAlpha === undefined ? 1 : this.ctx.globalAlpha;
-      const args = arguments;
+      const args = Array.from(arguments);
       return withAlpha.call(this, ga, ga, () => drawImageInner.apply(this, args));
     };
     function drawImageInner(img, sx, sy, sw, sh, dx, dy, dw, dh) {
@@ -1925,6 +2287,8 @@
       }
       if (typeof img === 'string') return origDrawImage.call(this, img, sx, sy, sw, sh, dx, dy, dw, dh);
       const src = img && img.src;
+      // Место SVG, которое выводится векторами (drawSvgVectors), — ничего не рисуем
+      if (src && src.indexOf(SVG_BLANK_MARK) >= 0) return;
       try {
         if (src && /^data:image\/svg\+xml/.test(src)) {
           const S = 3;
@@ -1957,6 +2321,71 @@
         console.warn('[pdf] image skipped', src, e);
       }
     }
+
+    // Отложенная обрезка. Перед заливкой фона html2canvas обрезает по той же фигуре (clip → fill).
+    // В PDF край сглаживается дважды (обрезкой и заливкой), и на стыке соседних заливок
+    // (ячейки заголовка таблицы) просвечивает светлая полоска. Обрезка по той же фигуре, что
+    // и заливка, ничего не меняет, поэтому применяется только перед операцией, которая рисует другое
+    // Фон и рамки Chrome рисует по прямоугольнику, округлённому до целых пикселей (PixelSnappedIntRect) —
+    // в том числе после transform (например, translateY(-50%) у полоски заголовка). Рамка фигуры
+    // округляется до целых CSS px, точки пересчитываются линейно (форма скруглений сохраняется)
+    const snapPath = function () {
+      const T = this.ctx.transform;
+      if (!T || Math.abs(T.shx) > 1e-9 || Math.abs(T.shy) > 1e-9 || !T.sx || !T.sy) return;
+      let L = Infinity, Tp = Infinity, R = -Infinity, B = -Infinity;
+      this.path.forEach(p => {
+        if (p.x === undefined) return;
+        L = Math.min(L, p.x); R = Math.max(R, p.x); Tp = Math.min(Tp, p.y); B = Math.max(B, p.y);
+      });
+      if (!isFinite(L)) return;
+      const l = (L - T.tx) / T.sx, r = (R - T.tx) / T.sx, t = (Tp - T.ty) / T.sy, b = (B - T.ty) / T.sy;
+      const ls = Math.round(l), rs = Math.round(r), ts = Math.round(t), bs = Math.round(b);
+      if (Math.abs(ls - l) < 1e-6 && Math.abs(rs - r) < 1e-6 && Math.abs(ts - t) < 1e-6 && Math.abs(bs - b) < 1e-6) return;
+      const map = (v, o, sc, a, z, as, zs) => {
+        const px = (v - o) / sc;
+        return o + sc * (z - a > 1e-6 ? as + (px - a) * (zs - as) / (z - a) : px + as - a);
+      };
+      const fx = v => map(v, T.tx, T.sx, l, r, ls, rs), fy = v => map(v, T.ty, T.sy, t, b, ts, bs);
+      this.path.forEach(p => {
+        if (p.x !== undefined) { p.x = fx(p.x); p.y = fy(p.y); }
+        if (p.x1 !== undefined) { p.x1 = fx(p.x1); p.y1 = fy(p.y1); }
+        if (p.x2 !== undefined) { p.x2 = fx(p.x2); p.y2 = fy(p.y2); }
+      });
+    };
+    let pendingClip = null;
+    const flushClip = function () {
+      if (!pendingClip) return;
+      const cur = this.path;
+      this.path = JSON.parse(pendingClip.path);
+      const args = pendingClip.args;
+      pendingClip = null;
+      clipNow.apply(this, args);
+      this.path = cur;
+    };
+    ctx.clip = function () {
+      flushClip.call(this);
+      snapPath.call(this);
+      pendingClip = { path: JSON.stringify(this.path), args: Array.from(arguments) };
+    };
+    ['stroke', 'fillRect', 'strokeRect', 'clearRect', 'drawImage', 'save'].forEach(name => {
+      const fn = ctx[name];
+      ctx[name] = function () {
+        flushClip.call(this);
+        return fn.apply(this, arguments);
+      };
+    });
+    const fillImpl = ctx.fill;
+    ctx.fill = function () {
+      snapPath.call(this);
+      if (!pendingClip || pendingClip.path !== JSON.stringify(this.path)) flushClip.call(this);
+      return fillImpl.apply(this, arguments);
+    };
+    const restoreImpl = ctx.restore;
+    ctx.restore = function () {
+      // Обрезка не понадобилась ни одной операции этого уровня — просто отбрасываем
+      pendingClip = null;
+      return restoreImpl.apply(this, arguments);
+    };
   }
 
   // Запоминаем параметры градиентов, которые html2canvas рисует на временном холсте
@@ -2007,7 +2436,8 @@
       // в копию документа все вычисленные стили, и у элементов SVG свойства геометрии из CSS
       // (x, y, width, transform…) перекрывали бы атрибуты — фигуры исчезали бы
       cloneDoc.querySelectorAll('svg[data-zpdf-svg]').forEach(svg => {
-        const url = cloneInfo.svgs && cloneInfo.svgs[svg.getAttribute('data-zpdf-svg')];
+        const item = cloneInfo.svgs && cloneInfo.svgs[svg.getAttribute('data-zpdf-svg')];
+        const url = item && item.url;
         if (!url) return;
         const img = cloneDoc.createElement('img');
         img.style.cssText = svg.style.cssText;
@@ -2130,8 +2560,8 @@
     });
   }
 
-  // «Чистые» копии SVG для растра (без текста и foreignObject — их рисует слой текста),
-  // с явным размером в пикселях. Ключ — атрибут data-zpdf-svg у исходного элемента
+  // «Чистые» копии SVG (без текста и foreignObject — их рисует слой текста) с явным размером в пикселях:
+  // для векторного вывода (svg2pdf) и, если он невозможен, для растра. Ключ — атрибут data-zpdf-svg
   function prepareSvgImages(win, root) {
     const out = {};
     let seq = 0;
@@ -2147,9 +2577,117 @@
       if (!c.getAttribute('xmlns')) c.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
       const id = String(++seq);
       svg.setAttribute('data-zpdf-svg', id);
-      out[id] = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new win.XMLSerializer().serializeToString(c));
+      out[id] = {
+        el: c, left: r.left + win.scrollX, top: r.top + win.scrollY, w: r.width, h: r.height,
+        url: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new win.XMLSerializer().serializeToString(c))
+      };
     });
     return out;
+  }
+
+  // ---------- SVG векторами (svg2pdf.js) ----------
+  // Chrome выводит SVG (диаграммы Mermaid, корни в формулах KaTeX) векторами. Каждый SVG сначала
+  // пробно выводится в отдельный документ: если получилось, html2canvas на его месте ничего не рисует
+  // (пустая заглушка того же размера), а сам SVG выводится векторами после фона. Иначе — растр
+  const SVG_BLANK_MARK = 'data-zpdf-blank';
+  // svg2pdf всегда масштабирует маркер (наконечники стрелок) толщиной линии, а у маркеров Mermaid
+  // markerUnits="userSpaceOnUse" — размер не зависит от толщины. Для каждой толщины делаем копию
+  // маркера, уменьшенную во столько же раз: итоговый размер — как в браузере
+  function fixMarkersForSvg2pdf(win, svgEl) {
+    const markers = new Map();
+    svgEl.querySelectorAll('marker').forEach(m => {
+      if (m.id && m.getAttribute('markerUnits') === 'userSpaceOnUse') markers.set(m.id, m);
+    });
+    if (!markers.size) return;
+    svgEl.querySelectorAll('*').forEach(el => {
+      ['marker-start', 'marker-mid', 'marker-end'].forEach(prop => {
+        const val = (el.style && el.style.getPropertyValue(prop)) || el.getAttribute(prop) || '';
+        const m = /url\(["']?[^#"')]*#([^"')]+)["']?\)/.exec(val);
+        if (!m || !markers.has(m[1])) return;
+        const sw = parseFloat((el.style && el.style.getPropertyValue('stroke-width')) || el.getAttribute('stroke-width') || '1') || 1;
+        if (Math.abs(sw - 1) < 1e-6) return;
+        const key = m[1] + '-zsw' + String(sw).replace(/\W/g, '_');
+        if (!svgEl.querySelector('#' + win.CSS.escape(key))) {
+          const src = markers.get(m[1]);
+          const copy = src.cloneNode(true);
+          copy.id = key;
+          ['markerWidth', 'markerHeight'].forEach(a => copy.setAttribute(a, String((parseFloat(src.getAttribute(a)) || 3) / sw)));
+          if (!copy.getAttribute('viewBox')) {
+            // Без viewBox содержимое маркера не масштабируется по markerWidth (это только область
+            // обрезки): уменьшаем само содержимое, а точку привязки — в том же масштабе
+            const g = copy.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.setAttribute('transform', 'scale(' + 1 / sw + ')');
+            while (copy.firstChild) g.appendChild(copy.firstChild);
+            copy.appendChild(g);
+            ['refX', 'refY'].forEach(a => copy.setAttribute(a, String((parseFloat(src.getAttribute(a)) || 0) / sw)));
+          }
+          src.parentNode.appendChild(copy);
+        }
+        const ref = 'url(#' + key + ')';
+        if (el.style) el.style.setProperty(prop, ref);
+        if (el.hasAttribute(prop)) el.setAttribute(prop, ref);
+      });
+    });
+  }
+  async function planSvgVectors(win, doc, svgs) {
+    const out = [];
+    if (!svgs || !win.svg2pdf || !win.jspdf) return out;
+    const host = doc.createElement('div');
+    host.style.cssText = 'position:absolute;left:-99999px;top:0;width:0;height:0;overflow:hidden';
+    doc.body.appendChild(host);
+    for (const id of Object.keys(svgs)) {
+      const item = svgs[id];
+      try {
+        host.appendChild(item.el);
+        fixMarkersForSvg2pdf(win, item.el);
+        const test = new win.jspdf.jsPDF({ unit: 'pt', format: [PAGE.wPt, PAGE.hPt] });
+        await test.svg(item.el, { x: 0, y: 0, width: item.w * PAGE.k, height: item.h * PAGE.k });
+        item.url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(
+          '<svg xmlns="http://www.w3.org/2000/svg" ' + SVG_BLANK_MARK + '="1" width="' + item.w + '" height="' + item.h + '"></svg>');
+        out.push(Object.assign({ id }, item));
+      } catch (e) {
+        console.warn('[pdf] SVG as raster', e);
+      } finally {
+        item.el.remove();
+      }
+    }
+    host.remove();
+    return out;
+  }
+  async function drawSvgVectors(pdf, win, doc, root, vectors) {
+    if (!vectors.length) return;
+    const host = doc.createElement('div');
+    host.style.cssText = 'position:absolute;left:-99999px;top:0;width:0;height:0;overflow:hidden';
+    doc.body.appendChild(host);
+    const clipCache = new Map();
+    for (const v of vectors) {
+      const orig = doc.querySelector('[data-zpdf-svg="' + v.id + '"]');
+      // Обрезка контейнером (overflow) — как у остального содержимого
+      const clip = orig ? clipRectFor(win, orig.parentElement || orig, root, clipCache) : null;
+      host.appendChild(v.el);
+      const first = pageOf(v.top + 0.01), last = pageOf(v.top + v.h - 0.01);
+      for (let pg = first; pg <= last; pg++) {
+        ensurePages(pdf, pg + 1);
+        pdf.setPage(pg + 1);
+        // Chrome ставит корневой SVG (как и изображения) в целые пиксели
+        const pt = toPt(Math.round(v.left), Math.round(v.top), pg);
+        // Видимая область страницы (и контейнера) — как при печати
+        let x0 = 0, y0 = pg * PAGE.contentH, x1 = PAGE.clipW, y1 = pg * PAGE.contentH + PAGE.clipH;
+        if (clip) { x0 = Math.max(x0, clip.l); y0 = Math.max(y0, clip.t); x1 = Math.min(x1, clip.r); y1 = Math.min(y1, clip.b); }
+        if (x1 <= x0 || y1 <= y0) continue;
+        const c0 = toPt(x0, y0, pg);
+        pdf.saveGraphicsState();
+        pdf.rect(c0.x, c0.y, (x1 - x0) * PAGE.k, (y1 - y0) * PAGE.k, null).clip().discardPath();
+        try {
+          await pdf.svg(v.el, { x: pt.x, y: pt.y, width: v.w * PAGE.k, height: v.h * PAGE.k });
+        } catch (e) {
+          console.warn('[pdf] SVG vector output failed', e);
+        }
+        pdf.restoreGraphicsState();
+      }
+      v.el.remove();
+    }
+    host.remove();
   }
 
   // Фон подписей внутри foreignObject (html2canvas рисует SVG одним растром без него)
@@ -2198,8 +2736,17 @@
     const markers = collectMarkers(win, doc, root, metrics);
     const markerRuns = markers.filter(m => m.kind === 'text').map(m => {
       const am = metrics.ascent(m.style.familyCss, m.style.sizePx, m.style.weight, m.style.fontStyle);
+      // Позиции символов маркера — с табличными цифрами, как у ::marker в Chromium (без растяжения глифов)
+      const tw = t => (t ? metrics.textWidth(m.style.cssFont, t, 'font-variant-numeric:tabular-nums') : 0);
+      const gx = [];
+      let o = 0;
+      for (const ch of m.text) {
+        const before = tw(m.text.slice(0, o));
+        gx.push({ o, len: ch.length, x: m.x + before, w: tw(m.text.slice(0, o + ch.length)) - before });
+        o += ch.length;
+      }
       return {
-        text: m.text, left: m.x, right: m.x + metrics.textWidth(m.style.cssFont, m.text, 'font-variant-numeric:tabular-nums'),
+        text: m.text, left: m.x, right: m.x + tw(m.text), gx,
         top: m.baseline - am.ascent, height: am.height, baselineY: m.baseline, style: m.style, clip: null, isMarker: true
       };
     });
@@ -2213,8 +2760,20 @@
     const images = await prefetchImages(doc);
 
     const pdf = new win.jspdf.jsPDF({ unit: 'pt', format: [PAGE.wPt, PAGE.hPt], orientation: 'portrait', compress: true });
+    // jsPDF пишет цвет заливки и обводки с двумя знаками (#EA4335 → 0.92 → 235): цвета немного
+    // отличались бы от Chrome. Компоненты-строки jsPDF выводит как есть — передаём их с пятью знаками
+    ['setFillColor', 'setDrawColor'].forEach(name => {
+      const fn = pdf[name];
+      pdf[name] = function (a, b, c, d) {
+        if (typeof a === 'number' && typeof b === 'number' && typeof c === 'number' && (d === undefined || (d && typeof d === 'object'))) {
+          const p = [a, b, c].map(v => String(+(Math.min(255, Math.max(0, v)) / 255).toFixed(5)));
+          return d === undefined ? fn.call(this, p[0], p[1], p[2]) : fn.call(this, p[0], p[1], p[2], d);
+        }
+        return fn.apply(this, arguments);
+      };
+    });
     const registry = makeFontRegistry(pdf);
-    const pieces = await assignFonts(registry, runs, markerRuns, lang);
+    const pieces = await assignFonts(registry, runs, markerRuns, lang, webFontRanges(doc));
 
     hookGradients(win);
     patchContext(pdf, win, images);
@@ -2226,6 +2785,7 @@
       (PAGE.clipW * PAGE.k).toFixed(3) + ' ' + (PAGE.clipH * PAGE.k).toFixed(3) + ' re W n';
     for (let i = 1; i <= pages; i++) { pdf.setPage(i); pdf.internal.write(pageClip); }
     pdf.setPage(1);
+    const vectors = await planSvgVectors(win, doc, cloneInfo.svgs);
     await pdf.html(root, {
       x: 0,
       y: 0,
@@ -2243,11 +2803,12 @@
     while (pdf.internal.getNumberOfPages() > pages) pdf.deletePage(pdf.internal.getNumberOfPages());
     for (let i = 1; i <= pages; i++) { pdf.setPage(i); pdf.internal.write('Q'); }
 
+    await drawSvgVectors(pdf, win, doc, root, vectors);
     drawRects(pdf, fgRects);
     drawInlineBoxes(pdf, inlineBoxes);
     drawMarkers(pdf, markers);
     drawCheckboxes(pdf, checkboxes);
-    drawPieces(pdf, win, doc, pieces, registry);
+    drawPieces(pdf, win, doc, pieces, registry, await loadShaper(win, lang));
     drawDecorations(pdf, decos, registry);
     drawScrollbars(pdf, scrollbars);
     drawLinks(pdf, links);
@@ -2272,6 +2833,14 @@
       const doc = iframe.contentDocument;
       await loadScript(doc, LIBS.jspdf);
       await loadScript(doc, LIBS.html2canvas);
+      // svg2pdf.js и HarfBuzz необязательны: без них SVG выводится растром, глифы — по таблице cmap
+      try {
+        await loadScript(doc, LIBS.svg2pdf);
+      } catch (e) { /* SVG растром */ }
+      try {
+        await loadScript(doc, LIBS.hb);
+        await loadScript(doc, LIBS.hbjs);
+      } catch (e) { /* без формирования глифов */ }
       await loadScript(doc, SELF_SRC);
       const res = await iframe.contentWindow.ZmdPdf.renderHere({ title: opts.title, lang: opts.lang });
       return new Blob([new Uint8Array(res.buffer)], { type: 'application/pdf' });

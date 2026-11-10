@@ -56,7 +56,7 @@ function buildPreviewHTML(title, opts) {
   title = title || 'Złoty MD Preview';
   const withCopy = !opts || opts.copyButtons !== false;
   const PREVIEW_CSS = `
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
     :root{
       --gb:#4285F4;--gr:#EA4335;--gy:#FBBC04;--gg:#34A853;
       --gbt:#E8F0FE;--grt:#FCE8E6;--gyt:#FEF7E0;--ggt:#E6F4EA;
@@ -102,7 +102,8 @@ function buildPreviewHTML(title, opts) {
     .pre-body::-webkit-scrollbar{height:5px}
     .pre-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:99px}
     .pre-body::-webkit-scrollbar-track{background:transparent}
-    .lang-badge{padding:2px 8px;border-radius:5px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;background:rgba(255,255,255,.1);color:#9AA0A6;line-height:1.6;pointer-events:none;user-select:none;flex-shrink:0}
+    @supports not selector(::-webkit-scrollbar){.pre-body{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}}
+    .lang-badge{padding:2px 8px;border-radius:5px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;background:rgba(255,255,255,.1);color:#9AA0A6;line-height:1.6;pointer-events:none;-webkit-user-select:none;user-select:none;flex-shrink:0}
     .md pre code{background:transparent;color:inherit;padding:0;font-size:12.5px;white-space:pre}
     .md pre .hljs-keyword,.md pre .hljs-selector-tag,.md pre .hljs-doctag,.md pre .hljs-template-tag,.md pre .hljs-meta .hljs-keyword{color:#8ab4f8}
     .md pre .hljs-built_in,.md pre .hljs-type,.md pre .hljs-title.class_,.md pre .hljs-title.class_.inherited__,.md pre .hljs-variable.language_{color:#78d9ec}
@@ -116,7 +117,7 @@ function buildPreviewHTML(title, opts) {
     .md pre .hljs-strong{font-weight:700}
     .diff-wrap{display:block;min-width:max-content}
     .diff-add,.diff-del,.diff-meta,.diff-ctx{display:block;padding:0 var(--s21) 0 calc(var(--s8)*4 + 13px);position:relative;line-height:1.6;min-height:1.6em;white-space:pre;min-width:100%;box-sizing:border-box}
-    .diff-add::before,.diff-del::before,.diff-meta::before,.diff-ctx::before{content:attr(data-mark);position:absolute;left:8px;width:13px;text-align:center;font-weight:700;font-size:11px;line-height:1.6;user-select:none;pointer-events:none;opacity:.9}
+    .diff-add::before,.diff-del::before,.diff-meta::before,.diff-ctx::before{content:attr(data-mark);position:absolute;left:8px;width:13px;text-align:center;font-weight:700;font-size:11px;line-height:1.6;-webkit-user-select:none;user-select:none;pointer-events:none;opacity:.9}
     .diff-add{background:rgba(52,168,83,.13);color:#B4EFCA;border-left:3px solid #34A853}
     .diff-add::before{color:#34A853}
     .diff-del{background:rgba(234,67,53,.13);color:#FFADA6;border-left:3px solid #EA4335}
@@ -236,7 +237,8 @@ function buildPreviewHTML(title, opts) {
   clone.querySelectorAll('.mermaid').forEach(node => {
     const src = node.getAttribute('data-src') || node.dataset.src;
     if (src) {
-      node.innerHTML = src;
+      // Исходник как текст (как в превью): «<» в подписях не должен превращаться в HTML-теги
+      node.textContent = src;
       node.removeAttribute('data-processed');
     }
   });
@@ -271,6 +273,17 @@ function buildPreviewHTML(title, opts) {
     Copyright (c) 2012 Niklas von Hertzen
     MIT License — https://github.com/niklasvh/html2canvas/blob/master/LICENSE
 
+  svg2pdf.js v2.9.0 — used by the editor for PDF export (SVG diagrams and formulas as vectors)
+    Copyright (c) 2015-2026 yWorks GmbH
+    MIT License — https://github.com/yWorks/svg2pdf.js/blob/master/LICENSE
+
+  harfbuzzjs v0.4.12 (HarfBuzz) — used by the editor for PDF export (text shaping: ligatures)
+    Copyright (c) 2019 Ebrahim Byagowi; HarfBuzz: Copyright (c) the HarfBuzz authors
+    MIT License — https://github.com/harfbuzz/harfbuzzjs/blob/main/LICENSE
+    HarfBuzz: "Old MIT" License — https://github.com/harfbuzz/harfbuzz/blob/main/COPYING
+    The WebAssembly build also contains emmalloc (from Emscripten) and Zephyr libc string functions
+    under the Apache License 2.0.
+
   highlight.js v11.11.1 — syntax highlighting in code blocks
     Copyright (c) 2006, Ivan Sagalaev
     BSD 3-Clause License — https://github.com/highlightjs/highlight.js/blob/main/LICENSE
@@ -283,7 +296,7 @@ function buildPreviewHTML(title, opts) {
     Copyright (c) 2020 JetBrains s.r.o.
     SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
 
-  Noto Sans, Noto Serif, Noto Sans JP / KR / SC / TC, Noto Sans Arabic, Noto Sans Hebrew, Noto Sans Math,
+  Noto Sans, Noto Sans JP / KR / SC / TC, Noto Sans Arabic, Noto Sans Hebrew, Noto Sans Math,
   Noto Sans Symbols 2 — embedded into exported PDF files
   only for characters the document fonts do not cover
     Copyright (c) Google LLC
@@ -327,11 +340,18 @@ if(typeof mermaid!=='undefined'){
     flowchart:{htmlLabels:true,curve:'basis'},
     pie:{useMaxWidth:true}});
   (async function(){
+    // Подписи диаграмм измеряются шрифтом страницы: ждём его загрузки, иначе размеры зависят от того,
+    // успел ли шрифт загрузиться (и печать, и PDF получают одинаковую раскладку)
+    if(document.fonts&&document.fonts.ready){try{await document.fonts.ready;}catch(e){}}
     var nodes=Array.from(document.querySelectorAll('.mermaid'));
+    var lastMs=0;
     for(var idx=0;idx<nodes.length;idx++){
       var node=nodes[idx];
       node.id='mmd-'+Date.now()+'-'+idx+'-'+Math.random().toString(36).slice(2,7);
       try{
+        // id SVG у Mermaid — Date.now(): каждая диаграмма рисуется в свою миллисекунду
+        while(Date.now()<=lastMs){await new Promise(function(r){setTimeout(r,1);});}
+        lastMs=Date.now();
         await mermaid.run({nodes:[node],suppressErrors:true});
         node.querySelectorAll('svg').forEach(function(svg){
           var vb=svg.getAttribute('viewBox');
@@ -492,10 +512,30 @@ function _mdConvertCustomTables(v) {
 
 // Точка входа конвертации в стандартный Markdown перед сохранением .md
 function toStandardMarkdown(v) {
-  let out = v;
+  // Блоки кода и инлайн-код переносятся как есть: преобразования применяются только вне их
+  const store = [];
+  let out = '';
+  let last = 0;
+  for (const [a, b] of _findCodeRanges(v)) {
+    out += v.slice(last, a) + '\x02MDC' + store.length + '\x03';
+    store.push(v.slice(a, b));
+    last = b;
+  }
+  out += v.slice(last);
+  out = _mdConvertDiagrams(out);
   out = _mdConvertCustomTables(out);
   out = _mdConvertImageAttrs(out);
-  return out;
+  return out.replace(/\x02MDC(\d+)\x03/g, (_, i) => store[+i]);
+}
+
+// :::mermaid / :::tikz → ```mermaid / ```tikz — общепринятая запись в других редакторах
+function _mdConvertDiagrams(v) {
+  return v.replace(/^[ \t]*:::(mermaid|tikz)[ \t]*\n([\s\S]*?)^[ \t]*:::[ \t]*$/gm, (_, kind, body) => {
+    // Ограждение длиннее любой последовательности апострофов внутри
+    const runs = body.match(/`{3,}/g) || [];
+    const fence = '`'.repeat(Math.max(3, ...runs.map(r => r.length + 1)));
+    return `${fence}${kind}\n${body.replace(/\n$/, '')}\n${fence}`;
+  });
 }
 
 // Разбирает текст .zmd-файла: отделяет метаданные от содержимого документа
@@ -808,23 +848,113 @@ function _esc(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// Применяет diff-разметку (добавлено/удалено) к блоку кода
+// Делит HTML подсветки (hljs) на строки: открытые <span> закрываются в конце строки
+// и открываются снова в начале следующей, чтобы каждую строку можно было обернуть отдельно
+function _splitHighlightedLines(html) {
+  const out = [];
+  const open = [];
+  let cur = '';
+  html.replace(/(<span[^>]*>)|(<\/span>)|([^<]+)/g, (_, o, c, text) => {
+    if (o) {
+      open.push(o);
+      cur += o;
+    } else if (c) {
+      open.pop();
+      cur += c;
+    } else {
+      const parts = text.split('\n');
+      parts.forEach((p, k) => {
+        if (k) {
+          out.push(cur + '</span>'.repeat(open.length));
+          cur = open.join('');
+        }
+        cur += p;
+      });
+    }
+    return '';
+  });
+  out.push(cur + '</span>'.repeat(open.length));
+  return out;
+}
+
+// Подсвечивает строки кода на языке lang; null — если язык недоступен
+function _highlightLines(lines, lang) {
+  if (!lang || typeof hljs === 'undefined' || !hljs.getLanguage(lang)) return null;
+  try {
+    const html = hljs.highlight(lines.join('\n'), { language: lang, ignoreIllegals: true }).value;
+    const res = _splitHighlightedLines(html);
+    return res.length === lines.length ? res : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Применяет diff-разметку (добавлено/удалено) к блоку кода.
+// Для diff_<язык> строки дополнительно раскрашиваются подсветкой синтаксиса этого языка
 function applyDiff(pre, code) {
-  const raw = (code.textContent || '').replace(/\n$/, '');
-  const lines = raw.split('\n');
-  const inner = lines
-    .map(line => {
-      if (/^\+\+\+|^---/.test(line)) {
-        return `<span class="diff-meta" data-mark="~">${_esc(line)}</span>`;
-      } else if (line.startsWith('+')) {
-        return `<span class="diff-add" data-mark="+">${_esc(line.slice(1))}</span>`;
-      } else if (line.startsWith('-')) {
-        return `<span class="diff-del" data-mark="−">${_esc(line.slice(1))}</span>`;
-      } else if (line.startsWith('@@')) {
-        return `<span class="diff-meta" data-mark="@">${_esc(line)}</span>`;
-      } else {
-        return `<span class="diff-ctx" data-mark=" ">${_esc(line)}</span>`;
+  // Исходный текст сохраняем: при повторном вызове (после загрузки языка) разметка уже заменена
+  if (code._diffRaw == null) code._diffRaw = (code.textContent || '').replace(/\n$/, '');
+  const lines = code._diffRaw.split('\n');
+  const kinds = lines.map(line =>
+    /^\+\+\+|^---/.test(line)
+      ? 'meta~'
+      : line.startsWith('+')
+        ? 'add'
+        : line.startsWith('-')
+          ? 'del'
+          : line.startsWith('@@')
+            ? 'meta@'
+            : 'ctx'
+  );
+  const texts = lines.map((line, k) => (kinds[k] === 'add' || kinds[k] === 'del' ? line.slice(1) : line));
+
+  const m = (code.className.match(/language-diff_(\S+)/i) || [])[1];
+  let lang = m ? m.toLowerCase() : '';
+  lang = HLJS_ALIAS[lang] || lang;
+  // Уже загруженный дополнительный язык (ps1 → powershell и т.п.)
+  if (lang && typeof hljs !== 'undefined' && !hljs.getLanguage(lang) && HLJS_EXTRA[lang] && hljs.getLanguage(HLJS_EXTRA[lang]))
+    lang = HLJS_EXTRA[lang];
+  let hl = null;
+  if (lang) {
+    if (typeof hljs !== 'undefined' && hljs.getLanguage(lang)) {
+      // Старая и новая версии подсвечиваются отдельно, чтобы многострочные конструкции
+      // (строки, комментарии) одной версии не «протекали» в другую
+      hl = new Array(lines.length);
+      // Сначала новая версия (её подсветка достаётся и строкам контекста), затем старая
+      for (const side of ['add', 'del']) {
+        const idx = kinds.map((k, n) => (k === side || k === 'ctx' ? n : -1)).filter(n => n >= 0);
+        const res = _highlightLines(idx.map(n => texts[n]), lang);
+        if (!res) {
+          hl = null;
+          break;
+        }
+        idx.forEach((n, j) => {
+          if (kinds[n] === side || hl[n] == null) hl[n] = res[j];
+        });
       }
+      if (hl) code.dataset.hl = lang;
+    } else if (HLJS_EXTRA[lang] && !code._diffLoading) {
+      // Язык не входит в основную сборку: загружаем и раскрашиваем повторно
+      code._diffLoading = true;
+      const extra = HLJS_EXTRA[lang];
+      loadHljsLanguage(extra)
+        .then(() => {
+          if (code.isConnected && hljs.getLanguage(extra)) applyDiff(pre, code);
+        })
+        .catch(() => {})
+        .finally(() => {
+          code._diffLoading = false;
+        });
+    }
+  }
+
+  const CLS = { add: 'diff-add', del: 'diff-del', ctx: 'diff-ctx', 'meta~': 'diff-meta', 'meta@': 'diff-meta' };
+  const MARK = { add: '+', del: '−', ctx: ' ', 'meta~': '~', 'meta@': '@' };
+  const inner = lines
+    .map((line, k) => {
+      const kind = kinds[k];
+      const body = hl && hl[k] != null && !kind.startsWith('meta') ? hl[k] : _esc(texts[k]);
+      return `<span class="${CLS[kind]}" data-mark="${MARK[kind]}">${body}</span>`;
     })
     .join('');
   code.innerHTML = `<span class="diff-wrap">${inner}</span>`;
@@ -974,6 +1104,203 @@ function addCopyBtns() {
   });
 }
 
+// ── Защита кода ──
+// Блоки кода и `инлайн-код` заменяются токенами в самом начале render(), до всех остальных
+// преобразований (LaTeX, TikZ, Mermaid, таблицы, HTML), и возвращаются на место прямо перед
+// marked.parse. Поэтому внутри кода ничего не рендерится — только подсветка синтаксиса и diff.
+const CODE_TOKEN_RE = /\x02CODE(\d+)\x03/g;
+let _codeStore = [];
+
+// Ширина отступа строки (табуляция — до ближайшей позиции, кратной 4)
+function _indentWidth(s) {
+  let w = 0;
+  for (const ch of s) {
+    if (ch === ' ') w++;
+    else if (ch === '\t') w += 4 - (w % 4);
+    else break;
+  }
+  return w;
+}
+
+// Снимает с начала строки не больше maxBq маркеров цитаты «>»
+function _stripQuote(line, maxBq) {
+  let pos = 0;
+  let bq = 0;
+  let m;
+  while (bq < maxBq && (m = /^ {0,3}>[ \t]?/.exec(line.slice(pos)))) {
+    pos += m[0].length;
+    bq++;
+  }
+  return { bq, rest: line.slice(pos) };
+}
+
+// Разбирает строку: уровень цитаты, есть ли маркер списка, колонка и текст после префиксов
+function _codeLineInfo(line) {
+  const { bq, rest: afterQuote } = _stripQuote(line, Infinity);
+  let rest = afterQuote;
+  let list = false;
+  let col = 0;
+  let m;
+  while ((m = /^ {0,3}(?:[-+*]|\d{1,9}[.)])(?:[ \t]+|$)/.exec(rest))) {
+    col += _indentWidth(m[0]) + m[0].trim().length + (m[0].length - m[0].trimEnd().length);
+    rest = rest.slice(m[0].length);
+    list = true;
+  }
+  const indent = _indentWidth(rest);
+  return { bq, list, indent, col: col + indent, text: rest.trim() };
+}
+
+// Находит участки кода [начало, конец): огороженные блоки (``` и ~~~ по правилам CommonMark,
+// в том числе внутри цитат и списков; незакрытый блок идёт до конца документа),
+// блоки с отступом в 4 пробела и инлайн-код. Блоки :::mermaid / :::tikz и LaTeX-документы —
+// не Markdown: обратные апострофы внутри них кодом не считаются
+function _findCodeRanges(v) {
+  const lines = v.split('\n');
+  const starts = [];
+  let off = 0;
+  for (const l of lines) {
+    starts.push(off);
+    off += l.length + 1;
+  }
+  const lineEnd = i => starts[i] + lines[i].length;
+  const blocks = []; // { a, b, code } — code: false для непрозрачных участков
+  let inList = false;
+  let prevBlank = true;
+  let i = 0;
+  // Непрозрачный участок от строки i до первой строки, подходящей под endRe
+  const opaque = (endRe, from) => {
+    let j = from;
+    while (j < lines.length && !endRe.test(lines[j])) j++;
+    if (j >= lines.length) return false;
+    blocks.push({ a: starts[i], b: lineEnd(j), code: false });
+    i = j + 1;
+    prevBlank = false;
+    return true;
+  };
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!line.trim()) {
+      prevBlank = true;
+      i++;
+      continue;
+    }
+    const info = _codeLineInfo(line);
+    if (info.list && info.bq === 0) inList = true;
+    else if (prevBlank && info.bq === 0 && info.indent < 2) inList = false;
+
+    if (/^\s*:::(?:mermaid|tikz)\s*$/.test(line) && opaque(/^\s*:::\s*$/, i + 1)) continue;
+    if (/^\s*\\(?:documentclass|begin\s*\{document\})/.test(line) && opaque(/\\end\s*\{document\}/, i)) continue;
+
+    const fence = /^(`{3,}|~{3,})(.*)$/.exec(info.text);
+    if (
+      fence &&
+      (info.indent <= 3 || inList || info.list) &&
+      !(fence[1][0] === '`' && fence[2].includes('`'))
+    ) {
+      const close = new RegExp('^' + (fence[1][0] === '`' ? '`' : '~') + '{' + fence[1].length + ',}[ \\t]*$');
+      // Колонка содержимого пункта списка: непустая строка левее неё закрывает пункт, а с ним и блок
+      const contentCol = info.list || inList ? info.col : 0;
+      let j = i + 1;
+      let end = -1;
+      for (; j < lines.length; j++) {
+        const { bq, rest } = _stripQuote(lines[j], info.bq);
+        if (bq < info.bq) break; // цитата закончилась
+        if (contentCol && rest.trim() && _indentWidth(rest) < contentCol) break;
+        if (close.test(rest.trim())) {
+          end = j;
+          break;
+        }
+      }
+      // Незакрытый блок — до конца цитаты/пункта списка или до конца документа
+      const last = end >= 0 ? end : j - 1;
+      blocks.push({ a: starts[i], b: last >= i ? lineEnd(last) : v.length, code: true });
+      i = last + 1;
+      prevBlank = false;
+      continue;
+    }
+
+    // Блок с отступом (4+ пробела) вне списков и цитат, после пустой строки
+    if (info.bq === 0 && !inList && prevBlank && _indentWidth(line) >= 4) {
+      let j = i;
+      let last = i;
+      while (j < lines.length && (!lines[j].trim() || _indentWidth(lines[j]) >= 4)) {
+        if (lines[j].trim()) last = j;
+        j++;
+      }
+      blocks.push({ a: starts[i], b: lineEnd(last), code: true });
+      i = last + 1;
+      prevBlank = false;
+      continue;
+    }
+    prevBlank = false;
+    i++;
+  }
+
+  // Инлайн-код — в промежутках между блоками
+  const ranges = [];
+  const scanInline = (a, b) => {
+    const s = v.slice(a, b);
+    const re = /`+/g;
+    let m;
+    while ((m = re.exec(s))) {
+      let start = m.index;
+      let len = m[0].length;
+      let bs = 0;
+      for (let k = start - 1; k >= 0 && s[k] === '\\'; k--) bs++;
+      if (bs % 2) {
+        // Первый апостроф экранирован обратной косой чертой
+        start++;
+        len--;
+        if (!len) continue;
+      }
+      // Закрывающая последовательность той же длины, не дальше конца абзаца (пустой строки)
+      const re2 = /`+|\n[ \t]*(?=\n)/g;
+      re2.lastIndex = start + len;
+      let end = -1;
+      let m2;
+      while ((m2 = re2.exec(s))) {
+        if (m2[0][0] === '\n') break;
+        if (m2[0].length === len) {
+          end = m2.index + len;
+          break;
+        }
+      }
+      if (end < 0) continue;
+      ranges.push([a + start, a + end]);
+      re.lastIndex = end;
+    }
+  };
+  let from = 0;
+  for (const bl of blocks) {
+    scanInline(from, bl.a);
+    if (bl.code) ranges.push([bl.a, bl.b]);
+    from = bl.b;
+  }
+  scanInline(from, v.length);
+  return ranges;
+}
+
+// Заменяет весь код в тексте токенами \x02CODE<n>\x03
+function _protectCode(v) {
+  _codeStore = [];
+  const ranges = _findCodeRanges(v);
+  if (!ranges.length) return v;
+  let out = '';
+  let last = 0;
+  for (const [a, b] of ranges) {
+    out += v.slice(last, a);
+    _codeStore.push(v.slice(a, b));
+    out += '\x02CODE' + (_codeStore.length - 1) + '\x03';
+    last = b;
+  }
+  return out + v.slice(last);
+}
+
+// Возвращает код на место (перед marked.parse и в тексте, который рендерится отдельно)
+function _restoreCode(v) {
+  return v.replace(CODE_TOKEN_RE, (_, i) => _codeStore[+i] ?? '');
+}
+
 const ESC_TOKEN = '\x02ESC';
 const ESC_END = '\x03';
 let _escStore = [];
@@ -989,25 +1316,12 @@ function _protectEscapes(v) {
 
   return parts
     .map((part, idx) => {
+      // Код уже спрятан в токены (_protectCode), они пропускаются вместе с остальными
       if (idx % 2 === 1) return part;
-
-      const CODE_RE = /(`+)([\s\S]*?)\1/g;
-      const codeSlots = [];
-      const CS = '\x04C';
-      const CE = '\x05';
-      let p = part.replace(CODE_RE, full => {
-        codeSlots.push(full);
-        return CS + (codeSlots.length - 1) + CE;
-      });
-
-      p = p.replace(MD_SPECIAL, (_, ch) => {
-        const literal = ch === '\\' ? '\\' : ch;
-        _escStore.push(literal);
+      return part.replace(MD_SPECIAL, (_, ch) => {
+        _escStore.push(ch);
         return ESC_TOKEN + (_escStore.length - 1) + ESC_END;
       });
-
-      p = p.replace(new RegExp('\\x04C(\\d+)\\x05', 'g'), (_, i) => codeSlots[parseInt(i)]);
-      return p;
     })
     .join('');
 }
@@ -1041,8 +1355,9 @@ const DISPLAY_ENVS = [
   'alignat\\*',
   'split'
 ].join('|');
+// Формула не может проходить через токены (\x02…\x03): так она не захватывает код и другие блоки
 const DISPLAY_ENV_RE = new RegExp(
-  `\\\\begin\\{(${DISPLAY_ENVS})\\}([\\s\\S]+?)\\\\end\\{\\1\\}`,
+  `\\\\begin\\{(${DISPLAY_ENVS})\\}([^\\x02\\x03]+?)\\\\end\\{\\1\\}`,
   'g'
 );
 
@@ -1063,10 +1378,10 @@ function _protectLatex(v) {
     return LATEX_TOKEN + (_latexStore.length - 1) + LATEX_END;
   };
   v = v.replace(DISPLAY_ENV_RE, (full, env, math) => push('block', full));
-  v = v.replace(/\$\$([\s\S]+?)\$\$/g, (_, math) => push('block', math));
-  v = v.replace(/\\\[([\s\S]+?)\\\]/g, (_, math) => push('block', math));
-  v = v.replace(/\\\((.+?)\\\)/g, (_, math) => push('inline', math));
-  v = v.replace(/\$([^\$\n]+?)\$/g, (_, math) => push('inline', math));
+  v = v.replace(/\$\$([^\x02\x03]+?)\$\$/g, (_, math) => push('block', math));
+  v = v.replace(/\\\[([^\x02\x03]+?)\\\]/g, (_, math) => push('block', math));
+  v = v.replace(/\\\(([^\n\x02\x03]+?)\\\)/g, (_, math) => push('inline', math));
+  v = v.replace(/\$([^\$\n\x02\x03]+?)\$/g, (_, math) => push('inline', math));
   return v;
 }
 
@@ -1180,35 +1495,49 @@ function _mmdEsc(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// Декодирует HTML-сущности обратно в исходные символы
-function _decodeHtmlEntities(s) {
-  return s
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&amp;/g, '&');
+// Диаграммы Mermaid: блок
+// :::mermaid
+// …
+// :::
+// (```mermaid — обычный блок кода, он не рендерится)
+const MMD_BLOCK_RE = /^[ \t]*:::mermaid[ \t]*\n([\s\S]*?)^[ \t]*:::[ \t]*$/gm;
+let _mmdStore = [];
+
+// Заменяет блоки :::mermaid токенами (исходник диаграммы — в _mmdStore)
+function _protectMermaid(v) {
+  _mmdStore = [];
+  return v.replace(MMD_BLOCK_RE, (_, body) => {
+    _mmdStore.push(_restoreCode(body).trim());
+    return `\n\n\x02MMD${_mmdStore.length - 1}\x03\n\n`;
+  });
 }
-// Преобразует блоки ```mermaid, сгенерированные marked.js, в разметку для рендеринга диаграмм
-function _convertMermaidFences(html) {
+
+// Mermaid 10 называет SVG диаграммы «mermaid-<Date.now()>»: две диаграммы, нарисованные в одну
+// миллисекунду, получают одинаковый id, и вторая рисуется внутрь первой. Ждём следующую миллисекунду
+let _mmdLastMs = 0;
+async function _mmdNextMs() {
+  while (Date.now() <= _mmdLastMs) await new Promise(r => setTimeout(r, 1));
+  _mmdLastMs = Date.now();
+}
+
+// Ставит на место токенов контейнеры диаграмм (рисует их mermaid.run в render)
+function _restoreMermaid(html) {
   let idx = 0;
-  return html.replace(
-    /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g,
-    (_, code) => {
-      const decoded = _decodeHtmlEntities(code).trim();
-      const uid = 'mmd-' + Date.now() + '-' + ++idx + '-' + Math.random().toString(36).slice(2, 7);
-      const escaped = _mmdEsc(decoded);
-      return (
-        '<div class="mermaid-wrap"><div class="mermaid" id="' +
-        uid +
-        '" data-src="' +
-        escaped +
-        '">' +
-        escaped +
-        '</div></div>'
-      );
-    }
-  );
+  return html.replace(/(?:<p>)?\x02MMD(\d+)\x03(?:<\/p>)?/g, (_, i) => {
+    const src = _mmdStore[+i];
+    if (src == null) return '';
+    const uid = 'mmd-' + Date.now() + '-' + ++idx + '-' + Math.random().toString(36).slice(2, 7);
+    const escaped = _mmdEsc(src);
+    return (
+      '<div class="mermaid-wrap"><div class="mermaid" id="' +
+      uid +
+      '" data-src="' +
+      escaped.replace(/"/g, '&quot;') +
+      '">' +
+      escaped +
+      '</div></div>'
+    );
+  });
 }
 // ── TikZ (TikZJax: TeX, скомпилированный в WebAssembly, рисует TikZ в SVG прямо в браузере) ──
 const TIKZJAX_BASE = 'https://cdn.jsdelivr.net/npm/@drgrice1/tikzjax@1.0.0-beta24/dist';
@@ -1366,32 +1695,29 @@ function _tikzPush(code, docOpts) {
   return `\n\n${TIKZ_TOKEN}${_tikzStore.length - 1}${TIKZ_END}\n\n`;
 }
 
-// Применяет fn только к частям текста вне блоков кода
-function _tikzOutsideCode(text, fn) {
-  return text
-    .split(/(```[\s\S]*?```|`[^`\n]+`)/g)
-    .map((part, i) => (i % 2 ? part : fn(part)))
-    .join('');
-}
-
-// Markdown: ```tikz-блоки и «голые» \begin{tikzpicture}/\begin{tikzcd} заменяет токенами
+// Markdown: блоки :::tikz … ::: и «голые» \begin{tikzpicture}/\begin{tikzcd} заменяет токенами
+// (код к этому моменту уже спрятан _protectCode, поэтому рисунки в коде не трогаются)
 function _protectTikz(v) {
-  const hasFence = /^```tikz[ \t]*$/m.test(v);
-  const envRe = new RegExp(`\\\\begin\\s*\\{(${TIKZ_ENVS})\\}[\\s\\S]*?\\\\end\\s*\\{\\1\\}`, 'g');
-  if (!hasFence && !envRe.test(v)) return v;
+  const blockRe = /^[ \t]*:::tikz[ \t]*\n([\s\S]*?)^[ \t]*:::[ \t]*$/gm;
+  const envRe = new RegExp(`\\\\begin\\s*\\{(${TIKZ_ENVS})\\}[^\\x02\\x03]*?\\\\end\\s*\\{\\1\\}`, 'g');
+  const hasBlock = /^[ \t]*:::tikz[ \t]*$/m.test(v);
+  if (!hasBlock && !envRe.test(v)) return v;
   envRe.lastIndex = 0;
 
-  // \usetikzlibrary / \usepackage вне кода действуют на все рисунки документа
+  // Сначала откладываем блоки :::tikz: их собственная преамбула относится только к ним
+  const blocks = [];
+  v = v.replace(blockRe, (_, code) => {
+    blocks.push(_restoreCode(code));
+    return `\x02TKB${blocks.length - 1}\x03`;
+  });
+  // \usetikzlibrary / \usepackage вне блоков действуют на все рисунки документа
   const docOpts = _tikzEmptyOpts();
-  v = _tikzOutsideCode(v, part =>
-    part.replace(/^[ \t]*\\(?:usetikzlibrary|usepackage)\b[^\n]*$/gm, line => {
-      _tikzParsePreamble(line, docOpts);
-      return '';
-    })
-  );
-  v = v.replace(/^```tikz[ \t]*\n([\s\S]*?)^```[ \t]*$/gm, (_, code) => _tikzPush(code, docOpts));
-  v = _tikzOutsideCode(v, part => part.replace(envRe, full => _tikzPush(full, docOpts)));
-  return v;
+  v = v.replace(/^[ \t]*\\(?:usetikzlibrary|usepackage)\b[^\n]*$/gm, line => {
+    _tikzParsePreamble(line, docOpts);
+    return '';
+  });
+  v = v.replace(envRe, full => _tikzPush(full, docOpts));
+  return v.replace(/\x02TKB(\d+)\x03/g, (_, i) => _tikzPush(blocks[+i], docOpts));
 }
 
 // LaTeX-документ: окружения tikzpicture/tikzcd с учётом преамбулы документа
@@ -1417,14 +1743,13 @@ let _latexDocStore = [];
 function _protectLatexDocs(v) {
   _latexDocStore = [];
   if (!/\\(?:documentclass|begin\s*\{document\})/.test(v)) return v;
-  return _tikzOutsideCode(v, part =>
-    part.replace(LATEX_DOC_RE, doc => {
-      let d = _protectTikzLatexDoc(doc);
-      if (!appSettings.htmlRendering) d = escapeHtmlInMarkdown(d);
-      _latexDocStore.push(_renderLatexDoc(d));
-      return `\n\n${LDOC_TOKEN}${_latexDocStore.length - 1}${TIKZ_END}\n\n`;
-    })
-  );
+  // Код уже спрятан _protectCode; внутри самого документа возвращаем исходный текст
+  return v.replace(LATEX_DOC_RE, doc => {
+    let d = _protectTikzLatexDoc(_restoreCode(doc));
+    if (!appSettings.htmlRendering) d = escapeHtmlInMarkdown(d);
+    _latexDocStore.push(_renderLatexDoc(d));
+    return `\n\n${LDOC_TOKEN}${_latexDocStore.length - 1}${TIKZ_END}\n\n`;
+  });
 }
 
 function _restoreLatexDocs(html) {
@@ -1605,11 +1930,15 @@ function _processImageAttrs(v) {
 function render(v) {
   const raw = v;
   _tikzStore = [];
-  // LaTeX-документы и TikZ вынимаем до экранирования HTML: в коде рисунков бывают «<» и «>»
+  // Код прячем первым: внутри него ничего не рендерится (только подсветка и diff)
+  v = _protectCode(v);
+  // LaTeX-документы, Mermaid и TikZ вынимаем до экранирования HTML: в их коде бывают «<» и «>»
   v = _protectLatexDocs(v);
+  v = _protectMermaid(v);
   v = _protectTikz(v);
   if (!appSettings.htmlRendering) {
-    v = escapeHtmlInMarkdown(v);
+    // Код спрятан в токены, поэтому экранировать можно весь оставшийся текст
+    v = escapeHtmlTags(v);
   }
   if (!v.trim()) {
     emp.style.display = 'flex';
@@ -1617,11 +1946,11 @@ function render(v) {
   } else {
     emp.style.display = 'none';
     mo.style.display = 'block';
-    const hasMmd = /```\s*mermaid\b/.test(v);
+    const hasMmd = _mmdStore.length > 0;
     const vv = _processCustomTables(_processImageAttrs(v));
-    let _html = marked.parse(_protectEscapes(_protectLatex(vv)));
-    _html = _convertMermaidFences(_html);
-    mo.innerHTML = _restoreTikz(_restoreLatexDocs(_restoreEscapes(_restoreLatex(_html))));
+    // Код возвращается на место только перед marked: его разбирает (и экранирует) сам marked
+    const _html = marked.parse(_restoreCode(_protectEscapes(_protectLatex(vv))));
+    mo.innerHTML = _restoreMermaid(_restoreTikz(_restoreLatexDocs(_restoreEscapes(_restoreLatex(_html)))));
     if (hasMmd && typeof mermaid !== 'undefined') {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -1633,6 +1962,7 @@ function render(v) {
                 'mmd-' + Date.now() + '-' + idx + '-' + Math.random().toString(36).slice(2, 7);
               if (!node.dataset.src) node.dataset.src = node.textContent;
               try {
+                await _mmdNextMs();
                 await mermaid.run({ nodes: [node], suppressErrors: true });
                 node.querySelectorAll('svg').forEach(svg => {
                   const vb = svg.getAttribute('viewBox');
@@ -1775,10 +2105,11 @@ function iDiff() {
 function iMermaid() {
   const { s, e, t } = gs();
   const body = t || 'flowchart LR\n  A[Start] --> B[End]';
-  const r = '```mermaid\n' + body + '\n```';
+  const head = ':::mermaid\n';
+  const r = head + body + '\n:::';
   ed.value = ed.value.slice(0, s) + r + ed.value.slice(e);
-  ed.selectionStart = s + 10;
-  ed.selectionEnd = s + 10 + body.length;
+  ed.selectionStart = s + head.length;
+  ed.selectionEnd = s + head.length + body.length;
   ed.focus();
   render(ed.value);
 }
@@ -1805,10 +2136,11 @@ const TIKZ_DEFAULT = [
 function iTikz() {
   const { s, e, t } = gs();
   const body = t || TIKZ_DEFAULT;
-  const r = '```tikz\n' + body + '\n```';
+  const head = ':::tikz\n';
+  const r = head + body + '\n:::';
   ed.value = ed.value.slice(0, s) + r + ed.value.slice(e);
-  ed.selectionStart = s + 8;
-  ed.selectionEnd = s + 8 + body.length;
+  ed.selectionStart = s + head.length;
+  ed.selectionEnd = s + head.length + body.length;
   ed.focus();
   render(ed.value);
 }
@@ -1910,7 +2242,7 @@ const LANGS = {
     aiKeyWarning: '⚠ Please enter your {backend} API key and press "Save".',
     aiThinking: '● Thinking…',
     pvPopBtnTitle: 'Open in new window',
-    ttTikz: 'TikZ figure (```tikz...```)',
+    ttTikz: 'TikZ figure (:::tikz ... :::)',
     tikzLoadError: '⚠ TikZ: could not load the TeX engine (an internet connection is needed the first time).',
     tikzCompileError: '⚠ TikZ: compilation failed. Check the code for errors.',
     tikzUnsupportedPkgs: 'Packages not available in the browser TeX: {pkgs}',
@@ -2026,7 +2358,7 @@ const LANGS = {
     ttMathInline: 'Inline math ($...$)',
     ttMathBlock: 'Block math ($$...$$)',
     ttDiff: 'Diff block (diff / diff_lang)',
-    ttMermaid: 'Mermaid diagram (```mermaid...```)',
+    ttMermaid: 'Mermaid diagram (:::mermaid ... :::)',
     ttTable: 'Insert custom table',
     fontSizeBtnTitle: 'Font size settings',
     fontPanelTitle: 'Font Sizes',
@@ -2109,22 +2441,22 @@ console.log([...Array(8)].map((_,i) => fib(i))); // [0,1,1,2,3,5,8,13]
 - [x] Real-time preview · Draggable resizer
 - [x] Language badge on code blocks (30+ languages)
 - [x] Diff highlighting with \`\`\`diff\`\`\`
-- [x] Mermaid diagrams with \`\`\`mermaid...\`\`\`
+- [x] Mermaid diagrams with \`:::mermaid ... :::\`
 
 ## Mermaid Diagram
 
-\`\`\`mermaid
+:::mermaid
 flowchart LR
   A([Start]) --> B{Decision}
   B -- Yes --> C[Process A]
   B -- No  --> D[Process B]
   C --> E([End])
   D --> E
-\`\`\`
+:::
 
 ## Sequence Diagram
 
-\`\`\`mermaid
+:::mermaid
 sequenceDiagram
   participant U as User
   participant E as Editor
@@ -2132,7 +2464,7 @@ sequenceDiagram
   U->>E: Type Markdown
   E->>P: Render HTML
   P-->>U: Live preview
-\`\`\`
+:::
 
 ---
 
@@ -2421,10 +2753,10 @@ function applyLang(code) {
     const key = el.getAttribute('data-i18n-placeholder');
     if (t[key] !== undefined) el.placeholder = t[key];
   });
-  if (typeof _updateAiWelcomeText === 'function') _updateAiWelcomeText();
+  _updateAiWelcomeText();
   // applyLang вызывается до объявления части ИИ-переменных, поэтому защищаемся try/catch
   try {
-    if (typeof updateAiOnlineState === 'function') updateAiOnlineState();
+    updateAiOnlineState();
   } catch (_) {}
 
   document.querySelectorAll('[data-i18n-prompt]').forEach(el => {
@@ -2452,7 +2784,7 @@ function applyLang(code) {
     if (dotDescEl && t.settingsAiDotDesc) dotDescEl.textContent = t.settingsAiDotDesc;
   }
   // Составные сообщения превью (TikZ) и индикатор загрузки, если он сейчас показан
-  if (typeof _refreshTikzErrors === 'function') _refreshTikzErrors();
+  _refreshTikzErrors();
   try {
     if (_busyStack.length) _renderBusy();
   } catch (_) {}
@@ -2610,11 +2942,6 @@ function showErrorModal(message, title) {
     const titleEl = document.getElementById('errTitle');
     const msgEl = document.getElementById('errMsg');
     const okBtn = document.getElementById('errOkBtn');
-    if (!overlay || !modal) {
-      alert(message); // запасной вариант, если разметки нет
-      resolve();
-      return;
-    }
     titleEl.textContent = title || tr('errModalTitle');
     msgEl.textContent = message;
     okBtn.textContent = tr('errOk');
@@ -2700,7 +3027,7 @@ async function setLang(code) {
   if (token !== _langSwitchToken) return;
   applyLang(code);
   saveLangSetting();
-  if (typeof saveContent === 'function') saveContent();
+  saveContent();
 }
 // Открывает панель выбора языка
 function toggleLang() {
@@ -3081,7 +3408,7 @@ function applySettings() {
   const dotTog = document.getElementById('aiDotToggle');
   if (dotTog) dotTog.setAttribute('aria-checked', appSettings.aiDot ? 'true' : 'false');
   updateSettingsPreview();
-  if (ed.value) (typeof _render === 'function' ? _render : render)(ed.value);
+  if (ed.value) _render(ed.value);
 }
 
 // Обновляет предпросмотр в соответствии с текущими настройками
@@ -3122,7 +3449,7 @@ async function saveSettings() {
 async function loadSettings() {
   try {
     const raw = await idbGet(IDB_SETTINGS_KEY);
-    if (raw) appSettings = Object.assign({ ...SETTINGS_DEFAULTS }, JSON.parse(raw));
+    if (raw) appSettings = JSON.parse(raw);
   } catch (e) {}
   applySettings();
 }
@@ -3343,9 +3670,11 @@ function _scanSourceBlocks(text) {
     const start = i;
     let type = 'p';
     let m;
-    if ((m = isFence(l))) {
-      const lang = (l.slice(m[0].length).trim().split(/\s+/)[0] || '').toLowerCase();
-      type = lang === 'mermaid' ? 'mermaid' : lang === 'tikz' ? 'tikz' : 'pre';
+    if ((m = /^\s*:::(mermaid|tikz)\s*$/.exec(l))) {
+      type = m[1];
+      i = skipTo(i + 1, /^\s*:::\s*$/);
+    } else if ((m = isFence(l))) {
+      type = 'pre';
       const close = new RegExp('^\\s{0,3}' + (m[1][0] === '`' ? '`' : '~') + '{' + m[1].length + ',}\\s*$');
       i = skipTo(i + 1, close);
     } else if (/^\s*\\(documentclass|begin\s*\{document\})/.test(l)) {
@@ -3601,6 +3930,7 @@ ed.addEventListener('input', () => {
 // После изменения содержимого выравниваем с небольшой задержкой: при наборе текста точки
 // пересчитываются один раз после паузы, а не на каждое нажатие
 let _scrollResyncTimer = null;
+// Старые браузеры без ResizeObserver / document.fonts: пересчёт по изменению размера окна
 if (typeof ResizeObserver !== 'undefined') {
   const ro = new ResizeObserver(() => {
     _invalidateScrollMap();
@@ -3610,6 +3940,11 @@ if (typeof ResizeObserver !== 'undefined') {
   ro.observe(ed);
   ro.observe(mo);
   ro.observe(pv);
+} else {
+  window.addEventListener('resize', () => {
+    _invalidateScrollMap();
+    _scheduleScrollSync();
+  });
 }
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(_invalidateScrollMap);
 
@@ -3636,7 +3971,7 @@ async function switchToDoc(id) {
   await setCurrentDocId(id);
   currentDocMeta = { name: data.name };
   ed.value = data.content;
-  fontSizes = Object.assign({ ...FONT_DEFAULTS }, data.fontSizes || {});
+  fontSizes = { ...data.fontSizes };
   applyFontSizesToDOM();
   _render(data.content);
   _invalidateScrollMap();
@@ -3647,8 +3982,8 @@ async function switchToDoc(id) {
   _applyAiSelection();
   _refreshAiChatPanel();
   requestAnimationFrame(() => {
-    ed.scrollTop = data.scrollEd || 0;
-    pv.scrollTop = data.scrollPv || 0;
+    ed.scrollTop = data.scrollEd;
+    pv.scrollTop = data.scrollPv;
     // Восстановленная позиция — не прокрутка пользователя
     _expectScroll(ed);
     _expectScroll(pv);
@@ -4216,10 +4551,10 @@ async function _loadAiConversation() {
   try {
     conv = JSON.parse((await idbGet(AI_CONV_PREFIX + currentDocId)) || 'null');
   } catch (_) {}
-  if (conv && typeof conv === 'object') {
-    if (Array.isArray(conv.history)) _aiConvHistory = conv.history;
-    if (AI_MODELS[conv.backend]) AI_BACKEND = conv.backend;
-    _aiModelChoice = conv.models && typeof conv.models === 'object' ? { ...conv.models } : {};
+  if (conv) {
+    _aiConvHistory = conv.history;
+    AI_BACKEND = conv.backend;
+    _aiModelChoice = { ...conv.models };
   } else {
     // Копия: выбор в этом разговоре не должен менять объект предыдущего
     _aiModelChoice = { ..._aiModelChoice };
@@ -4474,7 +4809,7 @@ function toggleAiPanel() {
 
 // Проверяет, находится ли браузер в автономном режиме (без сети)
 function _isOffline() {
-  return typeof navigator !== 'undefined' && (navigator.onLine === false || _netReachable === false);
+  return navigator.onLine === false || _netReachable === false;
 }
 
 var _netReachable = true;
