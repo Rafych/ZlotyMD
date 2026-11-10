@@ -5645,3 +5645,39 @@ async function sendAi() {
     { passive: false } // passive:false нужен для preventDefault
   );
 })();
+
+// Панель инструментов в тесной шапке. Сначала скрывается статистика (символы, слова, строки) —
+// она только информирует. Если и тогда не помещается даже первая группа кнопок (H1–H3),
+// панель скрывается совсем: полоска в несколько пикселей бесполезна. Места станет больше — всё вернётся
+(function initToolbarFit() {
+  const hd = document.querySelector('.hd');
+  const tb = hd && hd.querySelector('.tb');
+  if (!tb) return;
+  const first = tb.querySelector('.tg');
+  const stats = hd.querySelector('.stats');
+  let statsW = 0; // ширина статистики вместе с промежутком (пока она показана)
+  // Внутренние отступы .tb (запас под hover) компенсированы отрицательными полями
+  const pad = () => {
+    const cs = getComputedStyle(tb);
+    return (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+  };
+  const tbWidth = () => tb.getBoundingClientRect().width - pad();
+  const update = () => {
+    const need = first ? first.getBoundingClientRect().width : 0;
+    if (!need) return;
+    const compact = hd.classList.contains('hd-nostats');
+    if (!compact && stats && stats.offsetWidth > 0 && tbWidth() + 0.5 < need) {
+      statsW = stats.getBoundingClientRect().width + (parseFloat(getComputedStyle(hd).columnGap) || 0);
+      hd.classList.add('hd-nostats');
+    } else if (compact && tbWidth() - statsW >= need + 21) {
+      // Запас, чтобы на границе статистика не мигала
+      hd.classList.remove('hd-nostats');
+    }
+    const off = tbWidth() + 0.5 < need;
+    tb.classList.toggle('tb-off', off);
+    tb.setAttribute('aria-hidden', off ? 'true' : 'false');
+  };
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(update).observe(tb);
+  else window.addEventListener('resize', update);
+  update();
+})();
