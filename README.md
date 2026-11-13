@@ -29,21 +29,27 @@ Złoty MD is released under the [MIT License](./LICENSE).
 
 # Third-party libraries
 
-The libraries below are not part of this repository. The browser loads them from a CDN at runtime.
+The libraries below are not part of this repository. The browser loads them from a CDN at runtime. They are sorted by license.
 
 | Library | Version | License | Loaded from |
 |---|---|---|---|
-| [marked](https://github.com/markedjs/marked) | 9.1.6 | MIT | cdnjs |
-| [KaTeX](https://github.com/KaTeX/KaTeX) | 0.16.9 | MIT | cdnjs |
-| [Mermaid](https://github.com/mermaid-js/mermaid) | 10.6.1 | MIT | cdnjs |
-| [jsPDF](https://github.com/parallax/jsPDF) | 4.2.1 | MIT | cdnjs, only when exporting to PDF |
-| [html2canvas](https://github.com/niklasvh/html2canvas) | 1.4.1 | MIT | cdnjs, only when exporting to PDF (used by jsPDF `html()`) |
-| [svg2pdf.js](https://github.com/yWorks/svg2pdf.js) | 2.9.0 | MIT | jsDelivr, only when exporting to PDF (SVG as vectors) |
-| [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs) ([HarfBuzz](https://github.com/harfbuzz/harfbuzz)) | 0.4.12 | MIT (HarfBuzz: Old MIT; parts Apache-2.0) | jsDelivr, only when exporting to PDF (text shaping) |
+| emmalloc (Emscripten) / Zephyr libc string functions | — | Apache-2.0 | bundled in the harfbuzzjs WebAssembly build |
+| [Leaflet](https://github.com/Leaflet/Leaflet) | 1.9.4 | BSD-2-Clause | jsDelivr, only when a document contains geojson / topojson |
 | [highlight.js](https://github.com/highlightjs/highlight.js) | 11.11.1 | BSD-3-Clause | cdnjs (extra languages are loaded only when a code block uses them) |
+| [TikZJax](https://github.com/drgrice1/tikzjax) (`@drgrice1/tikzjax`) | 1.0.0-beta24 | GPL-3.0-or-later | jsDelivr, only when a document contains TikZ |
+| [topojson-client](https://github.com/topojson/topojson-client) | 3.1.0 | ISC | jsDelivr, only when a document contains topojson |
+| [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs) ([HarfBuzz](https://github.com/harfbuzz/harfbuzz)) | 0.4.12 | MIT (HarfBuzz: Old MIT; parts Apache-2.0) | jsDelivr, only when exporting to PDF (text shaping) |
+| [html2canvas](https://github.com/niklasvh/html2canvas) | 1.4.1 | MIT | cdnjs, only when exporting to PDF (used by jsPDF `html()`) |
+| [jsPDF](https://github.com/parallax/jsPDF) | 4.2.1 | MIT | cdnjs, only when exporting to PDF |
+| [KaTeX](https://github.com/KaTeX/KaTeX) | 0.16.9 | MIT | cdnjs |
+| [marked](https://github.com/markedjs/marked) | 9.1.6 | MIT | cdnjs |
+| [Mermaid](https://github.com/mermaid-js/mermaid) | 10.6.1 | MIT | cdnjs |
+| [svg2pdf.js](https://github.com/yWorks/svg2pdf.js) | 2.9.0 | MIT | jsDelivr, only when exporting to PDF (SVG as vectors) |
+| [three.js](https://github.com/mrdoob/three.js) | r128 | MIT | jsDelivr, only when a document contains stl |
+| [OpenStreetMap](https://www.openstreetmap.org/copyright) map data and tiles | — | ODbL-1.0 | OpenStreetMap tile servers, only when a document contains geojson / topojson |
 | [Google Sans](https://fonts.google.com/) | — | SIL OFL 1.1 | Google Fonts |
 | [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | 2020 | SIL OFL 1.1 | Google Fonts |
+| KaTeX fonts | 0.16.9 | SIL OFL 1.1 | jsDelivr / cdnjs |
 | [Noto fonts](https://github.com/notofonts) (Noto Sans, Noto Sans JP, KR, SC, TC, Arabic, Hebrew, Math, Symbols 2) | — | SIL OFL 1.1 | jsDelivr, embedded into a PDF only for characters the document fonts do not cover |
-| [TikZJax](https://github.com/drgrice1/tikzjax) (`@drgrice1/tikzjax`) | 1.0.0-beta24 | GPL-3.0-or-later | jsDelivr, only when a document contains TikZ |
 
 TikZJax runs TeX in the browser (WebAssembly) and bundles TeX packages such as PGF/TikZ and pgfplots under their own licenses; see its repository for details. None of its files are copied into this repository.
