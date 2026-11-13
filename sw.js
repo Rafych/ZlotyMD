@@ -2,7 +2,7 @@
  * Локальные файлы и CDN-ресурсы (marked, KaTeX, Mermaid, highlight.js, jsPDF, html2canvas, svg2pdf.js, HarfBuzz, шрифты) кэшируются
  * при установке и при использовании, поэтому редактор работает без сети.
  * При изменении файлов приложения увеличьте CACHE_VERSION. */
-const CACHE_VERSION = 'zmd-v24';
+const CACHE_VERSION = 'zmd-v25';
 const CACHE = CACHE_VERSION;
 
 const LOCAL_ASSETS = [
@@ -10,6 +10,7 @@ const LOCAL_ASSETS = [
   'ZlotyMD.html',
   'index.html',
   'css/styles.css',
+  'js/render.js',
   'js/app.js',
   'js/pdf-export.js',
   'js/pwa.js',
