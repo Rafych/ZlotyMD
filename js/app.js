@@ -530,20 +530,9 @@ function toStandardMarkdown(v) {
     last = b;
   }
   out += v.slice(last);
-  out = _mdConvertDiagrams(out);
   out = _mdConvertCustomTables(out);
   out = _mdConvertImageAttrs(out);
   return out.replace(/\x02MDC(\d+)\x03/g, (_, i) => store[+i]);
-}
-
-// :::mermaid / :::tikz → ```mermaid / ```tikz — общепринятая запись в других редакторах
-function _mdConvertDiagrams(v) {
-  return v.replace(/^[ \t]*:::(mermaid|tikz)[ \t]*\n([\s\S]*?)^[ \t]*:::[ \t]*$/gm, (_, kind, body) => {
-    // Ограждение длиннее любой последовательности апострофов внутри
-    const runs = body.match(/`{3,}/g) || [];
-    const fence = '`'.repeat(Math.max(3, ...runs.map(r => r.length + 1)));
-    return `${fence}${kind}\n${body.replace(/\n$/, '')}\n${fence}`;
-  });
 }
 
 // Разбирает текст .zmd-файла: отделяет метаданные от содержимого документа
@@ -1154,7 +1143,7 @@ function _codeLineInfo(line) {
 
 // Находит участки кода [начало, конец): огороженные блоки (``` и ~~~ по правилам CommonMark,
 // в том числе внутри цитат и списков; незакрытый блок идёт до конца документа),
-// блоки с отступом в 4 пробела и инлайн-код. Блоки :::mermaid / :::tikz и LaTeX-документы —
+// блоки с отступом в 4 пробела и инлайн-код. Блоки ```mermaid / ```tikz и LaTeX-документы —
 // не Markdown: обратные апострофы внутри них кодом не считаются
 function _findCodeRanges(v) {
   const lines = v.split('\n');
@@ -1190,7 +1179,13 @@ function _findCodeRanges(v) {
     if (info.list && info.bq === 0) inList = true;
     else if (prevBlank && info.bq === 0 && info.indent < 2) inList = false;
 
-    if (/^\s*:::(?:mermaid|tikz)\s*$/.test(line) && opaque(/^\s*:::\s*$/, i + 1)) continue;
+    if (info.bq === 0 && !inList) {
+      const dg = /^\s*(`{3,}|~{3,})\s*(?:mermaid|tikz)\s*$/.exec(line);
+      if (dg) {
+        const endRe = new RegExp('^\\s*' + (dg[1][0] === '`' ? '`' : '~') + '{' + dg[1].length + ',}\\s*$');
+        if (opaque(endRe, i + 1)) continue;
+      }
+    }
     if (/^\s*\\(?:documentclass|begin\s*\{document\})/.test(line) && opaque(/\\end\s*\{document\}/, i)) continue;
 
     const fence = /^(`{3,}|~{3,})(.*)$/.exec(info.text);
@@ -1497,18 +1492,19 @@ function _mmdEsc(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
-// Диаграммы Mermaid: блок
-// :::mermaid
-// …
-// :::
-// (```mermaid — обычный блок кода, он не рендерится)
-const MMD_BLOCK_RE = /^[ \t]*:::mermaid[ \t]*\n([\s\S]*?)^[ \t]*:::[ \t]*$/gm;
+function _diagramBlockRe(kind) {
+  return new RegExp(
+    '^[ \\t]*(`{3,}|~{3,})[ \\t]*' + kind + '[ \\t]*\\n([\\s\\S]*?)^[ \\t]*\\1[`~]*[ \\t]*$',
+    'gm'
+  );
+}
+const MMD_BLOCK_RE = _diagramBlockRe('mermaid');
 let _mmdStore = [];
 
-// Заменяет блоки :::mermaid токенами (исходник диаграммы — в _mmdStore)
+// Заменяет блоки ```mermaid токенами (исходник диаграммы — в _mmdStore)
 function _protectMermaid(v) {
   _mmdStore = [];
-  return v.replace(MMD_BLOCK_RE, (_, body) => {
+  return v.replace(MMD_BLOCK_RE, (_, fence, body) => {
     _mmdStore.push(_restoreCode(body).trim());
     return `\n\n\x02MMD${_mmdStore.length - 1}\x03\n\n`;
   });
@@ -1697,18 +1693,18 @@ function _tikzPush(code, docOpts) {
   return `\n\n${TIKZ_TOKEN}${_tikzStore.length - 1}${TIKZ_END}\n\n`;
 }
 
-// Markdown: блоки :::tikz … ::: и «голые» \begin{tikzpicture}/\begin{tikzcd} заменяет токенами
+// Markdown: блоки ```tikz … ``` и «голые» \begin{tikzpicture}/\begin{tikzcd} заменяет токенами
 // (код к этому моменту уже спрятан _protectCode, поэтому рисунки в коде не трогаются)
 function _protectTikz(v) {
-  const blockRe = /^[ \t]*:::tikz[ \t]*\n([\s\S]*?)^[ \t]*:::[ \t]*$/gm;
+  const blockRe = _diagramBlockRe('tikz');
   const envRe = new RegExp(`\\\\begin\\s*\\{(${TIKZ_ENVS})\\}[^\\x02\\x03]*?\\\\end\\s*\\{\\1\\}`, 'g');
-  const hasBlock = /^[ \t]*:::tikz[ \t]*$/m.test(v);
+  const hasBlock = /^[ \t]*(?:`{3,}|~{3,})[ \t]*tikz[ \t]*$/m.test(v);
   if (!hasBlock && !envRe.test(v)) return v;
   envRe.lastIndex = 0;
 
-  // Сначала откладываем блоки :::tikz: их собственная преамбула относится только к ним
+  // Сначала откладываем блоки ```tikz: их собственная преамбула относится только к ним
   const blocks = [];
-  v = v.replace(blockRe, (_, code) => {
+  v = v.replace(blockRe, (_, fence, code) => {
     blocks.push(_restoreCode(code));
     return `\x02TKB${blocks.length - 1}\x03`;
   });
@@ -2116,8 +2112,8 @@ function iMermaid() {
   if (_roGuard()) return;
   const { s, e, t } = gs();
   const body = t || 'flowchart LR\n  A[Start] --> B[End]';
-  const head = ':::mermaid\n';
-  const r = head + body + '\n:::';
+  const head = '```mermaid\n';
+  const r = head + body + '\n```';
   ed.value = ed.value.slice(0, s) + r + ed.value.slice(e);
   ed.selectionStart = s + head.length;
   ed.selectionEnd = s + head.length + body.length;
@@ -2148,8 +2144,8 @@ function iTikz() {
   if (_roGuard()) return;
   const { s, e, t } = gs();
   const body = t || TIKZ_DEFAULT;
-  const head = ':::tikz\n';
-  const r = head + body + '\n:::';
+  const head = '```tikz\n';
+  const r = head + body + '\n```';
   ed.value = ed.value.slice(0, s) + r + ed.value.slice(e);
   ed.selectionStart = s + head.length;
   ed.selectionEnd = s + head.length + body.length;
@@ -2254,7 +2250,7 @@ const LANGS = {
     aiKeyWarning: '⚠ Please enter your {backend} API key and press "Save".',
     aiThinking: '● Thinking…',
     pvPopBtnTitle: 'Open in new window',
-    ttTikz: 'TikZ figure (:::tikz ... :::)',
+    ttTikz: 'TikZ figure (```tikz ... ```)',
     tikzLoadError: '⚠ TikZ: could not load the TeX engine (an internet connection is needed the first time).',
     tikzCompileError: '⚠ TikZ: compilation failed. Check the code for errors.',
     tikzUnsupportedPkgs: 'Packages not available in the browser TeX: {pkgs}',
@@ -2382,7 +2378,7 @@ const LANGS = {
     ttMathInline: 'Inline math ($...$)',
     ttMathBlock: 'Block math ($$...$$)',
     ttDiff: 'Diff block (diff / diff_lang)',
-    ttMermaid: 'Mermaid diagram (:::mermaid ... :::)',
+    ttMermaid: 'Mermaid diagram (```mermaid ... ```)',
     ttTable: 'Insert custom table',
     fontSizeBtnTitle: 'Font size settings',
     fontPanelTitle: 'Font Sizes',
@@ -2465,22 +2461,22 @@ console.log([...Array(8)].map((_,i) => fib(i))); // [0,1,1,2,3,5,8,13]
 - [x] Real-time preview · Draggable resizer
 - [x] Language badge on code blocks (30+ languages)
 - [x] Diff highlighting with \`\`\`diff\`\`\`
-- [x] Mermaid diagrams with \`:::mermaid ... :::\`
+- [x] Mermaid diagrams with \`\`\`mermaid\`\`\`
 
 ## Mermaid Diagram
 
-:::mermaid
+\`\`\`mermaid
 flowchart LR
   A([Start]) --> B{Decision}
   B -- Yes --> C[Process A]
   B -- No  --> D[Process B]
   C --> E([End])
   D --> E
-:::
+\`\`\`
 
 ## Sequence Diagram
 
-:::mermaid
+\`\`\`mermaid
 sequenceDiagram
   participant U as User
   participant E as Editor
@@ -2488,7 +2484,7 @@ sequenceDiagram
   U->>E: Type Markdown
   E->>P: Render HTML
   P-->>U: Live preview
-:::
+\`\`\`
 
 ---
 
@@ -4106,11 +4102,9 @@ function _scanSourceBlocks(text) {
     const start = i;
     let type = 'p';
     let m;
-    if ((m = /^\s*:::(mermaid|tikz)\s*$/.exec(l))) {
-      type = m[1];
-      i = skipTo(i + 1, /^\s*:::\s*$/);
-    } else if ((m = isFence(l))) {
-      type = 'pre';
+    if ((m = isFence(l))) {
+      const dk = /^\s*(?:`{3,}|~{3,})\s*(mermaid|tikz)\s*$/.exec(l);
+      type = dk ? dk[1] : 'pre';
       const close = new RegExp('^\\s{0,3}' + (m[1][0] === '`' ? '`' : '~') + '{' + m[1].length + ',}\\s*$');
       i = skipTo(i + 1, close);
     } else if (/^\s*\\(documentclass|begin\s*\{document\})/.test(l)) {
