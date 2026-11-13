@@ -253,7 +253,8 @@ function _rdScrollTo(hash) {
   const find = key => Array.from(mo.querySelectorAll('[id]')).find(el => el.id === key);
   const target = find(id) || find('zmd-' + id) || find('zmd-' + _rdSlug(id));
   if (!target) return false;
-  target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const top = target.getBoundingClientRect().top - pv.getBoundingClientRect().top + pv.scrollTop - 16;
+  pv.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
   return true;
 }
 
@@ -297,17 +298,17 @@ function _rdLoadScript(url) {
   return _rdScripts.get(url);
 }
 
-const RD_LEAFLET_BASE = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4';
+const RD_LEAFLET_BASE = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist';
 
 function _rdLeaflet() {
   if (!document.getElementById('rd-leaflet-css')) {
     const l = document.createElement('link');
     l.id = 'rd-leaflet-css';
     l.rel = 'stylesheet';
-    l.href = RD_LEAFLET_BASE + '/leaflet.min.css';
+    l.href = RD_LEAFLET_BASE + '/leaflet.css';
     document.head.appendChild(l);
   }
-  return _rdLoadScript(RD_LEAFLET_BASE + '/leaflet.min.js').then(() => window.L);
+  return _rdLoadScript(RD_LEAFLET_BASE + '/leaflet.js').then(() => window.L);
 }
 
 function _rdSimpleStyle(feature) {
@@ -325,7 +326,7 @@ async function _rdBuildMap(el, kind, src) {
   const L = await _rdLeaflet();
   let data = JSON.parse(src);
   if (kind === 'topojson') {
-    await _rdLoadScript('https://cdnjs.cloudflare.com/ajax/libs/topojson-client/3.1.0/topojson-client.min.js');
+    await _rdLoadScript('https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js');
     const feats = [];
     Object.keys(data.objects || {}).forEach(name => {
       const f = window.topojson.feature(data, data.objects[name]);
@@ -372,7 +373,7 @@ function _rdParseStl(text) {
 }
 
 async function _rdBuildStl(el, src) {
-  await _rdLoadScript('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js');
+  await _rdLoadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js');
   const THREE = window.THREE;
   const positions = _rdParseStl(src);
   const geo = new THREE.BufferGeometry();
@@ -500,7 +501,7 @@ function _rdPrepareExport(clone) {
     if (ids.has(slug)) a.setAttribute('href', '#' + slug);
   });
   return clone.querySelector('.leaflet-container')
-    ? `<link rel="stylesheet" href="${RD_LEAFLET_BASE}/leaflet.min.css">\n`
+    ? `<link rel="stylesheet" href="${RD_LEAFLET_BASE}/leaflet.css">\n`
     : '';
 }
 

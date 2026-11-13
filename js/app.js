@@ -500,7 +500,7 @@ function _mdConvertImageAttrs(v) {
 
 // Преобразует расширенные таблицы Złoty MD в обычные GFM-таблицы
 function _mdConvertCustomTables(v) {
-  return v.replace(/:::table([^\n]*)\n([\s\S]*?):::/g, (_, opts, body) => {
+  return v.replace(/^[ \t]*:::table([^\n]*)\n([\s\S]*?)^[ \t]*:::[ \t]*$/gm, (_, opts, body) => {
     const lines = body
       .trim()
       .split('\n')
@@ -1208,10 +1208,14 @@ function _findCodeRanges(v) {
           break;
         }
       }
-      // Незакрытый блок — до конца цитаты/пункта списка или до конца документа
-      const last = end >= 0 ? end : j - 1;
-      blocks.push({ a: starts[i], b: last >= i ? lineEnd(last) : v.length, code: true });
-      i = last + 1;
+      if (end < 0) {
+        blocks.push({ a: starts[i], b: lineEnd(i), code: true, esc: true });
+        i++;
+        prevBlank = false;
+        continue;
+      }
+      blocks.push({ a: starts[i], b: lineEnd(end), code: true });
+      i = end + 1;
       prevBlank = false;
       continue;
     }
@@ -1270,7 +1274,7 @@ function _findCodeRanges(v) {
   let from = 0;
   for (const bl of blocks) {
     scanInline(from, bl.a);
-    if (bl.code) ranges.push([bl.a, bl.b]);
+    if (bl.code) ranges.push([bl.a, bl.b, !!bl.esc]);
     from = bl.b;
   }
   scanInline(from, v.length);
@@ -1284,9 +1288,10 @@ function _protectCode(v) {
   if (!ranges.length) return v;
   let out = '';
   let last = 0;
-  for (const [a, b] of ranges) {
+  for (const [a, b, esc] of ranges) {
     out += v.slice(last, a);
-    _codeStore.push(v.slice(a, b));
+    const piece = v.slice(a, b);
+    _codeStore.push(esc ? piece.replace(/`{3,}|~{3,}/, m => m.replace(/./g, '\\$&')) : piece);
     out += '\x02CODE' + (_codeStore.length - 1) + '\x03';
     last = b;
   }
@@ -3934,14 +3939,28 @@ function _scanSourceBlocks(text) {
       const dk = /^\s*(?:`{3,}|~{3,})\s*(mermaid|tikz|math)\s*$/.exec(l);
       type = dk ? (dk[1] === 'math' ? 'p' : dk[1]) : 'pre';
       const close = new RegExp('^\\s{0,3}' + (m[1][0] === '`' ? '`' : '~') + '{' + m[1].length + ',}\\s*$');
-      i = skipTo(i + 1, close);
+      let k = i + 1;
+      while (k < lines.length && !close.test(lines[k])) k++;
+      if (k >= lines.length) {
+        type = 'p';
+        i++;
+      } else {
+        i = k + 1;
+      }
     } else if (/^\s*:::table/.test(l)) {
-      type = 'table';
-      i = skipTo(i + 1, /^\s*:::\s*$/);
+      let k = i + 1;
+      while (k < lines.length && !/^\s*:::\s*$/.test(lines[k])) k++;
+      if (k >= lines.length) {
+        i++;
+      } else {
+        type = 'table';
+        i = k + 1;
+      }
     } else if (/^\s*\$\$/.test(l)) {
-      // Выводимая формула: в превью — абзац с формулой
       const rest = l.replace(/^\s*\$\$/, '');
-      i = rest.includes('$$') ? i + 1 : skipTo(i + 1, /\$\$/);
+      let k = i + 1;
+      if (!rest.includes('$$')) while (k < lines.length && !/\$\$/.test(lines[k])) k++;
+      i = k >= lines.length ? i + 1 : rest.includes('$$') ? i + 1 : k + 1;
     } else if (isHeading(l)) {
       type = 'h';
       i++;
@@ -4435,7 +4454,7 @@ initLaunchQueue();
 
 // Обрабатывает пользовательские расширенные таблицы (:::table) при рендеринге
 function _processCustomTables(v) {
-  return v.replace(/:::table([^\n]*)\n([\s\S]*?):::/g, (_, opts, body) => {
+  return v.replace(/^[ \t]*:::table([^\n]*)\n([\s\S]*?)^[ \t]*:::[ \t]*$/gm, (_, opts, body) => {
     const stripe = /stripe/.test(opts) ? ' stripe' : '';
     const border = /border/.test(opts) ? ' border' : '';
     const lines = body
