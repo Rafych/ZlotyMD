@@ -40,16 +40,16 @@ Block formulas:
 
 ### Mermaid
 
-Create diagrams directly inside the document: write the diagram between `:::mermaid` and `:::` (TikZ figures: `:::tikz` … `:::`). Code blocks are never rendered.
+Create diagrams directly inside the document: write the diagram in a ```` ```mermaid ```` fenced block (TikZ figures: ```` ```tikz ````).
 
-```md
-:::mermaid
+````md
+```mermaid
 flowchart TD
     A[Start] --> B{Check}
     B -->|Yes| C[Continue]
     B -->|No| D[Finish]
-:::
 ```
+````
 
 ### Code highlighting
 
