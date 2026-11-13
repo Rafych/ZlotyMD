@@ -181,6 +181,7 @@ function buildPreviewHTML(title, opts) {
   `;
 
   const clone = mo.cloneNode(true);
+  const rdHead = _rdPrepareExport(clone);
   if (withCopy) {
     // Кнопки копирования остаются; подписи на текущем языке передаются через data-атрибуты
     clone.querySelectorAll('.cpbtn').forEach(b => {
@@ -331,7 +332,7 @@ function buildPreviewHTML(title, opts) {
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-${tikzFonts}<style>${PREVIEW_CSS}${COPY_CSS}</style>
+${tikzFonts}${rdHead}<style>${PREVIEW_CSS}${RD_CSS}${COPY_CSS}</style>
 </head>
 <body>
 ${bodyInner}
@@ -1180,13 +1181,12 @@ function _findCodeRanges(v) {
     else if (prevBlank && info.bq === 0 && info.indent < 2) inList = false;
 
     if (info.bq === 0 && !inList) {
-      const dg = /^\s*(`{3,}|~{3,})\s*(?:mermaid|tikz)\s*$/.exec(line);
+      const dg = /^\s*(`{3,}|~{3,})\s*(?:mermaid|tikz|math|geojson|topojson|stl)\s*$/.exec(line);
       if (dg) {
         const endRe = new RegExp('^\\s*' + (dg[1][0] === '`' ? '`' : '~') + '{' + dg[1].length + ',}\\s*$');
         if (opaque(endRe, i + 1)) continue;
       }
     }
-    if (/^\s*\\(?:documentclass|begin\s*\{document\})/.test(line) && opaque(/\\end\s*\{document\}/, i)) continue;
 
     const fence = /^(`{3,}|~{3,})(.*)$/.exec(info.text);
     if (
@@ -1335,29 +1335,6 @@ const LATEX_TOKEN = '\x02LTX';
 const LATEX_END = '\x03';
 let _latexStore = [];
 
-const DISPLAY_ENVS = [
-  'equation',
-  'equation\\*',
-  'align',
-  'align\\*',
-  'gather',
-  'gather\\*',
-  'multline',
-  'multline\\*',
-  'eqnarray',
-  'eqnarray\\*',
-  'flalign',
-  'flalign\\*',
-  'alignat',
-  'alignat\\*',
-  'split'
-].join('|');
-// Формула не может проходить через токены (\x02…\x03): так она не захватывает код и другие блоки
-const DISPLAY_ENV_RE = new RegExp(
-  `\\\\begin\\{(${DISPLAY_ENVS})\\}([^\\x02\\x03]+?)\\\\end\\{\\1\\}`,
-  'g'
-);
-
 // Рендерит формулу через KaTeX (инлайн или блочный режим)
 function _katexRender(math, displayMode) {
   if (typeof katex === 'undefined')
@@ -1374,11 +1351,10 @@ function _protectLatex(v) {
     _latexStore.push({ type, math });
     return LATEX_TOKEN + (_latexStore.length - 1) + LATEX_END;
   };
-  v = v.replace(DISPLAY_ENV_RE, (full, env, math) => push('block', full));
+  v = v.replace(_diagramBlockRe('math'), (_, fence, lang, body) => push('block', _restoreCode(body).trim()));
+  v = v.replace(/\$(\x02CODE\d+\x03)\$/g, (_, t) => push('inline', _restoreCode(t).replace(/^`+|`+$/g, '')));
   v = v.replace(/\$\$([^\x02\x03]+?)\$\$/g, (_, math) => push('block', math));
-  v = v.replace(/\\\[([^\x02\x03]+?)\\\]/g, (_, math) => push('block', math));
-  v = v.replace(/\\\(([^\n\x02\x03]+?)\\\)/g, (_, math) => push('inline', math));
-  v = v.replace(/\$([^\$\n\x02\x03]+?)\$/g, (_, math) => push('inline', math));
+  v = v.replace(/(?<![\\$])\$(?![\s$])([^$\n\x02\x03]*?[^\s$\\])\$(?![\d$])/g, (_, math) => push('inline', math));
   return v;
 }
 
@@ -1386,105 +1362,8 @@ function _protectLatex(v) {
 function _restoreLatex(html) {
   return html.replace(new RegExp(`\\x02LTX(\\d+)\\x03`, 'g'), (_, i) => {
     const { type, math } = _latexStore[parseInt(i)];
-    const isEnv = type === 'block' && math.startsWith('\\begin');
-    if (isEnv) {
-      if (typeof katex === 'undefined') return `<div><code>${math}</code></div>`;
-      const el = document.createElement('div');
-      katex.render(math, el, { displayMode: true, throwOnError: false, output: 'html' });
-      return el.outerHTML;
-    }
     return _katexRender(math, type === 'block');
   });
-}
-
-// Разбирает LaTeX-документ на структурные блоки (секции, окружения и т.д.)
-function _parseLatexDoc(v) {
-  v = v.replace(/(?<!\\)%[^\n]*/g, '');
-
-  const pkgs = [];
-  (v.match(/\\usepackage(?:\[.*?\])?\{(.+?)\}/g) || []).forEach(m => {
-    const n = m.match(/\{(.+?)\}/);
-    if (n) n[1].split(',').forEach(p => pkgs.push(p.trim()));
-  });
-
-  const bodyMatch = v.match(/\\begin\s*\{document\}([\s\S]*?)\\end\s*\{document\}/);
-  let body = bodyMatch ? bodyMatch[1] : v;
-
-  body = body.replace(/\\maketitle/g, '');
-  body = body.replace(/\\title\{([\s\S]+?)\}/g, (_, t) => `\n__TITLE__${t.trim()}__ENDTITLE__\n`);
-  body = body.replace(
-    /\\author\{([\s\S]+?)\}/g,
-    (_, a) => `\n__AUTHOR__${a.replace(/\\\\|\\and/g, ', ')}__ENDAUTHOR__\n`
-  );
-  body = body.replace(/\\date\{([\s\S]*?)\}/g, '');
-  body = body.replace(/\\section\*?\{([\s\S]+?)\}/g, (_, t) => `\n\n## ${t}\n`);
-  body = body.replace(/\\subsection\*?\{([\s\S]+?)\}/g, (_, t) => `\n\n### ${t}\n`);
-  body = body.replace(/\\subsubsection\*?\{([\s\S]+?)\}/g, (_, t) => `\n\n#### ${t}\n`);
-  body = body.replace(/\\paragraph\*?\{([\s\S]+?)\}/g, (_, t) => `\n\n**${t}**\n`);
-  body = body.replace(/\\label\{[^}]*\}/g, '');
-  body = body.replace(/\\ref\{([^}]*)\}/g, (_, r) => `(${r})`);
-  body = body.replace(/\\footnote\{([\s\S]+?)\}/g, (_, f) => `^[${f}]`);
-
-  body = body.replace(/\\textbf\{([\s\S]+?)\}/g, (_, t) => `**${t}**`);
-  body = body.replace(/\\textit\{([\s\S]+?)\}/g, (_, t) => `*${t}*`);
-  body = body.replace(/\\emph\{([\s\S]+?)\}/g, (_, t) => `*${t}*`);
-  body = body.replace(/\\underline\{([\s\S]+?)\}/g, (_, t) => `<u>${t}</u>`);
-  body = body.replace(/\\texttt\{([\s\S]+?)\}/g, (_, t) => `\`${t}\``);
-  body = body.replace(/\\text\{([^}]+)\}/g, (_, t) => `\\text{${t}}`);
-
-  body = body.replace(
-    /\\begin\{itemize\}([\s\S]+?)\\end\{itemize\}/g,
-    (_, content) => content.replace(/\\item\s*/g, '- ').trim() + '\n'
-  );
-  body = body.replace(/\\begin\{enumerate\}([\s\S]+?)\\end\{enumerate\}/g, (_, content) => {
-    let i = 0;
-    return content.replace(/\\item\s*/g, () => `${++i}. `).trim() + '\n';
-  });
-  body = body.replace(
-    /\\begin\{description\}([\s\S]+?)\\end\{description\}/g,
-    (_, content) =>
-      content.replace(/\\item\[([^\]]*)\]/g, (_, lbl) => `- **${lbl}**: `).trim() + '\n'
-  );
-
-  body = body.replace(
-    /\\begin\{verbatim\}([\s\S]+?)\\end\{verbatim\}/g,
-    (_, code) => `\n\`\`\`\n${code.trim()}\n\`\`\`\n`
-  );
-
-  body = body.replace(/\\(?:vspace|hspace|vskip|hskip)\*?\{[^}]*\}/g, '\n');
-  body = body.replace(/\\(?:noindent|smallskip|medskip|bigskip|newpage|clearpage)\b/g, '');
-  body = body.replace(/\\\\(\[[\d.]+[a-z]*\])?/g, '  \n');
-  body = body.replace(/\\par\b/g, '\n\n');
-  body = body.replace(/~~/g, ' ');
-  body = body.replace(/~/g, '\u00A0');
-  body = body.replace(/---/g, '—');
-  body = body.replace(/--/g, '–');
-  body = body.replace(/``/g, '\u201C').replace(/''/g, '\u201D');
-  body = body.replace(/`/g, '\u2018').replace(/'/g, '\u2019');
-
-  for (let pass = 0; pass < 3; pass++) {
-    body = body.replace(/\\(?!begin|end|[([])(?:[a-zA-Z]+)\{([\s\S]+?)\}/g, (_, t) => t);
-  }
-  body = body.replace(/\\[a-zA-Z]+\b\*?/g, '');
-  body = body.replace(/\{|\}/g, '');
-
-  return { body, pkgs };
-}
-
-// Рендерит распознанный LaTeX-документ в HTML-разметку
-function _renderLatexDoc(v) {
-  const { body } = _parseLatexDoc(v);
-
-  let processed = _protectLatex(body);
-
-  processed = processed.replace(/__TITLE__(.+?)__ENDTITLE__/g, (_, t) => `# ${t}`);
-  processed = processed.replace(/__AUTHOR__(.+?)__ENDAUTHOR__/g, (_, a) => `*${a}*`);
-
-  processed = _processImageAttrs(processed);
-  let html = marked.parse(processed);
-
-  html = _restoreLatex(html);
-  return `<div class="latex-doc">${html}</div>`;
 }
 
 // Экранирование спецсимволов для встраивания кода Mermaid-диаграммы
@@ -1494,7 +1373,7 @@ function _mmdEsc(s) {
 
 function _diagramBlockRe(kind) {
   return new RegExp(
-    '^[ \\t]*(`{3,}|~{3,})[ \\t]*' + kind + '[ \\t]*\\n([\\s\\S]*?)^[ \\t]*\\1[`~]*[ \\t]*$',
+    '^[ \\t]*(`{3,}|~{3,})[ \\t]*(' + kind + ')[ \\t]*\\n([\\s\\S]*?)^[ \\t]*\\1[`~]*[ \\t]*$',
     'gm'
   );
 }
@@ -1504,7 +1383,7 @@ let _mmdStore = [];
 // Заменяет блоки ```mermaid токенами (исходник диаграммы — в _mmdStore)
 function _protectMermaid(v) {
   _mmdStore = [];
-  return v.replace(MMD_BLOCK_RE, (_, fence, body) => {
+  return v.replace(MMD_BLOCK_RE, (_, fence, lang, body) => {
     _mmdStore.push(_restoreCode(body).trim());
     return `\n\n\x02MMD${_mmdStore.length - 1}\x03\n\n`;
   });
@@ -1545,7 +1424,6 @@ const TIKZ_SUPPORTED_PKGS = new Set([
   'etoolbox', 'hf-tikz', 'pgfplots', 'tikz-3dplot', 'tikz-cd', 'xparse'
 ]);
 const TIKZ_PRELOADED_PKGS = new Set(['tikz', 'pgf', 'xcolor']);
-const TIKZ_ENVS = 'tikzpicture|tikzcd';
 const TIKZ_TOKEN = '\x02TKZ';
 const TIKZ_END = '\x03';
 const TIKZ_DEBOUNCE = 600;
@@ -1693,65 +1571,9 @@ function _tikzPush(code, docOpts) {
   return `\n\n${TIKZ_TOKEN}${_tikzStore.length - 1}${TIKZ_END}\n\n`;
 }
 
-// Markdown: блоки ```tikz … ``` и «голые» \begin{tikzpicture}/\begin{tikzcd} заменяет токенами
-// (код к этому моменту уже спрятан _protectCode, поэтому рисунки в коде не трогаются)
 function _protectTikz(v) {
   const blockRe = _diagramBlockRe('tikz');
-  const envRe = new RegExp(`\\\\begin\\s*\\{(${TIKZ_ENVS})\\}[^\\x02\\x03]*?\\\\end\\s*\\{\\1\\}`, 'g');
-  const hasBlock = /^[ \t]*(?:`{3,}|~{3,})[ \t]*tikz[ \t]*$/m.test(v);
-  if (!hasBlock && !envRe.test(v)) return v;
-  envRe.lastIndex = 0;
-
-  // Сначала откладываем блоки ```tikz: их собственная преамбула относится только к ним
-  const blocks = [];
-  v = v.replace(blockRe, (_, fence, code) => {
-    blocks.push(_restoreCode(code));
-    return `\x02TKB${blocks.length - 1}\x03`;
-  });
-  // \usetikzlibrary / \usepackage вне блоков действуют на все рисунки документа
-  const docOpts = _tikzEmptyOpts();
-  v = v.replace(/^[ \t]*\\(?:usetikzlibrary|usepackage)\b[^\n]*$/gm, line => {
-    _tikzParsePreamble(line, docOpts);
-    return '';
-  });
-  v = v.replace(envRe, full => _tikzPush(full, docOpts));
-  return v.replace(/\x02TKB(\d+)\x03/g, (_, i) => _tikzPush(blocks[+i], docOpts));
-}
-
-// LaTeX-документ: окружения tikzpicture/tikzcd с учётом преамбулы документа
-function _protectTikzLatexDoc(v) {
-  const envRe = new RegExp(`\\\\begin\\s*\\{(${TIKZ_ENVS})\\}[\\s\\S]*?\\\\end\\s*\\{\\1\\}`, 'g');
-  if (!envRe.test(v)) return v;
-  envRe.lastIndex = 0;
-  const docStart = v.search(/\\begin\s*\{document\}/);
-  const preamble = (docStart >= 0 ? v.slice(0, docStart) : '').replace(/(?<!\\)%[^\n]*/g, '');
-  const docOpts = _tikzParsePreamble(preamble, _tikzEmptyOpts());
-  const head = docStart >= 0 ? v.slice(0, docStart) : '';
-  const body = docStart >= 0 ? v.slice(docStart) : v;
-  return head + body.replace(envRe, full => _tikzPush(full, docOpts));
-}
-
-// LaTeX-документ (\documentclass … \end{document}), вставленный в Markdown, рисуем на его месте,
-// а не переключаем весь редактор в отдельный режим
-const LATEX_DOC_RE =
-  /\\documentclass\s*(?:\[[^\]]*\])?\s*\{[^}]*\}[\s\S]*?\\end\s*\{document\}|\\begin\s*\{document\}[\s\S]*?\\end\s*\{document\}/g;
-const LDOC_TOKEN = '\x02LDOC';
-let _latexDocStore = [];
-
-function _protectLatexDocs(v) {
-  _latexDocStore = [];
-  if (!/\\(?:documentclass|begin\s*\{document\})/.test(v)) return v;
-  // Код уже спрятан _protectCode; внутри самого документа возвращаем исходный текст
-  return v.replace(LATEX_DOC_RE, doc => {
-    let d = _protectTikzLatexDoc(_restoreCode(doc));
-    if (!appSettings.htmlRendering) d = escapeHtmlInMarkdown(d);
-    _latexDocStore.push(_renderLatexDoc(d));
-    return `\n\n${LDOC_TOKEN}${_latexDocStore.length - 1}${TIKZ_END}\n\n`;
-  });
-}
-
-function _restoreLatexDocs(html) {
-  return html.replace(/(?:<p>)?\x02LDOC(\d+)\x03(?:<\/p>)?/g, (_, i) => _latexDocStore[parseInt(i)] || '');
+  return v.replace(blockRe, (_, fence, lang, code) => _tikzPush(_restoreCode(code), _tikzEmptyOpts()));
 }
 
 // Заменяет токены на контейнеры рисунков (сам SVG вставляет _mountTikz)
@@ -1928,12 +1750,14 @@ function _processImageAttrs(v) {
 function render(v) {
   const raw = v;
   _tikzStore = [];
+  v = _rdFrontMatter(v);
   // Код прячем первым: внутри него ничего не рендерится (только подсветка и diff)
   v = _protectCode(v);
   // LaTeX-документы, Mermaid и TikZ вынимаем до экранирования HTML: в их коде бывают «<» и «>»
-  v = _protectLatexDocs(v);
   v = _protectMermaid(v);
   v = _protectTikz(v);
+  v = _rdEmbeds(v);
+  v = _rdFootnotes(v);
   if (!appSettings.htmlRendering) {
     // Код спрятан в токены, поэтому экранировать можно весь оставшийся текст
     v = escapeHtmlTags(v);
@@ -1945,10 +1769,12 @@ function render(v) {
     emp.style.display = 'none';
     mo.style.display = 'block';
     const hasMmd = _mmdStore.length > 0;
-    const vv = _processCustomTables(_processImageAttrs(v));
+    const vv = _processCustomTables(_processImageAttrs(_rdEmoji(v)));
     // Код возвращается на место только перед marked: его разбирает (и экранирует) сам marked
     const _html = marked.parse(_restoreCode(_protectEscapes(_protectLatex(vv))));
-    mo.innerHTML = _restoreMermaid(_restoreTikz(_restoreLatexDocs(_restoreEscapes(_restoreLatex(_html)))));
+    mo.innerHTML = _rdRestore(_restoreMermaid(_restoreTikz(_restoreEscapes(_restoreLatex(_html)))));
+    if (_rdFn) mo.insertAdjacentHTML('beforeend', _rdFootnoteSection());
+    _rdPost(mo);
     if (hasMmd && typeof mermaid !== 'undefined') {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -1994,6 +1820,7 @@ function render(v) {
       });
     }
     _mountTikz();
+    _rdMountEmbeds();
     highlightCodeBlocks(mo);
     addCopyBtns();
   }
@@ -2005,6 +1832,7 @@ function render(v) {
 }
 
 ed.addEventListener('input', () => render(ed.value));
+_rdBindPreview();
 ed.addEventListener('keydown', e => {
   if (e.key === 'Tab') {
     if (docReadOnly) return;
@@ -4103,16 +3931,10 @@ function _scanSourceBlocks(text) {
     let type = 'p';
     let m;
     if ((m = isFence(l))) {
-      const dk = /^\s*(?:`{3,}|~{3,})\s*(mermaid|tikz)\s*$/.exec(l);
-      type = dk ? dk[1] : 'pre';
+      const dk = /^\s*(?:`{3,}|~{3,})\s*(mermaid|tikz|math)\s*$/.exec(l);
+      type = dk ? (dk[1] === 'math' ? 'p' : dk[1]) : 'pre';
       const close = new RegExp('^\\s{0,3}' + (m[1][0] === '`' ? '`' : '~') + '{' + m[1].length + ',}\\s*$');
       i = skipTo(i + 1, close);
-    } else if (/^\s*\\(documentclass|begin\s*\{document\})/.test(l)) {
-      type = 'other';
-      i = skipTo(i, /\\end\s*\{document\}/);
-    } else if (/^\s*\\begin\s*\{(tikzpicture|tikzcd)\}/.test(l)) {
-      type = 'tikz';
-      i = skipTo(i, /\\end\s*\{(tikzpicture|tikzcd)\}/);
     } else if (/^\s*:::table/.test(l)) {
       type = 'table';
       i = skipTo(i + 1, /^\s*:::\s*$/);
