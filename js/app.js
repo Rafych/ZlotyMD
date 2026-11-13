@@ -257,16 +257,62 @@ function buildPreviewHTML(title, opts) {
   Złoty MD — © 2026 Rafych (https://github.com/Rafych) and Hiromichi (https://github.com/hiromichipixel)
   MIT License — https://github.com/Rafych/ZlotyMD/blob/main/LICENSE
 
-  Third-party components used (loaded at runtime from a CDN; none of their files are copied into this file):
+  Third-party components used (loaded at runtime from a CDN; none of their files are copied into this file),
+  sorted by license:
 
-  marked v9.1.6
-    Copyright (c) 2011-2018, Christopher Jeffrey (https://github.com/markedjs/marked)
-    MIT License — https://github.com/markedjs/marked/blob/master/LICENSE
+  Apache License 2.0
+
+  emmalloc (Emscripten) and Zephyr libc string functions — bundled in the harfbuzzjs WebAssembly build
+    Copyright (c) the Emscripten authors; Copyright (c) the Zephyr Project contributors
+    Apache License 2.0 — https://www.apache.org/licenses/LICENSE-2.0
+
+  BSD 2-Clause License
+
+  Leaflet v1.9.4 — maps for geojson / topojson blocks; loaded only when a document contains them
+    Copyright (c) 2010-2023, Vladimir Agafonkin; Copyright (c) 2010-2011, CloudMade
+    BSD 2-Clause License — https://github.com/Leaflet/Leaflet/blob/main/LICENSE
+
+  BSD 3-Clause License
+
+  highlight.js v11.11.1 — syntax highlighting in code blocks
+    Copyright (c) 2006, Ivan Sagalaev
+    BSD 3-Clause License — https://github.com/highlightjs/highlight.js/blob/main/LICENSE
+
+  GPL-3.0-or-later
+
+  TikZJax (@drgrice1/tikzjax v1.0.0-beta24) — loaded only when a document contains TikZ
+    Copyright (c) Jim Fowler, Glenn Rice and contributors
+    GPL-3.0-or-later — https://github.com/drgrice1/tikzjax
+    It bundles TeX and TeX packages (e.g. PGF/TikZ, pgfplots) under their own licenses.
+
+  ISC License
+
+  topojson-client v3.1.0 — topojson blocks; loaded only when a document contains them
+    Copyright (c) 2012-2019, Michael Bostock
+    ISC License — https://github.com/topojson/topojson-client/blob/master/LICENSE.md
+
+  MIT License
+
+  harfbuzzjs v0.4.12 (HarfBuzz) — used by the editor for PDF export (text shaping: ligatures)
+    Copyright (c) 2019 Ebrahim Byagowi; HarfBuzz: Copyright (c) the HarfBuzz authors
+    MIT License — https://github.com/harfbuzz/harfbuzzjs/blob/main/LICENSE
+    HarfBuzz: "Old MIT" License — https://github.com/harfbuzz/harfbuzz/blob/main/COPYING
+
+  html2canvas v1.4.1 — used by jsPDF (html()) for PDF export
+    Copyright (c) 2012 Niklas von Hertzen
+    MIT License — https://github.com/niklasvh/html2canvas/blob/master/LICENSE
+
+  jsPDF v4.2.1 — used by the editor for PDF export
+    Copyright (c) 2010-2025 James Hall (https://github.com/parallax/jsPDF), (c) 2015-2025 yWorks GmbH (https://www.yworks.com/)
+    MIT License — https://github.com/parallax/jsPDF/blob/master/LICENSE
 
   KaTeX v0.16.9
     Copyright (c) 2013-2020 Khan Academy and other contributors
     MIT License — https://github.com/KaTeX/KaTeX/blob/main/LICENSE
-    KaTeX fonts: SIL Open Font License 1.1 (fonts derived from AMS Fonts / Computer Modern) — https://github.com/KaTeX/KaTeX/blob/main/LICENSE
+
+  marked v9.1.6
+    Copyright (c) 2011-2018, Christopher Jeffrey (https://github.com/markedjs/marked)
+    MIT License — https://github.com/markedjs/marked/blob/master/LICENSE
 
   Mermaid v10.6.1
     Copyright (c) 2014-2023 Knut Sveidqvist and contributors
@@ -274,28 +320,21 @@ function buildPreviewHTML(title, opts) {
     The distributed bundle includes dependencies (e.g. d3, dagre-d3-es, DOMPurify, dayjs, khroma)
     under their own permissive licenses (MIT / ISC / BSD-3-Clause / Apache-2.0 / MPL-2.0).
 
-  jsPDF v4.2.1 — used by the editor for PDF export
-    Copyright (c) 2010-2025 James Hall (https://github.com/parallax/jsPDF), (c) 2015-2025 yWorks GmbH (https://www.yworks.com/)
-    MIT License — https://github.com/parallax/jsPDF/blob/master/LICENSE
-
-  html2canvas v1.4.1 — used by jsPDF (html()) for PDF export
-    Copyright (c) 2012 Niklas von Hertzen
-    MIT License — https://github.com/niklasvh/html2canvas/blob/master/LICENSE
-
   svg2pdf.js v2.9.0 — used by the editor for PDF export (SVG diagrams and formulas as vectors)
     Copyright (c) 2015-2026 yWorks GmbH
     MIT License — https://github.com/yWorks/svg2pdf.js/blob/master/LICENSE
 
-  harfbuzzjs v0.4.12 (HarfBuzz) — used by the editor for PDF export (text shaping: ligatures)
-    Copyright (c) 2019 Ebrahim Byagowi; HarfBuzz: Copyright (c) the HarfBuzz authors
-    MIT License — https://github.com/harfbuzz/harfbuzzjs/blob/main/LICENSE
-    HarfBuzz: "Old MIT" License — https://github.com/harfbuzz/harfbuzz/blob/main/COPYING
-    The WebAssembly build also contains emmalloc (from Emscripten) and Zephyr libc string functions
-    under the Apache License 2.0.
+  three.js r128 — 3D view for stl blocks; loaded only when a document contains them
+    Copyright (c) 2010-2021 three.js authors
+    MIT License — https://github.com/mrdoob/three.js/blob/dev/LICENSE
 
-  highlight.js v11.11.1 — syntax highlighting in code blocks
-    Copyright (c) 2006, Ivan Sagalaev
-    BSD 3-Clause License — https://github.com/highlightjs/highlight.js/blob/main/LICENSE
+  Open Database License 1.0
+
+  OpenStreetMap map data and tiles — shown in geojson / topojson blocks (no code included)
+    Copyright (c) OpenStreetMap contributors
+    ODbL 1.0 — https://www.openstreetmap.org/copyright
+
+  SIL Open Font License 1.1
 
   Google Sans
     Copyright (c) Google Inc.
@@ -305,18 +344,18 @@ function buildPreviewHTML(title, opts) {
     Copyright (c) 2020 JetBrains s.r.o.
     SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
 
+  KaTeX fonts (derived from AMS Fonts / Computer Modern)
+    Copyright (c) 2013-2020 Khan Academy and other contributors
+    SIL Open Font License 1.1 — https://github.com/KaTeX/KaTeX/blob/main/LICENSE
+
   Noto Sans, Noto Sans JP / KR / SC / TC, Noto Sans Arabic, Noto Sans Hebrew, Noto Sans Math,
   Noto Sans Symbols 2 — embedded into exported PDF files
   only for characters the document fonts do not cover
     Copyright (c) Google LLC
     SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
 
-  TikZJax (@drgrice1/tikzjax v1.0.0-beta24) — loaded only when a document contains TikZ
-    Copyright (c) Jim Fowler, Glenn Rice and contributors
-    GPL-3.0-or-later — https://github.com/drgrice1/tikzjax
-    It bundles TeX and TeX packages (e.g. PGF/TikZ, pgfplots) under their own licenses.
-
-  Content delivery / font services (no code included): cdnjs (Cloudflare), jsDelivr, Google Fonts.
+  Content delivery / font / map tile services (no code included): cdnjs (Cloudflare), jsDelivr, Google Fonts,
+  OpenStreetMap tile servers.
 
   Optional AI features call external APIs with the user's own key (no code included; each
   provider's terms of service apply): Anthropic API, Google Gemini API.
@@ -2161,6 +2200,9 @@ const LANGS = {
     tblCellDefault: 'Cell',
     mermaidSyntaxError: '⚠ Mermaid: syntax error (diagram syntax error)',
     savedLabel: 'Saved',
+    toastSaving: 'Saving…',
+    toastSaved: 'Saved',
+    toastSaveFailed: 'Could not save',
     unsavedLabel: 'Unsaved',
     saveBtnTitle: 'Save (Ctrl+S)',
     readOnlyLabel: 'Read-only',
@@ -3451,7 +3493,7 @@ async function flushCurrentDocSave() {
 // Сохраняет содержимое, положение прокрутки и размеры шрифтов текущего документа.
 // Имя берётся из сохранённой записи: его могли изменить в другом окне
 async function saveContent() {
-  if (!currentDocId || switchingDoc || docReadOnly) return;
+  if (!currentDocId || switchingDoc || docReadOnly) return false;
   const id = currentDocId;
   const content = ed.value;
   try {
@@ -3467,23 +3509,44 @@ async function saveContent() {
       fill(fresh);
       await persistDocRecord(id, fresh);
     }
-    if (id !== currentDocId) return;
+    if (id !== currentDocId) return true;
     _savedContent = content;
     await updateDocIndex(list => {
       const item = list.find(d => d.id === id);
       if (item) item.updatedAt = Date.now();
     });
     if (id === currentDocId && !docReadOnly) setSaveStatus(ed.value === _savedContent ? 'saved' : 'unsaved');
+    return true;
   } catch (e) {
     setSaveStatus('error');
+    return false;
   }
+}
+
+let _toastTimer = null;
+function showToast(text, kind, duration) {
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast';
+    el.setAttribute('role', 'status');
+    document.body.appendChild(el);
+  }
+  clearTimeout(_toastTimer);
+  el.textContent = text;
+  el.className = 'toast show ' + (kind || '');
+  if (duration) _toastTimer = setTimeout(() => el.classList.remove('show'), duration);
 }
 
 // Сохранение вручную: кнопка «Сохранить» и Ctrl+S
 async function saveNow() {
   if (_roGuard()) return;
   clearTimeout(saveTimer);
-  await saveContent();
+  const t = LANGS[currentLang] || LANGS['en'];
+  showToast(t.toastSaving || LANGS['en'].toastSaving, 'saving');
+  const ok = await saveContent();
+  if (ok) showToast(t.toastSaved || LANGS['en'].toastSaved, 'ok', 1800);
+  else showToast(t.toastSaveFailed || LANGS['en'].toastSaveFailed, 'err', 3000);
 }
 
 let saveTimer = null;
