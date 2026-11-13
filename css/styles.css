@@ -3397,3 +3397,32 @@ body.ai-dot-on .ai-dot {
     scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
   }
 }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  transform: translate(-50%, 12px);
+  max-width: calc(100vw - 32px);
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: #202124;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 2000;
+}
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.toast.ok {
+  background: #1e8e3e;
+}
+.toast.err {
+  background: #d93025;
+}
