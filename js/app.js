@@ -168,6 +168,8 @@ function buildPreviewHTML(title, opts) {
     .md hr{border:none;height:1.5px;background:var(--bord);margin:var(--s34) 0}
     .md strong{font-weight:700}
     .md img{max-width:100%;border-radius:var(--r13)}
+    img.emoji{display:inline-block;width:1em;height:1em;margin:0 .05em 0 .1em;vertical-align:-.1em}
+    .md img.emoji{max-width:none;border-radius:0}
     .md input[type=checkbox]{accent-color:var(--gg)}
     .md .katex-display{overflow-x:auto;overflow-y:hidden;padding:var(--s13) 0;margin:var(--s13) 0}
     .md .katex{font-size:1.08em}
@@ -278,6 +280,12 @@ function buildPreviewHTML(title, opts) {
     Copyright (c) 2006, Ivan Sagalaev
     BSD 3-Clause License — https://github.com/highlightjs/highlight.js/blob/main/LICENSE
 
+  Creative Commons Attribution 4.0 International
+
+  Twemoji graphics v17.0.3 — emoji images in the editor interface, the preview and exported documents
+    Copyright (c) Twitter, Inc and other contributors; Copyright (c) jdecked/twemoji contributors
+    CC BY 4.0 — https://github.com/jdecked/twemoji/blob/main/LICENSE-GRAPHICS
+
   GPL-3.0-or-later
 
   TikZJax (@drgrice1/tikzjax v1.0.0-beta24) — loaded only when a document contains TikZ
@@ -327,6 +335,10 @@ function buildPreviewHTML(title, opts) {
   three.js r128 — 3D view for stl blocks; loaded only when a document contains them
     Copyright (c) 2010-2021 three.js authors
     MIT License — https://github.com/mrdoob/three.js/blob/dev/LICENSE
+
+  Twemoji (@twemoji/api v17.0.3) — replaces emoji in the editor interface and the preview with Twemoji images
+    Copyright (c) 2014-2021 Twitter; Copyright (c) 2022-present Jason Sofonia & Justine De Caires
+    MIT License — https://github.com/jdecked/twemoji/blob/main/LICENSE
 
   Open Database License 1.0
 
@@ -415,6 +427,15 @@ if(typeof mermaid!=='undefined'){
     }
   })();
 }
+<\/script>
+<script>
+(function(){
+  function fallback(img){if(img.parentNode)img.parentNode.replaceChild(document.createTextNode(img.alt),img);}
+  document.querySelectorAll('img.emoji').forEach(function(img){
+    if(img.complete){if(!img.naturalWidth)fallback(img);}
+    else img.addEventListener('error',function(){fallback(img);});
+  });
+})();
 <\/script>
 ${COPY_JS}</body>
 </html>`;
@@ -2185,6 +2206,7 @@ const LANGS = {
     aboutLibTikzjaxBadge: 'GPL-3.0-or-later',
     aboutLibTikzjaxCopy: '© Jim Fowler, Glenn Rice and contributors',
     langBtnTitle: 'Language',
+    langAuto: 'Auto (device language)',
     tblDialogTitle: 'Insert custom table',
     tblColsLabel: 'Columns',
     tblRowsLabel: 'Rows (excluding header)',
@@ -2662,9 +2684,7 @@ function applyLang(code) {
   ed.placeholder = t.placeholder;
 
   document.getElementById('langCurrent').textContent = code.toUpperCase();
-  document.querySelectorAll('.lang-opt').forEach(b => {
-    b.classList.toggle('active', b.dataset.lang === code);
-  });
+  syncLangMenu();
 
   const chip = document.getElementById('saveChip');
   if (chip) {
@@ -2892,18 +2912,73 @@ async function saveLangSetting() {
 }
 // Загружает ранее сохранённый язык интерфейса
 async function loadLangSetting() {
+  let raw = null;
   try {
-    const raw = await idbGet(IDB_LANG_KEY);
-    if (raw) {
-      try {
-        await loadLangFile(raw);
-        applyLang(raw);
-      } catch (err) {
-        // Сохранённый язык недоступен — остаёмся на текущем (английском) и сообщаем об ошибке
-        showLangError(err);
-      }
-    }
+    raw = await idbGet(IDB_LANG_KEY);
   } catch (e) {}
+  if (!raw) {
+    const code = await resolveBrowserLang();
+    _langAuto = true;
+    if (code !== currentLang) applyLang(code);
+    else syncLangMenu();
+    return;
+  }
+  _langAuto = false;
+  syncLangMenu();
+  try {
+    await loadLangFile(raw);
+    applyLang(raw);
+  } catch (err) {
+    // Сохранённый язык недоступен — остаёмся на текущем (английском) и сообщаем об ошибке
+    showLangError(err);
+  }
+}
+
+const LANG_AUTO = 'auto';
+let _langAuto = true;
+
+function syncLangMenu() {
+  const active = _langAuto ? LANG_AUTO : currentLang;
+  document.querySelectorAll('.lang-opt').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === active);
+  });
+}
+
+function getSupportedLangs() {
+  const codes = ['en'];
+  document.querySelectorAll('.lang-opt').forEach(b => {
+    const code = b.dataset.lang;
+    if (code && code !== LANG_AUTO && !codes.includes(code)) codes.push(code);
+  });
+  return codes;
+}
+
+function getBrowserLangCandidates() {
+  const prefs =
+    navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
+  const supported = getSupportedLangs();
+  const result = [];
+  Array.from(prefs).forEach(pref => {
+    const tag = String(pref || '').toLowerCase();
+    if (!tag) return;
+    const match =
+      supported.find(c => c.toLowerCase() === tag) || supported.find(c => c.toLowerCase() === tag.split('-')[0]);
+    if (match && !result.includes(match)) result.push(match);
+  });
+  return result;
+}
+
+async function resolveBrowserLang() {
+  for (const code of getBrowserLangCandidates()) {
+    if (code === 'en') return code;
+    try {
+      await loadLangFile(code);
+      return code;
+    } catch (err) {
+      console.warn('Language file load failed:', err);
+    }
+  }
+  return 'en';
 }
 
 // Устанавливает язык интерфейса и применяет его
@@ -2912,6 +2987,17 @@ async function setLang(code) {
   closeLang();
   // При быстрых кликах применяется только последний выбранный язык
   const token = ++_langSwitchToken;
+  if (code === LANG_AUTO) {
+    const target = await resolveBrowserLang();
+    if (token !== _langSwitchToken) return;
+    _langAuto = true;
+    applyLang(target);
+    try {
+      await idbDelete(IDB_LANG_KEY);
+    } catch (e) {}
+    saveContent();
+    return;
+  }
   try {
     await loadLangFile(code);
   } catch (err) {
@@ -2920,6 +3006,7 @@ async function setLang(code) {
     return;
   }
   if (token !== _langSwitchToken) return;
+  _langAuto = false;
   applyLang(code);
   saveLangSetting();
   saveContent();
@@ -2975,6 +3062,75 @@ function closeLang() {
 document.addEventListener('click', e => {
   if (!document.getElementById('langWrap').contains(e.target)) closeLang();
 });
+
+// Twemoji (https://github.com/jdecked/twemoji) — код: MIT License, графика: CC BY 4.0
+const TWEMOJI_SKIP =
+  '#ed, pre, code, svg, textarea, select, option, script, style, noscript, iframe, .katex, .mermaid, .rd-embed, [contenteditable]';
+const _twemojiFailed = new Set();
+
+function twemojiSrc(raw) {
+  const icon = twemoji.convert.toCodePoint(raw.indexOf('\u200d') < 0 ? raw.replace(/\ufe0f/g, '') : raw);
+  return twemoji.base + 'svg/' + icon + '.svg';
+}
+
+function twemojiImg(raw, src) {
+  const img = document.createElement('img');
+  img.className = 'emoji';
+  img.alt = raw;
+  img.draggable = false;
+  img.onerror = () => {
+    _twemojiFailed.add(src);
+    if (img.parentNode) img.parentNode.replaceChild(document.createTextNode(raw), img);
+  };
+  img.src = src;
+  return img;
+}
+
+function twemojiText(node) {
+  const text = node.data;
+  const frag = document.createDocumentFragment();
+  let last = 0;
+  let count = 0;
+  twemoji.replace(text, function (raw) {
+    const offset = arguments[arguments.length - 2];
+    const src = twemojiSrc(raw);
+    if (_twemojiFailed.has(src)) return raw;
+    if (offset > last) frag.appendChild(document.createTextNode(text.slice(last, offset)));
+    frag.appendChild(twemojiImg(raw, src));
+    last = offset + raw.length;
+    count++;
+    return raw;
+  });
+  if (!count || !node.parentNode) return;
+  if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+  node.parentNode.replaceChild(frag, node);
+}
+
+function applyTwemoji(root) {
+  if (typeof twemoji === 'undefined' || !root || root.nodeType !== 1 || root.closest(TWEMOJI_SKIP)) return;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+    acceptNode: n => {
+      if (n.nodeType === 1) return n.matches(TWEMOJI_SKIP) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_SKIP;
+      return twemoji.test(n.data) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+    }
+  });
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(twemojiText);
+}
+
+if (typeof twemoji !== 'undefined') {
+  applyTwemoji(document.body);
+  new MutationObserver(records => {
+    records.forEach(r => {
+      if (r.type === 'characterData') {
+        applyTwemoji(r.target.parentElement);
+        return;
+      }
+      r.addedNodes.forEach(n => applyTwemoji(n.nodeType === 1 ? n : n.parentElement));
+    });
+  }).observe(document.body, { childList: true, subtree: true, characterData: true });
+}
 
 if (typeof mermaid !== 'undefined') {
   mermaid.initialize({
