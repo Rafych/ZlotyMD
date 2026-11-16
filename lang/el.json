@@ -86,6 +86,7 @@
   "aboutLibTikzjaxBadge": "GPL-3.0-or-later",
   "aboutLibTikzjaxCopy": "© Jim Fowler, Glenn Rice και συνεργάτες",
   "langBtnTitle": "Γλώσσα",
+  "langAuto": "Αυτόματα (γλώσσα συσκευής)",
   "tblDialogTitle": "Εισαγωγή προσαρμοσμένου πίνακα",
   "tblColsLabel": "Στήλες",
   "tblRowsLabel": "Γραμμές (χωρίς επικεφαλίδα)",

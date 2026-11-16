@@ -86,6 +86,7 @@
   "aboutLibTikzjaxBadge": "GPL-3.0-or-later",
   "aboutLibTikzjaxCopy": "© Jim Fowler, Glenn Rice и другие участники",
   "langBtnTitle": "Язык",
+  "langAuto": "Авто (язык устройства)",
   "tblDialogTitle": "Вставить пользовательскую таблицу",
   "tblColsLabel": "Столбцы",
   "tblRowsLabel": "Строки (без учёта заголовка)",

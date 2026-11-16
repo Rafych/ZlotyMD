@@ -88,6 +88,7 @@
   "aboutLibTikzjaxBadge": "GPL-3.0-or-later",
   "aboutLibTikzjaxCopy": "© Jim Fowler、Glenn Rice 他",
   "langBtnTitle": "言語",
+  "langAuto": "自動（端末の言語）",
   "tblDialogTitle": "カスタムテーブルを挿入",
   "tblColsLabel": "列数",
   "tblRowsLabel": "行数（ヘッダー除く）",

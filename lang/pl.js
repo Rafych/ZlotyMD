@@ -88,6 +88,7 @@
   "aboutLibTikzjaxBadge": "GPL-3.0-or-later",
   "aboutLibTikzjaxCopy": "© Jim Fowler, Glenn Rice i współtwórcy",
   "langBtnTitle": "Język",
+  "langAuto": "Automatycznie (język urządzenia)",
   "tblDialogTitle": "Wstaw niestandardową tabelę",
   "tblColsLabel": "Kolumny",
   "tblRowsLabel": "Wiersze (bez nagłówka)",
