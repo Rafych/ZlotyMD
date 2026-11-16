@@ -1607,6 +1607,28 @@ body {
   color: var(--gb);
   background: var(--gbt);
 }
+.lang-sep {
+  height: 1px;
+  margin: var(--s5) var(--s8);
+  background: var(--bord);
+}
+img.emoji {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin: 0 0.05em 0 0.1em;
+  vertical-align: -0.1em;
+}
+.md img.emoji {
+  max-width: none;
+  border-radius: 0;
+}
+.lang-opt img.emoji {
+  width: 1.25em;
+  height: 1.25em;
+  margin: 0;
+  vertical-align: -0.2em;
+}
 
 .save-chip {
   display: flex;
