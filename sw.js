@@ -2,7 +2,7 @@
  * Локальные файлы и CDN-ресурсы (marked, KaTeX, Mermaid, highlight.js, jsPDF, html2canvas, svg2pdf.js, HarfBuzz, шрифты) кэшируются
  * при установке и при использовании, поэтому редактор работает без сети.
  * При изменении файлов приложения увеличьте CACHE_VERSION. */
-const CACHE_VERSION = 'zmd-v25';
+const CACHE_VERSION = 'zmd-v29';
 const CACHE = CACHE_VERSION;
 
 const LOCAL_ASSETS = [
@@ -25,6 +25,16 @@ const LOCAL_ASSETS = [
   'lang/pl.js',
   'lang/el.json',
   'lang/el.js',
+  'lang/fr.json',
+  'lang/fr.js',
+  'lang/it.json',
+  'lang/it.js',
+  'lang/pt.json',
+  'lang/pt.js',
+  'lang/es.json',
+  'lang/es.js',
+  'lang/ro.json',
+  'lang/ro.js',
   'manifest.webmanifest',
   'assets/favicon.svg',
   'icons/icon-192.png',
@@ -39,6 +49,7 @@ const CDN_SCRIPTS = [
   'https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/latex.min.js',
+  'https://cdn.jsdelivr.net/npm/@twemoji/api@17.0.3/dist/twemoji.min.js',
   // Экспорт в PDF (загружаются внутри скрытого iframe при создании PDF)
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/4.2.1/jspdf.umd.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',

@@ -17,6 +17,21 @@ Edytor Markdown z proporcjami złotego podziału i paletą kolorów w stylu Goog
 ## ελληνικά
 Ένας επεξεργαστής Markdown με αναλογίες χρυσής τομής και παλέτα χρωμάτων εμπνευσμένη από τη Google.
 
+## Français
+Un éditeur Markdown aux proportions du nombre d’or et à la palette de couleurs inspirée de Google.
+
+## Italiano
+Un editor Markdown con le proporzioni della sezione aurea e una tavolozza di colori ispirata a Google.
+
+## Português (Brasil)
+Um editor de Markdown com as proporções da razão áurea e uma paleta de cores inspirada no Google.
+
+## Español
+Un editor de Markdown con proporciones de la razón áurea y una paleta de colores inspirada en Google.
+
+## Română
+Un editor Markdown cu proporțiile secțiunii de aur și o paletă de culori inspirată de Google.
+
 # Screenshot
 
 ![Снимок экрана](./Снимок%20экрана%202026-11-09%20133131.png)
@@ -36,6 +51,7 @@ The libraries below are not part of this repository. The browser loads them from
 | emmalloc (Emscripten) / Zephyr libc string functions | — | Apache-2.0 | bundled in the harfbuzzjs WebAssembly build |
 | [Leaflet](https://github.com/Leaflet/Leaflet) | 1.9.4 | BSD-2-Clause | jsDelivr, only when a document contains geojson / topojson |
 | [highlight.js](https://github.com/highlightjs/highlight.js) | 11.11.1 | BSD-3-Clause | cdnjs (extra languages are loaded only when a code block uses them) |
+| [Twemoji](https://github.com/jdecked/twemoji) graphics | 17.0.3 | CC-BY-4.0 | jsDelivr (emoji images in the editor interface, the preview and exported documents) |
 | [TikZJax](https://github.com/drgrice1/tikzjax) (`@drgrice1/tikzjax`) | 1.0.0-beta24 | GPL-3.0-or-later | jsDelivr, only when a document contains TikZ |
 | [topojson-client](https://github.com/topojson/topojson-client) | 3.1.0 | ISC | jsDelivr, only when a document contains topojson |
 | [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs) ([HarfBuzz](https://github.com/harfbuzz/harfbuzz)) | 0.4.12 | MIT (HarfBuzz: Old MIT; parts Apache-2.0) | jsDelivr, only when exporting to PDF (text shaping) |
@@ -46,6 +62,7 @@ The libraries below are not part of this repository. The browser loads them from
 | [Mermaid](https://github.com/mermaid-js/mermaid) | 10.6.1 | MIT | cdnjs |
 | [svg2pdf.js](https://github.com/yWorks/svg2pdf.js) | 2.9.0 | MIT | jsDelivr, only when exporting to PDF (SVG as vectors) |
 | [three.js](https://github.com/mrdoob/three.js) | r128 | MIT | jsDelivr, only when a document contains stl |
+| [Twemoji](https://github.com/jdecked/twemoji) (`@twemoji/api`) | 17.0.3 | MIT | jsDelivr |
 | [OpenStreetMap](https://www.openstreetmap.org/copyright) map data and tiles | — | ODbL-1.0 | OpenStreetMap tile servers, only when a document contains geojson / topojson |
 | [Google Sans](https://fonts.google.com/) | — | SIL OFL 1.1 | Google Fonts |
 | [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | 2020 | SIL OFL 1.1 | Google Fonts |

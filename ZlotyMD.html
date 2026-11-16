@@ -24,6 +24,12 @@
     Copyright (c) 2006, Ivan Sagalaev
     BSD 3-Clause License — https://github.com/highlightjs/highlight.js/blob/main/LICENSE
 
+  Creative Commons Attribution 4.0 International
+
+  Twemoji graphics v17.0.3 — emoji images in the editor interface, the preview and exported documents
+    Copyright (c) Twitter, Inc and other contributors; Copyright (c) jdecked/twemoji contributors
+    CC BY 4.0 — https://github.com/jdecked/twemoji/blob/main/LICENSE-GRAPHICS
+
   GPL-3.0-or-later
 
   TikZJax (@drgrice1/tikzjax v1.0.0-beta24) — loaded only when a document contains TikZ
@@ -73,6 +79,10 @@
   three.js r128 — 3D view for stl blocks; loaded only when a document contains them
     Copyright (c) 2010-2021 three.js authors
     MIT License — https://github.com/mrdoob/three.js/blob/dev/LICENSE
+
+  Twemoji (@twemoji/api v17.0.3) — replaces emoji in the editor interface and the preview with Twemoji images
+    Copyright (c) 2014-2021 Twitter; Copyright (c) 2022-present Jason Sofonia & Justine De Caires
+    MIT License — https://github.com/jdecked/twemoji/blob/main/LICENSE
 
   Open Database License 1.0
 
@@ -139,6 +149,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
     <!-- LaTeX нет в основной сборке; используется часто, поэтому загружается сразу -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/latex.min.js"></script>
+    <!-- Twemoji (https://github.com/jdecked/twemoji) — эмодзи интерфейса, превью и экспорта. Код: MIT License, © 2014–2021 Twitter, © 2022–present Jason Sofonia & Justine De Caires. Графика: CC BY 4.0, © Twitter, Inc and other contributors -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/@twemoji/api@17.0.3/dist/twemoji.min.js"
+      integrity="sha384-Y5xukbGJwykbHHkTbLJykYLcBPFxrwipTbEh0puxhkz9CZ90raTPGe2Ks4vCxsYU"
+      crossorigin="anonymous"
+    ></script>
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
@@ -857,12 +873,20 @@
             <span id="langCurrent">EN</span>
           </button>
           <div class="lang-drop" id="langDrop">
-            <button class="lang-opt" data-lang="en" onclick="setLang('en')">🇬🇧 English</button>
-            <button class="lang-opt" data-lang="ru" onclick="setLang('ru')">🇷🇺 Русский</button>
-            <button class="lang-opt" data-lang="ja" onclick="setLang('ja')">🇯🇵 日本語</button>
-            <button class="lang-opt" data-lang="de" onclick="setLang('de')">🇩🇪 Deutsch</button>
-            <button class="lang-opt" data-lang="pl" onclick="setLang('pl')">🇵🇱 Polski</button>
-            <button class="lang-opt" data-lang="el" onclick="setLang('el')">🇬🇷 Ελληνικά</button>
+            <!-- Порядок пунктов: «Авто» всегда первым, далее языки по алфавиту их английских названий (English, French, German, Greek, Italian, Japanese, Polish, Portuguese, Romanian, Russian, Spanish) -->
+            <button class="lang-opt" data-lang="auto" onclick="setLang('auto')"><span>🌐</span><span data-i18n="langAuto">Auto (device language)</span></button>
+            <div class="lang-sep" role="separator"></div>
+            <button class="lang-opt" data-lang="en" onclick="setLang('en')"><span>🇬🇧</span><span>English</span></button>
+            <button class="lang-opt" data-lang="fr" onclick="setLang('fr')"><span>🇫🇷</span><span>Français</span></button>
+            <button class="lang-opt" data-lang="de" onclick="setLang('de')"><span>🇩🇪</span><span>Deutsch</span></button>
+            <button class="lang-opt" data-lang="el" onclick="setLang('el')"><span>🇬🇷</span><span>Ελληνικά</span></button>
+            <button class="lang-opt" data-lang="it" onclick="setLang('it')"><span>🇮🇹</span><span>Italiano</span></button>
+            <button class="lang-opt" data-lang="ja" onclick="setLang('ja')"><span>🇯🇵</span><span>日本語</span></button>
+            <button class="lang-opt" data-lang="pl" onclick="setLang('pl')"><span>🇵🇱</span><span>Polski</span></button>
+            <button class="lang-opt" data-lang="pt" onclick="setLang('pt')"><span>🇧🇷</span><span>Português (Brasil)</span></button>
+            <button class="lang-opt" data-lang="ro" onclick="setLang('ro')"><span>🇷🇴</span><span>Română</span></button>
+            <button class="lang-opt" data-lang="ru" onclick="setLang('ru')"><span>🇷🇺</span><span>Русский</span></button>
+            <button class="lang-opt" data-lang="es" onclick="setLang('es')"><span>🇪🇸</span><span>Español</span></button>
           </div>
         </div>
 
@@ -982,6 +1006,13 @@
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
+                <span class="about-lib-name">Twemoji graphics <span class="about-lib-ver">v17.0.3</span></span>
+                <span class="about-lib-badge about-lib-badge-alt">CC-BY-4.0</span>
+              </div>
+              <span class="about-lib-copy">© Twitter, Inc and other contributors</span>
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
                 <span class="about-lib-name">TikZJax <span class="about-lib-ver">v1.0.0-beta24</span></span>
                 <span class="about-lib-badge about-lib-badge-alt" data-i18n="aboutLibTikzjaxBadge"
                   >GPL-3.0-or-later</span
@@ -1061,6 +1092,13 @@
                 <span class="about-lib-badge">MIT</span>
               </div>
               <span class="about-lib-copy">© 2010–2021 three.js authors</span>
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
+                <span class="about-lib-name">Twemoji <span class="about-lib-ver">v17.0.3</span></span>
+                <span class="about-lib-badge">MIT</span>
+              </div>
+              <span class="about-lib-copy">© 2014–2021 Twitter, © 2022–present Jason Sofonia &amp; Justine De Caires</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
