@@ -8,7 +8,8 @@ const cc = document.getElementById('cc'),
 
 // aiDot — показывать фиолетовую точку («шишку») на значке ИИ (по умолчанию скрыта)
 // autoSave — автосохранение при наборе (выключено — только кнопкой «Сохранить» и Ctrl+S)
-const SETTINGS_DEFAULTS = { htmlRendering: false, aiDot: false, autoSave: true };
+// pageView — разметка страниц PDF в редакторе и превью (в скачиваемый HTML и новое окно не попадает)
+const SETTINGS_DEFAULTS = { htmlRendering: false, aiDot: false, autoSave: true, pageView: true };
 let appSettings = { ...SETTINGS_DEFAULTS };
 
 // Несколько окон (см. раздел «Несколько окон»): документ в этом окне только для просмотра,
@@ -246,6 +247,8 @@ function buildPreviewHTML(title, opts) {
 
   const clone = mo.cloneNode(true);
   _rdPrepareExport(clone);
+  // Ручные разрывы страниц (\newpage) — только для PDF: в HTML и превью в новом окне страниц нет
+  if (!opts || !opts.pageBreaks) clone.querySelectorAll('.zmd-pagebreak').forEach(n => n.remove());
   if (withCopy) {
     // Кнопки копирования остаются; подписи на текущем языке передаются через data-атрибуты
     clone.querySelectorAll('.cpbtn').forEach(b => {
@@ -675,8 +678,9 @@ function buildPdfHTML(title) {
     @page{margin:20mm}
     body{font-family:'Google Sans',sans-serif;background:#fff;color:#202124;padding:0;max-width:none;margin:0;line-height:1.85}
     @media print{body{padding:0}}
+    .md .zmd-pagebreak{display:block;break-after:page;height:0;margin:0;padding:0;border:0;overflow:hidden}
   `;
-  const baseHTML = buildPreviewHTML(title, { copyButtons: false });
+  const baseHTML = buildPreviewHTML(title, { copyButtons: false, pageBreaks: true });
   return baseHTML.replace('</style>', pdfCSS + '</style>');
 }
 
@@ -692,9 +696,10 @@ let _pdfPagesSkipped = false;
 // повторного рендера без правок) не раскладывается заново
 let _pdfPagesLastHtml = null;
 let _pdfPagesLastCount = null;
+let _pdfPagesLastLayout = null;
 // Идёт экспорт в PDF: фоновый подсчёт страниц ждёт его окончания, чтобы не нагружать браузер вдвойне
 let _pdfExporting = false;
-// Чип появляется/скрывается по ширине окна (см. styles.css: 768 и 1100 px)
+// Строка состояния может быть скрыта (например, при печати) — пересчёт, когда чип снова виден
 const _pdfPagesOnShow = () => {
   if (_pdfPagesSkipped) schedulePdfPageCount();
 };
@@ -711,6 +716,7 @@ function schedulePdfPageCount() {
   if (!ed.value.trim()) {
     pc.textContent = '0';
     pc.parentElement.classList.remove('busy');
+    if (window.ZmdPages) ZmdPages.setLayout({ count: 0, breaks: [] });
     return;
   }
   pc.parentElement.classList.add('busy');
@@ -719,8 +725,8 @@ function schedulePdfPageCount() {
 async function runPdfPageCount() {
   const pc = document.getElementById('pc');
   if (!pc || !window.ZmdPdf || !window.ZmdPdf.countPages) return;
-  // Чип скрыт (узкий экран) — не тратим ресурсы; пересчёт при его появлении
-  if (!pc.getClientRects().length) {
+  // Чип скрыт (узкий экран) и разметка страниц выключена — не тратим ресурсы; пересчёт при его появлении
+  if (!pc.getClientRects().length && !(window.ZmdPages && ZmdPages.wanted())) {
     pc.parentElement.classList.remove('busy');
     _pdfPagesSkipped = true;
     return;
@@ -734,15 +740,27 @@ async function runPdfPageCount() {
   if (html === _pdfPagesLastHtml && _pdfPagesLastCount !== null) {
     pc.textContent = Number(_pdfPagesLastCount).toLocaleString();
     pc.parentElement.classList.remove('busy');
+    if (window.ZmdPages) ZmdPages.setLayout(_pdfPagesLastLayout || _pdfPagesLastCount);
     return;
   }
   _pdfPagesRunning = true;
   const seq = _pdfPagesSeq;
   try {
-    const n = await window.ZmdPdf.countPages(html);
+    // Вместе с числом страниц — места их начала (для разметки страниц в редакторе и превью)
+    let n, lay = null;
+    if (window.ZmdPdf.layoutPages) {
+      lay = await window.ZmdPdf.layoutPages(html);
+      n = lay.count;
+    } else {
+      n = await window.ZmdPdf.countPages(html);
+    }
     _pdfPagesLastHtml = html;
     _pdfPagesLastCount = n;
-    if (seq === _pdfPagesSeq) pc.textContent = Number(n).toLocaleString();
+    _pdfPagesLastLayout = lay;
+    if (seq === _pdfPagesSeq) {
+      pc.textContent = Number(n).toLocaleString();
+      if (window.ZmdPages) ZmdPages.setLayout(lay || n);
+    }
   } catch (e) {
     console.warn('PDF page count failed:', e);
     if (seq === _pdfPagesSeq) pc.textContent = '—';
@@ -1833,6 +1851,9 @@ function _processImageAttrs(v) {
   });
 }
 
+// Строка ручного разрыва страницы (как в LaTeX/Pandoc): \newpage или \pagebreak
+const PAGEBREAK_LINE_RE = /^ {0,3}\\(?:newpage|pagebreak)[ \t]*$/gm;
+
 // Главная функция рендеринга: Markdown -> HTML предпросмотр (ядро приложения)
 function render(v) {
   const raw = v;
@@ -1843,6 +1864,8 @@ function render(v) {
   // LaTeX-документы, Mermaid и TikZ вынимаем до экранирования HTML: в их коде бывают «<» и «>»
   v = _protectMermaid(v);
   v = _protectTikz(v);
+  // Ручной разрыв страницы: \newpage (или \pagebreak) в отдельной строке — свой блок
+  v = v.replace(PAGEBREAK_LINE_RE, '\n\x02PGB\x03\n');
   v = _rdFootnotes(v);
   if (!appSettings.htmlRendering) {
     // Код спрятан в токены, поэтому экранировать можно весь оставшийся текст
@@ -1915,6 +1938,7 @@ function render(v) {
   cc.textContent = raw.length.toLocaleString();
   wc.textContent = (raw.trim() ? raw.trim().split(/\s+/).length : 0).toLocaleString();
   lc.textContent = raw.split('\n').length.toLocaleString();
+  if (window.ZmdPages) ZmdPages.invalidate();
   schedulePdfPageCount();
 }
 
@@ -1955,6 +1979,20 @@ function ins(p, sf) {
     r = p + (t || '') + sf;
   ed.value = ed.value.slice(0, s) + r + ed.value.slice(e);
   ed.selectionStart = ed.selectionEnd = s + p.length + (t ? t.length : 0) + sf.length;
+  ed.focus();
+  render(ed.value);
+}
+// Вставляет ручной разрыв страницы (\newpage) отдельной строкой
+function iPageBreak() {
+  if (_roGuard()) return;
+  const { s, e } = gs();
+  const before = ed.value.slice(0, s);
+  const after = ed.value.slice(e);
+  const pre = !before || before.endsWith('\n\n') ? '' : before.endsWith('\n') ? '\n' : '\n\n';
+  const post = after.startsWith('\n\n') ? '' : after.startsWith('\n') ? '\n' : '\n\n';
+  const r = pre + '\\newpage' + post;
+  ed.value = before + r + after;
+  ed.selectionStart = ed.selectionEnd = s + r.length;
   ed.focus();
   render(ed.value);
 }
@@ -2189,6 +2227,14 @@ const LANGS = {
     words: 'words',
     lines: 'lines',
     pdfPages: 'pages',
+    pageN: 'Page {n}',
+    pageBreak: 'Page break',
+    pageIndTitle: 'Current page / pages in the PDF',
+    ttPageBreak: 'Page break (\\newpage)',
+    settingsPagesTitle: 'Pages',
+    settingsPageViewLabel: 'Show pages',
+    settingsPageViewDesc:
+      'Mark where each PDF page begins in the editor and the preview, and show the current page. Downloaded HTML and the preview in a new window have no pages.',
     editorLabel: 'Editor',
     previewLabel: 'Preview',
     tabEdit: 'Edit',
@@ -2602,6 +2648,9 @@ async function _fetchGeminiModels() {
 }
 
 let _aiModelsLoading = false;
+// Кнопка ↻ после успешного обновления ненадолго становится зелёной с галочкой
+const AI_MODELS_OK_MS = 1800;
+let _aiModelsOkTimer = null;
 
 // Обновляет список моделей из API. force — без учёта срока кэша (кнопка ↻, сохранение ключа)
 async function refreshAiModels(force) {
@@ -2618,7 +2667,13 @@ async function refreshAiModels(force) {
   if (!force && Date.now() - (_aiModelsFetchedAt[backend] || 0) < AI_MODELS_TTL) return;
   const btn = document.getElementById('aiModelsRefreshBtn');
   _aiModelsLoading = true;
-  if (btn) btn.classList.add('spin');
+  // Нажатие во время показа галочки — снова вращение
+  clearTimeout(_aiModelsOkTimer);
+  let ok = false;
+  if (btn) {
+    btn.classList.remove('ok');
+    btn.classList.add('spin');
+  }
   try {
     const models =
       backend === 'gemini' ? await _fetchGeminiModels() : await _fetchAnthropicModels();
@@ -2635,11 +2690,19 @@ async function refreshAiModels(force) {
       AI_MODEL = _pickAiModel();
       _populateAiSelects();
     }
+    ok = true;
   } catch (err) {
     if (force) _aiAddMsg(t.aiModelsFetchError + err.message, 'thinking', null, 'warn');
   } finally {
     _aiModelsLoading = false;
-    if (btn) btn.classList.remove('spin');
+    if (btn) {
+      btn.classList.remove('spin');
+      // Галочка — только когда обновление запросил пользователь (кнопка ↻, сохранение ключа)
+      if (ok && force) {
+        btn.classList.add('ok');
+        _aiModelsOkTimer = setTimeout(() => btn.classList.remove('ok'), AI_MODELS_OK_MS);
+      }
+    }
   }
 }
 
@@ -2794,6 +2857,8 @@ function applyLang(code) {
   try {
     if (_busyStack.length) _renderBusy();
   } catch (_) {}
+  // Подписи разметки страниц
+  if (window.ZmdPages) ZmdPages.refresh();
   // Язык документа (lang) влияет на подбор шрифтов — пересчитываем страницы PDF
   schedulePdfPageCount();
 }
@@ -3552,6 +3617,9 @@ function applySettings() {
   if (dotTog) dotTog.setAttribute('aria-checked', appSettings.aiDot ? 'true' : 'false');
   const saveTog = document.getElementById('autoSaveToggle');
   if (saveTog) saveTog.setAttribute('aria-checked', appSettings.autoSave ? 'true' : 'false');
+  const pageTog = document.getElementById('pageViewToggle');
+  if (pageTog) pageTog.setAttribute('aria-checked', appSettings.pageView ? 'true' : 'false');
+  if (window.ZmdPages) ZmdPages.refresh();
   updateSettingsPreview();
   if (ed.value) _render(ed.value);
 }
@@ -3591,6 +3659,15 @@ function toggleAutoSave() {
   scheduleAutosave();
 }
 
+// Включает/выключает разметку страниц PDF в редакторе и превью
+function togglePageView() {
+  appSettings.pageView = !appSettings.pageView;
+  applySettings();
+  saveSettings();
+  // Раскладка страниц могла не считаться (чип числа страниц скрыт на узком экране)
+  if (appSettings.pageView) schedulePdfPageCount();
+}
+
 // Сохраняет настройки приложения в IndexedDB; другие окна применяют их сразу
 async function saveSettings() {
   try {
@@ -3621,7 +3698,7 @@ function toggleSettings() {
     document.getElementById('settingsBtn').style.color = 'var(--gb)';
     updateSettingsPreview();
     const t = LANGS[currentLang] || LANGS['en'];
-    ['settingsHtmlDesc', 'settingsAiDotDesc', 'settingsAutoSaveDesc'].forEach(key => {
+    ['settingsHtmlDesc', 'settingsAiDotDesc', 'settingsAutoSaveDesc', 'settingsPageViewDesc'].forEach(key => {
       const el = document.querySelector(`#settingsModal [data-i18n="${key}"]`);
       if (el && t[key]) el.textContent = t[key];
     });
@@ -4226,6 +4303,7 @@ function _scanSourceBlocks(text) {
   const isHr = l => /^\s{0,3}([-*_])(\s*\1){2,}\s*$/.test(l);
   const isList = l => /^\s{0,3}([-*+]|\d{1,9}[.)])\s+\S/.test(l);
   const isQuote = l => /^\s{0,3}>/.test(l);
+  const isPb = l => /^ {0,3}\\(?:newpage|pagebreak)[ \t]*$/.test(l);
   const isTableSep = l => /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)+\|?\s*$|^\s*\|\s*:?-+:?\s*\|\s*$/.test(l);
   // Пропускает строки до той, что подходит под re (включительно); возвращает индекс следующей
   const skipTo = (from, re) => {
@@ -4245,7 +4323,10 @@ function _scanSourceBlocks(text) {
     const start = i;
     let type = 'p';
     let m;
-    if ((m = isFence(l))) {
+    if (isPb(l)) {
+      type = 'pb';
+      i++;
+    } else if ((m = isFence(l))) {
       const dk = /^\s*(?:`{3,}|~{3,})\s*(mermaid|tikz|math)\s*$/.exec(l);
       type = dk ? (dk[1] === 'math' ? 'p' : dk[1]) : 'pre';
       const close = new RegExp('^\\s{0,3}' + (m[1][0] === '`' ? '`' : '~') + '{' + m[1].length + ',}\\s*$');
@@ -4289,12 +4370,13 @@ function _scanSourceBlocks(text) {
       while (i < lines.length && lines[i].trim() && lines[i].includes('|')) i++;
     } else if (isQuote(l)) {
       type = 'quote';
-      while (i < lines.length && lines[i].trim()) i++;
+      while (i < lines.length && lines[i].trim() && !isPb(lines[i])) i++;
     } else if (isList(l)) {
       type = 'list';
       // Список продолжается через пустые строки, пока идут пункты или вложенные строки
       while (i < lines.length) {
         if (lines[i].trim()) {
+          if (isPb(lines[i])) break;
           i++;
           continue;
         }
@@ -4315,6 +4397,7 @@ function _scanSourceBlocks(text) {
         !isFence(lines[i]) &&
         !isHeading(lines[i]) &&
         !isQuote(lines[i]) &&
+        !isPb(lines[i]) &&
         !(/^\s{0,3}(=+|-+)\s*$/.test(lines[i]))
       ) {
         i++;
@@ -4338,6 +4421,7 @@ function _previewBlockType(el) {
   if (tag === 'P' || tag === 'FIGURE') return 'p';
   if (el.classList.contains('mermaid-wrap')) return 'mermaid';
   if (el.classList.contains('tikz-wrap')) return 'tikz';
+  if (el.classList.contains('zmd-pagebreak')) return 'pb';
   return 'other';
 }
 
@@ -4907,7 +4991,7 @@ function setAiResponding(state) {
   } else {
     btn.classList.remove('ai-send-stop');
     btn.innerHTML =
-      '<svg viewBox="0 0 16 16"><line x1="14" y1="2" x2="2" y2="8"/><line x1="14" y1="2" x2="6" y2="14"/><line x1="2" y1="8" x2="6" y2="14"/></svg>';
+      '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M14.4 1.6 1.9 6.6a.55.55 0 0 0-.02 1l4.9 2.24 2.24 4.9a.55.55 0 0 0 1-.02z"/><path d="M14.4 1.6 6.8 9.84"/></svg>';
   }
 }
 
@@ -5821,16 +5905,14 @@ async function sendAi() {
   );
 })();
 
-// Панель инструментов в тесной шапке. Сначала скрывается статистика (символы, слова, строки) —
-// она только информирует. Если и тогда не помещается даже первая группа кнопок (H1–H3),
-// панель скрывается совсем: полоска в несколько пикселей бесполезна. Места станет больше — всё вернётся
+// Панель инструментов в тесной шапке: если не помещается даже первая группа кнопок (H1–H4),
+// панель скрывается совсем — полоска в несколько пикселей бесполезна. Места станет больше — она вернётся
+// (статистика документа — в строке состояния внизу и на ширину шапки не влияет)
 (function initToolbarFit() {
   const hd = document.querySelector('.hd');
   const tb = hd && hd.querySelector('.tb');
   if (!tb) return;
   const first = tb.querySelector('.tg');
-  const stats = hd.querySelector('.stats');
-  let statsW = 0; // ширина статистики вместе с промежутком (пока она показана)
   // Внутренние отступы .tb (запас под hover) компенсированы отрицательными полями
   const pad = () => {
     const cs = getComputedStyle(tb);
@@ -5840,14 +5922,6 @@ async function sendAi() {
   const update = () => {
     const need = first ? first.getBoundingClientRect().width : 0;
     if (!need) return;
-    const compact = hd.classList.contains('hd-nostats');
-    if (!compact && stats && stats.offsetWidth > 0 && tbWidth() + 0.5 < need) {
-      statsW = stats.getBoundingClientRect().width + (parseFloat(getComputedStyle(hd).columnGap) || 0);
-      hd.classList.add('hd-nostats');
-    } else if (compact && tbWidth() - statsW >= need + 21) {
-      // Запас, чтобы на границе статистика не мигала
-      hd.classList.remove('hd-nostats');
-    }
     const off = tbWidth() + 0.5 < need;
     tb.classList.toggle('tb-off', off);
     tb.setAttribute('aria-hidden', off ? 'true' : 'false');

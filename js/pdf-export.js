@@ -528,6 +528,8 @@
     const R2 = root.cloneNode(true);
     M.appendChild(R2);
     doc.body.appendChild(M);
+    // Ручной разрыв страницы (\newpage): при печати — break-after:page, в колонках — разрыв колонки
+    R2.querySelectorAll('.zmd-pagebreak').forEach(el => el.style.setProperty('break-after', 'column', 'important'));
     // При печати прокручиваемые блоки фрагментируются, а в колонках — нет: выравниваем поведение.
     // Место под полосы прокрутки (при печати они есть) сохраняем внутренними отступами
     // Сначала только чтения (стили копии и полосы прокрутки оригинала), потом только записи —
@@ -681,22 +683,10 @@
     return { items, maxCol, pageCount };
   }
 
-  async function paginate(win, doc, root) {
-    await repeatTableHeaders(win, doc, root);
-    const mc = await buildMulticol(win, doc, root);
-    const { M, R2, H, colOf, yOf } = mc;
-
-
-    // Параллельные списки узлов оригинала и копии
-    const listA = [], listB = [];
-    const twA = doc.createTreeWalker(root, 0xFFFFFFFF), twB = doc.createTreeWalker(R2, 0xFFFFFFFF);
-    for (let a = twA.currentNode, b = twB.currentNode; a && b; a = twA.nextNode(), b = twB.nextNode()) {
-      listA.push(a); listB.push(b);
-    }
-    const toA = new Map(listB.map((b, i) => [b, listA[i]]));
-
-    const { items, maxCol, pageCount } = measureItems(win, doc, mc);
-    // Колонка, в которой начинается рамка элемента (для решения, куда ставить распорку)
+  // Точки разрыва страниц: для каждой следующей колонки (страницы) — узел, с которого она начинается.
+  // Возвращает [{ col, item, anchorB, offset, node?, y }] (узлы — в копии R2 многоколоночной раскладки)
+  function planBreaks(win, doc, mc, items, maxCol) {
+    const { R2, colOf } = mc;
     const boxCol = el => {
       const rs = el.getClientRects();
       return rs.length ? colOf(rs[0]) : 0;
@@ -767,6 +757,30 @@
       }
       plan.push({ col: c, item: it, anchorB, offset, y: it.y });
     }
+    return plan;
+  }
+
+  async function paginate(win, doc, root) {
+    await repeatTableHeaders(win, doc, root);
+    const mc = await buildMulticol(win, doc, root);
+    const { M, R2, H, colOf, yOf } = mc;
+
+
+    // Параллельные списки узлов оригинала и копии
+    const listA = [], listB = [];
+    const twA = doc.createTreeWalker(root, 0xFFFFFFFF), twB = doc.createTreeWalker(R2, 0xFFFFFFFF);
+    for (let a = twA.currentNode, b = twB.currentNode; a && b; a = twA.nextNode(), b = twB.nextNode()) {
+      listA.push(a); listB.push(b);
+    }
+    const toA = new Map(listB.map((b, i) => [b, listA[i]]));
+
+    const { items, maxCol, pageCount } = measureItems(win, doc, mc);
+    // Колонка, в которой начинается рамка элемента (для решения, куда ставить распорку)
+    const boxCol = el => {
+      const rs = el.getClientRects();
+      return rs.length ? colOf(rs[0]) : 0;
+    };
+    const plan = planBreaks(win, doc, mc, items, maxCol);
 
     // Подгонка остальных блоков: после разрыва внутренняя геометрия разделённого контейнера
     // (например, шапки блока кода) может отличаться от обычного потока. Для первой строки каждого
@@ -3093,6 +3107,96 @@
     }
   }
 
+  // ---------- Где начинается каждая страница (для разметки страниц в редакторе и превью) ----------
+  // Описание места разрыва не зависит от раскладки: путь по элементам от корня документа (#mo)
+  // и смещение в тексте. Основное окно находит то же место в своём превью (у него та же структура).
+  // Служебные узлы, которых нет в превью (или которых нет здесь), в путь не входят
+  const BREAK_SKIP_SEL = '[data-zpdf-thead-repeat],[data-zpdf-spacer],.cpbtn,script,style';
+  // Внутренности диаграмм и формул в превью и здесь могут различаться: путь обрывается на них
+  const BREAK_OPAQUE_SEL = '.mermaid-wrap,.tikz-wrap,.katex,svg,img';
+  function describeBreak(root, p) {
+    const skip = n => n.nodeType === 1 && n.matches(BREAK_SKIP_SEL);
+    let el, textNode = null, textOff = 0;
+    if (p.anchorB.nodeType === 3) {
+      textNode = p.anchorB;
+      if (p.offset > 0) textOff = p.offset;
+      else {
+        const m = /\S/.exec(textNode.data);
+        textOff = m ? m.index : 0;
+      }
+      el = textNode.parentElement;
+    } else {
+      el = p.anchorB;
+      // Повтор шапки таблицы — служебный: страница начинается со следующей настоящей строки
+      while (el && el.matches && el.matches('[data-zpdf-thead-repeat]')) el = el.nextElementSibling || el.parentElement;
+    }
+    if (!el || !root.contains(el) || el === root) return null;
+    // Самый внешний «непрозрачный» предок
+    let opaque = null;
+    for (let a = el; a && a !== root; a = a.parentElement) if (a.matches(BREAK_OPAQUE_SEL)) opaque = a;
+    if (opaque) {
+      el = opaque;
+      textNode = null;
+    }
+    const path = [];
+    for (let a = el; a !== root; a = a.parentElement) {
+      if (!a || !a.parentElement) return null;
+      const kids = Array.from(a.parentElement.children).filter(k => !skip(k));
+      const i = kids.indexOf(a);
+      if (i < 0) return null;
+      path.unshift(i);
+    }
+    let text = -1;
+    if (textNode) {
+      // Смещение — в тексте элемента без служебных узлов
+      text = 0;
+      const tw = el.ownerDocument.createTreeWalker(el, 4, {
+        acceptNode: n => {
+          for (let a = n.parentElement; a && a !== el; a = a.parentElement) if (skip(a)) return 2;
+          return 1;
+        }
+      });
+      for (let n = tw.nextNode(); n; n = tw.nextNode()) {
+        if (n === textNode) { text += textOff; break; }
+        text += n.data.length;
+      }
+    }
+    return { page: p.col + 1, path, text };
+  }
+
+  // Число страниц и места их начала. Выполняется внутри iframe
+  async function layoutHere() {
+    const win = window, doc = document;
+    await waitReady(win, doc);
+    const root = doc.getElementById('mo') || doc.body.firstElementChild;
+    if (!root || root.getBoundingClientRect().height <= 0) return { count: 0, breaks: [] };
+    await repeatTableHeaders(win, doc, root);
+    const mc = await buildMulticol(win, doc, root);
+    try {
+      const { items, maxCol, pageCount } = measureItems(win, doc, mc);
+      const breaks = [];
+      for (const p of planBreaks(win, doc, mc, items, maxCol)) {
+        const d = describeBreak(mc.R2, p);
+        if (d) breaks.push(d);
+      }
+      return { count: pageCount, breaks };
+    } finally {
+      mc.M.remove();
+    }
+  }
+
+  // Вызывается из основного окна: { count, breaks: [{ page, path, text }] } для HTML документа
+  async function layoutPages(html) {
+    if (!SELF_SRC) throw new Error('pdf-export.js: script URL is unknown');
+    const iframe = await createFrame(html);
+    try {
+      await loadScript(iframe.contentDocument, SELF_SRC);
+      return await iframe.contentWindow.ZmdPdf.layoutHere();
+    } finally {
+      iframe.remove();
+    }
+  }
+
   // Скачивание файла: имя = заголовок документа
   async function save(html, opts) {
     opts = opts || {};
@@ -3108,5 +3212,5 @@
     setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
 
-  global.ZmdPdf = { save, renderHere, countPages, countHere };
+  global.ZmdPdf = { save, renderHere, countPages, countHere, layoutPages, layoutHere };
 })(window);

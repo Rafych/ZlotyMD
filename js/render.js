@@ -123,9 +123,17 @@ function _rdFootnoteSection() {
   return `<section class="footnotes"><h2 class="sr-only">Footnotes</h2><ol>${items}</ol></section>`;
 }
 
+// Ручной разрыв страницы (\newpage): блок-метка. В превью — полоса «Разрыв страницы», в PDF — новая
+// страница; из скачиваемого HTML и превью в новом окне удаляется (buildPreviewHTML)
+function _rdPageBreakHtml() {
+  const label = typeof tr === 'function' ? _rdEsc(tr('pageBreak')) : 'Page break';
+  return `<div class="zmd-pagebreak" aria-hidden="true" data-label="${label}"></div>`;
+}
+
 function _rdRestore(html) {
   return html
     .replace(/(?:<p>)?\x02FMT\x03(?:<\/p>)?/g, () => _rdFrontMatterHtml())
+    .replace(/(?:<p>)?\x02PGB\x03(?:<\/p>)?/g, () => _rdPageBreakHtml())
     .replace(/\x02FNR(\d+)_(\d+)\x03/g, (_, n, k) => _rdFootnoteRefHtml(n, k));
 }
 
