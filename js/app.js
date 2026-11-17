@@ -18,32 +18,16 @@ let _savedContent = '';
 const _bc = typeof BroadcastChannel === 'function' ? new BroadcastChannel('zmd-docs') : null;
 const _hasLocks = !!(navigator.locks && typeof navigator.locks.request === 'function');
 
-// Значки чипов вложений ИИ (SVG вместо эмодзи 📄/📝 и символа ×)
-const CHIP_PDF_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 1.5H4.3a1.6 1.6 0 0 0-1.6 1.6v9.8a1.6 1.6 0 0 0 1.6 1.6h7.4a1.6 1.6 0 0 0 1.6-1.6V5.3Z"/><path d="M9.5 1.5v3.8h3.8"/><path d="M5.4 11.6V8.4h1a1 1 0 0 1 0 2h-1"/></svg>';
-const CHIP_TEXT_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 1.5H4.3a1.6 1.6 0 0 0-1.6 1.6v9.8a1.6 1.6 0 0 0 1.6 1.6h7.4a1.6 1.6 0 0 0 1.6-1.6V5.3Z"/><path d="M9.5 1.5v3.8h3.8"/><path d="M5.4 8.6h5.2M5.4 11.2h3.6"/></svg>';
-const CHIP_REMOVE_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>';
-
-// Кегли по умолчанию — степени φ от 16px: H1 φ² · H2 φ · H3 √φ · текст 1 · код φ^-0.25 · Mermaid φ^-0.5
 const FONT_DEFAULTS = {
-  h1: 42,
-  h2: 26,
-  h3: 20,
-  body: 16,
-  latex: 16,
+  h1: 34,
+  h2: 21,
+  h3: 16,
+  body: 13,
+  latex: 13,
   mmd: 13,
-  code: 14
+  code: 12
 };
 let fontSizes = { ...FONT_DEFAULTS };
-// Размеры шрифтов из файла или хранилища: только известные ключи и только числа. Значения
-// подставляются в CSS, поэтому строка из чужого .zmd-файла позволила бы внедрить в него свой текст
-function cleanFontSizes(src) {
-  const out = { ...FONT_DEFAULTS };
-  Object.keys(FONT_DEFAULTS).forEach(key => {
-    const v = Number(src && src[key]);
-    if (isFinite(v) && v > 0) out[key] = Math.min(400, Math.max(1, Math.round(v * 100) / 100));
-  });
-  return out;
-}
 
 let currentLang = 'en';
 
@@ -81,18 +65,14 @@ function buildPreviewHTML(title, opts) {
   const withCopy = !opts || opts.copyButtons !== false;
   const PREVIEW_CSS = `
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    /* Złoty MD «Golden Sheet»: все размеры — 1rem × φⁿ (см. css/styles.css). Только hex/rgba — для html2canvas */
     :root{
       --gb:#4285F4;--gr:#EA4335;--gy:#FBBC04;--gg:#34A853;
-      --accent:#1B64DA;--accent-ink:#1653B6;
-      --gbt:#EDF3FE;--grt:#FDEEEC;--gyt:#FEF4D8;--ggt:#ECF6EE;--accent-tint:#E9F0FC;--accent-wash:#F2F6FD;--accent-line:#D6E3F8;
-      --gr-ink:#B3261E;--gy-ink:#7A5300;--gg-ink:#146C2E;
-      --bg:#fff;--surf:#F8FAFD;--surf2:#EEF2F8;--bord:#DDE3EA;--bord-strong:#C4C7C5;
-      --txt:#1F1F1F;--mut:#444746;--sub:#747775;--ink-dark:#1E1F20;--ink-dark-2:#28292A;
-      --s2:.1147rem;--s3:.1856rem;--s5:.3003rem;--s8:.4859rem;--s10:.618rem;--s13:.7862rem;--s16:1rem;--s21:1.272rem;--s26:1.618rem;--s34:2.0582rem;--s42:2.618rem;--s55:3.3302rem;--s89:5.3884rem;
-      --r3:.1856rem;--r5:.3003rem;--r8:.4859rem;--r13:.7862rem;--r21:1.272rem;--r34:2.0582rem;
-      --s1:1px;--f10:.7862rem;--f13:.8867rem;--f16:1rem;--f18:1.1278rem;--f21:1.272rem;--f26:1.618rem;--f34:2.0582rem;--f42:2.618rem;
-      --lh:1.618;--lh-s:1.272;--measure:36.9322em;
+      --gbt:#E8F0FE;--grt:#FCE8E6;--gyt:#FEF7E0;--ggt:#E6F4EA;
+      --bg:#fff;--surf:#F8F9FA;--bord:#DADCE0;
+      --txt:#202124;--mut:#5F6368;--sub:#9AA0A6;
+      --s3:3px;--s5:5px;--s8:8px;--s13:13px;--s21:21px;--s34:34px;--s55:55px;
+      --r5:5px;--r8:8px;--r13:13px;--r21:21px;--r34:34px;
+      --f13:13px;--f21:21px;--f34:34px;
       --font:'Google Sans',sans-serif;
       --mono:'JetBrains Mono',monospace;
       --fz-h1:${fontSizes.h1}px;
@@ -103,123 +83,107 @@ function buildPreviewHTML(title, opts) {
       --fz-mmd:${fontSizes.mmd}px;
       --fz-code:${fontSizes.code}px;
     }
-    body{font-family:var(--font);background:var(--bg);color:var(--txt);padding:var(--s55) var(--s34);max-width:calc(var(--measure) + 2 * var(--s34));margin:0 auto;line-height:var(--lh);-webkit-font-smoothing:antialiased}
-    .md{font-size:var(--fz-body,var(--f16));line-height:var(--lh);overflow-wrap:break-word}
-    .md>:first-child{margin-top:0}
-    .md h1,.md h2,.md h3,.md h4,.md h5,.md h6{line-height:var(--lh-s);text-wrap:balance;color:var(--txt)}
-    .md h1{font-size:var(--fz-h1,var(--f42));font-weight:700;letter-spacing:-.0213em;margin-top:var(--s55);margin-bottom:var(--s21);position:relative;padding-bottom:.382em}
-    .md h1::after{content:'';position:absolute;bottom:0;left:0;width:1.618em;height:max(2px,.0557em);border-radius:999px;background:linear-gradient(90deg,var(--gb) 0 44.72%,var(--gr) 44.72% 72.36%,var(--gy) 72.36% 89.44%,var(--gg) 89.44%)}
-    .md h2{font-size:var(--fz-h2,var(--f26));font-weight:700;letter-spacing:-.0132em;margin-top:var(--s42);margin-bottom:var(--s13)}
-    .md h2::before{content:'';display:inline-block;width:.1459em;height:.7862em;margin-right:.4859em;vertical-align:-.0902em;border-radius:999px;background:var(--gr)}
-    .md h3{font-size:var(--fz-h3,var(--f21));font-weight:700;margin-top:var(--s34);margin-bottom:var(--s8)}
-    .md h4{font-size:var(--f18);font-weight:700;margin-top:var(--s26);margin-bottom:var(--s5)}
-    .md h5,.md h6{font-size:var(--f16);font-weight:700;margin-top:var(--s21);margin-bottom:var(--s5)}
-    .md h6{color:var(--mut)}
-    .md p{font-size:var(--fz-body,var(--f16));line-height:var(--lh);margin-bottom:var(--s21);text-wrap:pretty}
-    .md .katex{font-size:var(--fz-latex,1em)!important}
+    body{font-family:var(--font);background:var(--bg);color:var(--txt);padding:34px;max-width:860px;margin:0 auto;line-height:1.85}
+    .md h1{font-size:var(--fz-h1,var(--f34));font-weight:800;margin-top:var(--s34);margin-bottom:var(--s13);position:relative;padding-bottom:${Math.round(fontSizes.h1 * 0.24)}px}
+    .md h1::after{content:'';position:absolute;bottom:0;left:0;width:${Math.round(fontSizes.h1 * 1.6)}px;height:${Math.max(2, Math.round(fontSizes.h1 * 0.09))}px;background:linear-gradient(90deg,var(--gb),var(--gg));border-radius:99px}
+    .md h2{font-size:var(--fz-h2,var(--f21));font-weight:700;margin-top:var(--s34);margin-bottom:var(--s8);display:flex;align-items:center;gap:var(--s8)}
+    .md h2::before{content:'';display:block;width:${Math.max(3, Math.round(fontSizes.h2 * 0.22))}px;height:${Math.round(fontSizes.h2 * 0.9)}px;background:var(--gr);border-radius:99px;flex-shrink:0}
+    .md h3{font-size:var(--fz-h3,16px);font-weight:700;margin-top:var(--s21);margin-bottom:var(--s5)}
+    .md p{font-size:var(--fz-body,var(--f13));line-height:1.85;margin-bottom:var(--s13)}
+    .md .katex{font-size:var(--fz-latex,1.08em)!important}
     .md .mermaid svg text,.md .mermaid svg .label{font-size:var(--fz-mmd,inherit)!important}
-    .md a{color:var(--accent);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.236em;text-decoration-color:var(--accent-line)}
-    .md a:visited{color:var(--accent)}
-    .md a:hover{text-decoration-color:currentColor}
-    .md ul,.md ol{padding-left:var(--s26);margin-bottom:var(--s21)}
-    .md li{font-size:var(--fz-body,var(--f16));line-height:var(--lh);margin-bottom:var(--s5);padding-left:var(--s3)}
-    .md li>ul,.md li>ol{margin-top:var(--s5);margin-bottom:0}
-    .md ul li::marker{color:var(--gb)}
+    .md code{font-family:var(--mono);font-size:var(--fz-code,12px);background:var(--gbt);color:var(--gb);border-radius:var(--r5);padding:2px var(--s5)}
+    .md pre code{font-size:var(--fz-code,12.5px)!important}
+    .md a {color: var(--gb);text-decoration: none;border-bottom: 1.5px solid var(--gbt);}
+    .md a:visited{color:var(--gb)}
+    .md a:hover{border-bottom-color:var(--gb)}
+    .md ul,.md ol{padding-left:var(--s21);margin-bottom:var(--s13)}
+    .md li{font-size:var(--f13);line-height:1.85;margin-bottom:var(--s5)}
+    .md ul li::marker{color:var(--gb);font-weight:700}
     .md ol li::marker{color:var(--gr);font-weight:700}
-    .md code{font-family:var(--mono);font-size:var(--fz-code,.8867em);background:var(--accent-wash);color:var(--accent-ink);border:1px solid var(--accent-line);border-radius:var(--r5);padding:.0902em .382em}
-    .md pre{background:var(--ink-dark);color:#E3E3E3;border-radius:var(--r13);margin-bottom:var(--s26);border:1px solid var(--ink-dark);overflow:hidden;position:relative;padding:0}
-    .pre-header{display:flex;align-items:center;gap:var(--s8);padding:var(--s5) var(--s5) var(--s5) var(--s13);background:var(--ink-dark-2);border-bottom:1px solid rgba(255,255,255,.056);position:relative;flex-shrink:0;min-height:var(--s34)}
+    .md code{font-family:var(--mono);font-size:12px;background:var(--gbt);color:var(--gb);border-radius:var(--r5);padding:2px var(--s5)}
+    .md pre{background:#202124;color:#E8EAED;border-radius:var(--r13);margin-bottom:var(--s21);border-top:3px solid var(--gb);overflow:hidden;position:relative;padding:0}
+    .pre-header{display:flex;align-items:center;gap:8px;padding:5px 8px;background:#2a2d31;border-bottom:1px solid rgba(255,255,255,.07);position:relative;flex-shrink:0;min-height:34px}
+    .pre-header::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gr) 0 33.3%,var(--gy) 33.3% 66.6%,var(--gg) 66.6%);opacity:.7}
     .pre-body{overflow-x:auto;padding:var(--s21)}
     .pre-body--diff{padding:var(--s13) 0}
-    .pre-body::-webkit-scrollbar{height:var(--s8)}
-    .pre-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.146);border-radius:999px}
+    .pre-body::-webkit-scrollbar{height:5px}
+    .pre-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:99px}
     .pre-body::-webkit-scrollbar-track{background:transparent}
-    @supports not selector(::-webkit-scrollbar){.pre-body{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.146) transparent}}
-    .lang-badge{font-family:var(--mono);font-size:var(--f10);font-weight:500;letter-spacing:.0557em;text-transform:uppercase;color:#9AA0A6;line-height:var(--lh);pointer-events:none;-webkit-user-select:none;user-select:none;flex-shrink:0}
-    .md pre code{background:transparent;color:inherit;padding:0;border:0;border-radius:0;font-size:var(--fz-code,var(--f13));line-height:var(--lh);white-space:pre}
+    @supports not selector(::-webkit-scrollbar){.pre-body{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}}
+    .lang-badge{padding:2px 8px;border-radius:5px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;background:rgba(255,255,255,.1);color:#9AA0A6;line-height:1.6;pointer-events:none;-webkit-user-select:none;user-select:none;flex-shrink:0}
+    .md pre code{background:transparent;color:inherit;padding:0;font-size:12.5px;white-space:pre}
     .md pre .hljs-keyword,.md pre .hljs-selector-tag,.md pre .hljs-doctag,.md pre .hljs-template-tag,.md pre .hljs-meta .hljs-keyword{color:#8ab4f8}
     .md pre .hljs-built_in,.md pre .hljs-type,.md pre .hljs-title.class_,.md pre .hljs-title.class_.inherited__,.md pre .hljs-variable.language_{color:#78d9ec}
     .md pre .hljs-string,.md pre .hljs-char.escape_,.md pre .hljs-addition,.md pre .hljs-meta .hljs-string{color:#81c995}
     .md pre .hljs-number,.md pre .hljs-literal,.md pre .hljs-symbol,.md pre .hljs-bullet,.md pre .hljs-variable.constant_{color:#fdd663}
-    .md pre .hljs-title,.md pre .hljs-title.function_,.md pre .hljs-section{color:#aecbfa}
+    .md pre .hljs-title,.md pre .hljs-title.function_,.md pre .hljs-section{color:#c58af9}
     .md pre .hljs-attr,.md pre .hljs-attribute,.md pre .hljs-property,.md pre .hljs-selector-attr,.md pre .hljs-selector-class,.md pre .hljs-selector-id,.md pre .hljs-selector-pseudo{color:#fcad70}
     .md pre .hljs-tag,.md pre .hljs-name,.md pre .hljs-meta,.md pre .hljs-regexp,.md pre .hljs-deletion,.md pre .hljs-link{color:#f28b82}
     .md pre .hljs-comment,.md pre .hljs-quote{color:#9aa0a6;font-style:italic}
     .md pre .hljs-emphasis{font-style:italic}
     .md pre .hljs-strong{font-weight:700}
     .diff-wrap{display:block;min-width:max-content}
-    .diff-add,.diff-del,.diff-meta,.diff-ctx{display:block;padding:0 var(--s21) 0 calc(var(--s8) * 2 + var(--s13) + var(--s5));position:relative;line-height:var(--lh);min-height:1.618em;white-space:pre;min-width:100%;box-sizing:border-box}
-    .diff-add::before,.diff-del::before,.diff-meta::before,.diff-ctx::before{content:attr(data-mark);position:absolute;left:var(--s8);width:var(--s13);text-align:center;font-weight:700;font-size:var(--f10);line-height:var(--lh);-webkit-user-select:none;user-select:none;pointer-events:none;opacity:.786}
-    .diff-add{background:rgba(52,168,83,.146);color:#B4EFCA;border-left:var(--s3) solid #34A853}
+    .diff-add,.diff-del,.diff-meta,.diff-ctx{display:block;padding:0 var(--s21) 0 calc(var(--s8)*4 + 13px);position:relative;line-height:1.6;min-height:1.6em;white-space:pre;min-width:100%;box-sizing:border-box}
+    .diff-add::before,.diff-del::before,.diff-meta::before,.diff-ctx::before{content:attr(data-mark);position:absolute;left:8px;width:13px;text-align:center;font-weight:700;font-size:11px;line-height:1.6;-webkit-user-select:none;user-select:none;pointer-events:none;opacity:.9}
+    .diff-add{background:rgba(52,168,83,.13);color:#B4EFCA;border-left:3px solid #34A853}
     .diff-add::before{color:#34A853}
-    .diff-del{background:rgba(234,67,53,.146);color:#FFADA6;border-left:var(--s3) solid #EA4335}
+    .diff-del{background:rgba(234,67,53,.13);color:#FFADA6;border-left:3px solid #EA4335}
     .diff-del::before{color:#EA4335}
-    .diff-meta{background:rgba(66,133,244,.09);color:#8AB4F8;border-left:var(--s3) solid #4285F4;font-style:italic;opacity:.786}
+    .diff-meta{background:rgba(66,133,244,.1);color:#8AB4F8;border-left:3px solid #4285F4;font-style:italic;opacity:.85}
     .diff-meta::before{color:#4285F4}
-    .diff-ctx{color:#9AA0A6;border-left:var(--s3) solid transparent}
-    .diff-ctx::before{color:#5F6368;opacity:.618}
-    .md .mermaid-wrap{background:var(--bg);border:1px solid var(--bord);border-radius:var(--r13);padding:var(--s34) var(--s21) var(--s21);margin-bottom:var(--s26);overflow-x:auto;overflow-y:hidden;text-align:center;position:relative}
-    .md .mermaid{display:block;min-width:var(--s89);max-width:100%}
+    .diff-ctx{color:#9AA0A6;border-left:3px solid transparent}
+    .diff-ctx::before{color:#5F6368;opacity:.6}
+    .md .mermaid-wrap{background:var(--bg);border:1.5px solid var(--gb);border-top:3px solid var(--gb);border-radius:var(--r13);padding:var(--s34) var(--s21) var(--s21);margin-bottom:var(--s21);overflow-x:auto;overflow-y:hidden;text-align:center;position:relative;box-shadow:0 2px 12px rgba(66,133,244,.08)}
+    .md .mermaid{display:block;min-width:80px;max-width:100%}
     .md .mermaid svg{display:block;max-width:100%;height:auto;overflow:hidden;margin:0 auto;font-family:var(--font) !important}
     .md .mermaid svg text,.md .mermaid svg .label{font-family:var(--font) !important}
     .md .mermaid svg .edgePath .path{stroke-width:1.5px}
-    .md .tikz-wrap{text-align:center;margin-bottom:var(--s26);overflow-x:auto}
+    .md .tikz-wrap{text-align:center;margin-bottom:var(--s21);overflow-x:auto}
     .md .tikz-wrap svg{display:inline-block;max-width:100%;height:auto}
-    .md .mermaid-error{background:var(--grt);border:1px solid #F5B5AE;border-radius:var(--r8);padding:var(--s13) var(--s21);color:var(--gr-ink);font-size:var(--f13);font-family:var(--mono);text-align:left}
-    .md blockquote{border-left:var(--s3) solid var(--gy);background:var(--gyt);padding:var(--s13) var(--s21);border-radius:0 var(--r8) var(--r8) 0;margin-bottom:var(--s21);color:var(--mut)}
-    .md blockquote>:last-child{margin-bottom:0}
-    .md table{width:100%;border-collapse:separate;border-spacing:0;margin-bottom:var(--s26);font-size:var(--f13);font-variant-numeric:tabular-nums;background:#fff;border:1px solid var(--bord);border-radius:var(--r8);overflow:hidden}
-    .md th{background:var(--surf);color:var(--txt);padding:var(--s8) var(--s13);font-weight:700;text-align:left;border-bottom:1px solid var(--bord)}
+    .md .mermaid-error{background:var(--grt);border:1px solid var(--gr);border-radius:var(--r8);padding:var(--s13) var(--s21);color:var(--gr);font-size:12px;font-family:var(--mono);text-align:left}
+    .md blockquote{border-left:3px solid var(--gy);background:var(--gyt);padding:var(--s13) var(--s21);border-radius:0 var(--r8) var(--r8) 0;margin-bottom:var(--s13);color:var(--mut);font-style:italic}
+    .md table{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13);background:#fff}
+    .md th{background:var(--gbt);color:var(--gb);padding:var(--s8) var(--s13);font-weight:700;text-align:left}
     .md th:first-child{border-radius:var(--r8) 0 0 0}
     .md th:last-child{border-radius:0 var(--r8) 0 0}
     .md td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord);background:#fff}
     .md tr:last-child td{border-bottom:none}
-    .md tr:hover td{background:var(--accent-wash)}
-    .ztbl{width:100%;border-collapse:separate;border-spacing:0;margin-bottom:var(--s26);font-size:var(--f13);font-variant-numeric:tabular-nums;overflow:hidden;border-radius:var(--r8);border:1px solid var(--bord)}
-    .ztbl thead tr th{background:var(--surf);color:var(--txt);padding:var(--s8) var(--s13);font-weight:700;text-align:left;border-bottom:1px solid var(--bord-strong)}
+    .md tr:hover td{background:var(--surf)}
+    .ztbl{width:100%;border-collapse:separate;border-spacing:0;margin-bottom:var(--s21);font-size:var(--f13);overflow:hidden;border-radius:var(--r8)}
+    .ztbl thead tr th{background:var(--gbt);color:var(--gb);padding:var(--s8) var(--s13);font-weight:700;text-align:left;border-bottom:2px solid var(--gb)}
     .ztbl tbody tr td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord)}
     .ztbl tbody tr:last-child td{border-bottom:none}
     .ztbl.stripe tbody tr:nth-child(even) td{background:var(--surf)}
     .ztbl.border td,.ztbl.border th{border:1px solid var(--bord)}
-    .ztbl tbody tr:hover td{background:var(--accent-wash)}
-    .ztbl td.bg-b,.ztbl th.bg-b{background:var(--gbt)!important;color:var(--accent-ink)!important}
-    .ztbl td.bg-r,.ztbl th.bg-r{background:var(--grt)!important;color:var(--gr-ink)!important}
-    .ztbl td.bg-y,.ztbl th.bg-y{background:var(--gyt)!important;color:var(--gy-ink)!important}
-    .ztbl td.bg-g,.ztbl th.bg-g{background:var(--ggt)!important;color:var(--gg-ink)!important}
+    .ztbl tbody tr:hover td{background:rgba(66,133,244,.05)}
+    .ztbl td.bg-b,.ztbl th.bg-b{background:var(--gbt)!important;color:var(--gb)!important}
+    .ztbl td.bg-r,.ztbl th.bg-r{background:var(--grt)!important;color:var(--gr)!important}
+    .ztbl td.bg-y,.ztbl th.bg-y{background:var(--gyt)!important;color:#7A4F00!important}
+    .ztbl td.bg-g,.ztbl th.bg-g{background:var(--ggt)!important;color:var(--gg)!important}
     .ztbl td.al,.ztbl th.al{text-align:left}
     .ztbl td.ac,.ztbl th.ac{text-align:center}
     .ztbl td.ar,.ztbl th.ar{text-align:right}
     .ztbl td.fw,.ztbl th.fw{font-weight:700}
-    .md hr{border:none;height:1px;background:var(--bord);margin:var(--s42) 0}
+    .md hr{border:none;height:1.5px;background:var(--bord);margin:var(--s34) 0}
     .md strong{font-weight:700}
-    .md img{max-width:100%;border-radius:var(--r8)}
+    .md img{max-width:100%;border-radius:var(--r13)}
     img.emoji{display:inline-block;width:1em;height:1em;margin:0 .05em 0 .1em;vertical-align:-.1em}
     .md img.emoji{max-width:none;border-radius:0}
-    .md input[type=checkbox]{accent-color:var(--accent)}
-    .md .katex-display{overflow-x:auto;overflow-y:hidden;padding:var(--s5) 0;margin:var(--s13) 0 var(--s21)}
-    .md .katex{font-size:1em}
-    .md .katex-display>.katex{background:var(--surf);border:1px solid var(--bord);border-radius:var(--r13);padding:var(--s21) var(--s34);display:block;overflow-x:auto}
-    .md .katex:not(.katex-display .katex){padding:0 var(--s2)}
+    .md input[type=checkbox]{accent-color:var(--gg)}
+    .md .katex-display{overflow-x:auto;overflow-y:hidden;padding:var(--s13) 0;margin:var(--s13) 0}
+    .md .katex{font-size:1.08em}
+    .md .katex-display>.katex{
+      background:linear-gradient(135deg,var(--gbt) 0%,#f0f4ff 100%);
+      border:1.5px solid var(--gb);border-left:4px solid var(--gb);
+      border-radius:var(--r8);padding:var(--s21) var(--s34);display:block;overflow-x:auto;
+      box-shadow:0 2px 8px rgba(66,133,244,.08)
+    }
+    .md .katex:not(.katex-display .katex){padding:1px 4px}
   `;
 
-  // Копия создаётся в документе без окна: пока в неё возвращается содержимое пользователя
-  // (скрипты, обработчики), ничего из этого не может выполниться в приложении
-  const clone = _sbInertDoc().importNode(mo, true);
-  const level = appSettings.htmlRendering ? (opts && opts.level) || 'safe' : 'none';
-  const userCss = _sbRestore(clone, level);
-  const full = level === 'full';
-  const embed = !!(opts && opts.embed);
-  // Документ без кода пользователя (PDF, печать, обычное окно предпросмотра): выполняются только
-  // скрипты с одноразовой меткой и те, что они загружают сами. Встроенные обработчики, ссылки
-  // javascript: и любые скрипты из содержимого запрещены политикой — второй рубеж после очистки
-  const nonce = full ? '' : _sbNonce();
-  const nonceAttr = nonce ? ` nonce="${nonce}"` : '';
-  const cspMeta = nonce
-    ? `<meta http-equiv="Content-Security-Policy" content="script-src 'nonce-${nonce}' 'strict-dynamic' 'unsafe-eval' 'wasm-unsafe-eval'; script-src-attr 'none'; object-src 'none'; base-uri 'none'">\n`
-    : '';
-  _rdPrepareExport(clone);
-  // Во встроенном превью флажки задач остаются кликабельными (см. _sbTask в render.js)
-  if (embed) clone.querySelectorAll('input[type=checkbox][data-zmd-task]').forEach(cb => cb.removeAttribute('disabled'));
+  const clone = mo.cloneNode(true);
+  const rdHead = _rdPrepareExport(clone);
   if (withCopy) {
     // Кнопки копирования остаются; подписи на текущем языке передаются через data-атрибуты
     clone.querySelectorAll('.cpbtn').forEach(b => {
@@ -236,19 +200,18 @@ function buildPreviewHTML(title, opts) {
   // Стили кнопки копирования — как в редакторе; при печати кнопка скрыта
   const COPY_CSS = withCopy
     ? `
-    .cpbtn{margin-left:auto;flex-shrink:0;display:flex;align-items:center;gap:var(--s5);height:var(--s26);padding:0 var(--s10);border-radius:var(--s10);border:none;background:rgba(255,255,255,.056);color:#C4C7C5;font-family:var(--font);font-size:var(--f10);font-weight:500;cursor:pointer;opacity:0;transition:opacity 144ms,background 144ms,color 144ms,transform 233ms;line-height:1;white-space:nowrap}
-    .cpbtn svg{width:var(--s13);height:var(--s13);flex-shrink:0}
+    .cpbtn{margin-left:auto;flex-shrink:0;display:flex;align-items:center;gap:var(--s5);padding:var(--s5) var(--s8);border-radius:var(--r8);border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#9aa0a6;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;opacity:0;transition:opacity .15s,background .15s,color .15s,transform .12s;line-height:1;white-space:nowrap}
+    .cpbtn svg{width:13px;height:13px;flex-shrink:0}
     .md pre:hover .cpbtn,.cpbtn:focus-visible{opacity:1}
-    @media (hover:none){.cpbtn{opacity:1}}
-    .cpbtn:hover{background:rgba(255,255,255,.146);color:#fff}
-    .cpbtn:active{transform:scale(.9443)}
-    .cpbtn.ok{background:rgba(52,168,83,.236);color:#81c995}
+    .cpbtn:hover{background:rgba(255,255,255,.16);color:#fff}
+    .cpbtn:active{transform:scale(.93)}
+    .cpbtn.ok{background:rgba(52,168,83,.25);color:#34a853;border-color:rgba(52,168,83,.4)}
     @media print{.cpbtn{display:none!important}}
   `
     : '';
   // Обработчик кнопок копирования в сохранённом документе (с запасным вариантом без Clipboard API)
   const COPY_JS = withCopy
-    ? `<script${nonceAttr}>
+    ? `<script>
 (function(){
   var COPY=${JSON.stringify(COPY_SVG)},CHECK=${JSON.stringify(CHECK_SVG)};
   function copyText(text,done){
@@ -282,8 +245,7 @@ function buildPreviewHTML(title, opts) {
   const tikzFonts = clone.querySelector('.tikz-wrap')
     ? `<link rel="stylesheet" href="${TIKZJAX_BASE}/fonts.css">\n`
     : '';
-  // Во встроенном превью диаграммы уже нарисованы приложением: Mermaid в iframe не загружается
-  clone.querySelectorAll(embed ? '.mermaid:not([data-processed])' : '.mermaid').forEach(node => {
+  clone.querySelectorAll('.mermaid').forEach(node => {
     const src = node.getAttribute('data-src') || node.dataset.src;
     if (src) {
       // Исходник как текст (как в превью): «<» в подписях не должен превращаться в HTML-теги
@@ -291,7 +253,6 @@ function buildPreviewHTML(title, opts) {
       node.removeAttribute('data-processed');
     }
   });
-  if (!full) _sbStabilize(clone);
   const bodyInner = clone.outerHTML;
   return `<!DOCTYPE html>
 <!--
@@ -306,6 +267,12 @@ function buildPreviewHTML(title, opts) {
   emmalloc (Emscripten) and Zephyr libc string functions — bundled in the harfbuzzjs WebAssembly build
     Copyright (c) the Emscripten authors; Copyright (c) the Zephyr Project contributors
     Apache License 2.0 — https://www.apache.org/licenses/LICENSE-2.0
+
+  BSD 2-Clause License
+
+  Leaflet v1.9.4 — maps for geojson / topojson blocks; loaded only when a document contains them
+    Copyright (c) 2010-2023, Vladimir Agafonkin; Copyright (c) 2010-2011, CloudMade
+    BSD 2-Clause License — https://github.com/Leaflet/Leaflet/blob/main/LICENSE
 
   BSD 3-Clause License
 
@@ -325,6 +292,12 @@ function buildPreviewHTML(title, opts) {
     Copyright (c) Jim Fowler, Glenn Rice and contributors
     GPL-3.0-or-later — https://github.com/drgrice1/tikzjax
     It bundles TeX and TeX packages (e.g. PGF/TikZ, pgfplots) under their own licenses.
+
+  ISC License
+
+  topojson-client v3.1.0 — topojson blocks; loaded only when a document contains them
+    Copyright (c) 2012-2019, Michael Bostock
+    ISC License — https://github.com/topojson/topojson-client/blob/master/LICENSE.md
 
   MIT License
 
@@ -359,9 +332,19 @@ function buildPreviewHTML(title, opts) {
     Copyright (c) 2015-2026 yWorks GmbH
     MIT License — https://github.com/yWorks/svg2pdf.js/blob/master/LICENSE
 
+  three.js r128 — 3D view for stl blocks; loaded only when a document contains them
+    Copyright (c) 2010-2021 three.js authors
+    MIT License — https://github.com/mrdoob/three.js/blob/dev/LICENSE
+
   Twemoji (@twemoji/api v17.0.3) — replaces emoji in the editor interface and the preview with Twemoji images
     Copyright (c) 2014-2021 Twitter; Copyright (c) 2022-present Jason Sofonia & Justine De Caires
     MIT License — https://github.com/jdecked/twemoji/blob/main/LICENSE
+
+  Open Database License 1.0
+
+  OpenStreetMap map data and tiles — shown in geojson / topojson blocks (no code included)
+    Copyright (c) OpenStreetMap contributors
+    ODbL 1.0 — https://www.openstreetmap.org/copyright
 
   SIL Open Font License 1.1
 
@@ -383,7 +366,8 @@ function buildPreviewHTML(title, opts) {
     Copyright (c) Google LLC
     SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
 
-  Content delivery / font services (no code included): cdnjs (Cloudflare), jsDelivr, Google Fonts.
+  Content delivery / font / map tile services (no code included): cdnjs (Cloudflare), jsDelivr, Google Fonts,
+  OpenStreetMap tile servers.
 
   Optional AI features call external APIs with the user's own key (no code included; each
   provider's terms of service apply): Anthropic API, Google Gemini API.
@@ -391,23 +375,23 @@ function buildPreviewHTML(title, opts) {
 <html lang="${currentLang}">
 <head>
 <meta charset="UTF-8">
-${cspMeta}<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${_rdEsc(title)}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${title}</title>
 <link rel="icon" type="image/svg+xml" href="${FAVICON_HREF}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-${tikzFonts}<style>${PREVIEW_CSS}${RD_CSS}${COPY_CSS}${full && opts && (opts.embed || opts.popup) ? SB_FRAME_CSS : ''}</style>
-${_sbStyleTag(userCss)}</head>
+${tikzFonts}${rdHead}<style>${PREVIEW_CSS}${RD_CSS}${COPY_CSS}</style>
+</head>
 <body>
-${full && opts && (opts.embed || opts.popup) ? SB_FRAME_JS : ''}${bodyInner}
-${embed ? '' : `<script${nonceAttr} src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"><\/script>
-<script${nonceAttr} src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"><\/script>`}
-<script${nonceAttr}>
+${bodyInner}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"><\/script>
+<script>
 if(typeof mermaid!=='undefined'){
-  mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'base',
+  mermaid.initialize({startOnLoad:false,securityLevel:'loose',theme:'base',
     themeVariables:{primaryColor:'#E8F0FE',primaryTextColor:'#1a1a2e',primaryBorderColor:'#4285F4',
     secondaryColor:'#E6F4EA',tertiaryColor:'#FEF7E0',background:'#ffffff',
     mainBkg:'#E8F0FE',nodeBorder:'#4285F4',lineColor:'#5F6368',
@@ -444,7 +428,7 @@ if(typeof mermaid!=='undefined'){
   })();
 }
 <\/script>
-<script${nonceAttr}>
+<script>
 (function(){
   function fallback(img){if(img.parentNode)img.parentNode.replaceChild(document.createTextNode(img.alt),img);}
   document.querySelectorAll('img.emoji').forEach(function(img){
@@ -459,15 +443,8 @@ ${COPY_JS}</body>
 
 // Открывает предпросмотр в новом окне браузера (для печати/просмотра)
 function openPreviewWindow() {
-  // Пустой документ: объясняем, почему окно не открылось
-  if (!ed.value.trim()) {
-    showErrorModal(tr('previewEmptyMsg'), tr('previewEmptyTitle'));
-    return;
-  }
-  // С HTML-рендерингом документ открывается внутри изолированного iframe страницы-оболочки
-  const html = appSettings.htmlRendering
-    ? _sbShellHTML(getDocTitle(), buildPreviewHTML(getDocTitle(), { level: 'full', popup: true }))
-    : buildPreviewHTML();
+  if (!ed.value.trim()) return;
+  const html = buildPreviewHTML();
   const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
   const win = window.open(url, '_blank');
   if (!win) { URL.revokeObjectURL(url); return; }
@@ -676,9 +653,9 @@ async function openFileObject(file) {
   if (!(await confirmLeaveDoc())) return;
   const id = genDocId();
   const data = {
-    name: String((meta && meta.name) || baseName || untitledDocName()).slice(0, 300),
+    name: (meta && meta.name) || baseName || untitledDocName(),
     content: content,
-    fontSizes: cleanFontSizes(meta && meta.fontSizes),
+    fontSizes: Object.assign({ ...FONT_DEFAULTS }, (meta && meta.fontSizes) || {}),
     scrollEd: 0,
     scrollPv: 0
   };
@@ -733,7 +710,7 @@ function getDocTitle() {
 function downloadHTML() {
   if (!ed.value.trim()) return;
   const title = getDocTitle();
-  const html = buildPreviewHTML(title, { level: 'full' });
+  const html = buildPreviewHTML(title);
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -761,12 +738,12 @@ let _pdfPagesRunning = false;
 let _pdfPagesDirty = false;
 let _pdfPagesSeq = 0;
 let _pdfPagesSkipped = false;
-// Чип появляется/скрывается по ширине окна (см. styles.css: 466 px)
+// Чип появляется/скрывается по ширине окна (см. styles.css: 768 и 1100 px)
 const _pdfPagesOnShow = () => {
   if (_pdfPagesSkipped) schedulePdfPageCount();
 };
 window.addEventListener('resize', _pdfPagesOnShow);
-['(max-width: 466px)'].forEach(q => {
+['(max-width: 768px)', '(max-width: 1100px)'].forEach(q => {
   const mq = window.matchMedia && window.matchMedia(q);
   if (mq && mq.addEventListener) mq.addEventListener('change', _pdfPagesOnShow);
 });
@@ -850,7 +827,10 @@ function printPdfViaDialog(pdfHTML) {
 
   iframe.onload = () => {
     setTimeout(() => {
-      iframe.contentWindow.print();
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      const s = doc.createElement('script');
+      s.textContent = `window.print();`;
+      doc.body.appendChild(s);
     }, 800);
   };
 
@@ -1261,7 +1241,7 @@ function _findCodeRanges(v) {
     else if (prevBlank && info.bq === 0 && info.indent < 2) inList = false;
 
     if (info.bq === 0 && !inList) {
-      const dg = /^\s*(`{3,}|~{3,})\s*(?:mermaid|tikz|math)\s*$/.exec(line);
+      const dg = /^\s*(`{3,}|~{3,})\s*(?:mermaid|tikz|math|geojson|topojson|stl)\s*$/.exec(line);
       if (dg) {
         const endRe = new RegExp('^\\s*' + (dg[1][0] === '`' ? '`' : '~') + '{' + dg[1].length + ',}\\s*$');
         if (opaque(endRe, i + 1)) continue;
@@ -1827,9 +1807,7 @@ function _processImageAttrs(v) {
     const safeAlt = alt.replace(/"/g, '&quot;');
     figN++;
     const caption = _figureLabel(figN, alt).replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const safeSrc = src.replace(/"/g, '&quot;');
-    const safeStyle = styleAttr.replace(/[<>]/g, '');
-    return `<figure class="md-figure"><img src="${safeSrc}" alt="${safeAlt}"${safeStyle}><figcaption>${caption}</figcaption></figure>`;
+    return `<figure class="md-figure"><img src="${src}" alt="${safeAlt}"${styleAttr}><figcaption>${caption}</figcaption></figure>`;
   });
 }
 
@@ -1837,13 +1815,13 @@ function _processImageAttrs(v) {
 function render(v) {
   const raw = v;
   _tikzStore = [];
-  _sbStash = [];
   v = _rdFrontMatter(v);
   // Код прячем первым: внутри него ничего не рендерится (только подсветка и diff)
   v = _protectCode(v);
   // LaTeX-документы, Mermaid и TikZ вынимаем до экранирования HTML: в их коде бывают «<» и «>»
   v = _protectMermaid(v);
   v = _protectTikz(v);
+  v = _rdEmbeds(v);
   v = _rdFootnotes(v);
   if (!appSettings.htmlRendering) {
     // Код спрятан в токены, поэтому экранировать можно весь оставшийся текст
@@ -1859,18 +1837,14 @@ function render(v) {
     const vv = _processCustomTables(_processImageAttrs(_rdEmoji(v)));
     // Код возвращается на место только перед marked: его разбирает (и экранирует) сам marked
     const _html = marked.parse(_restoreCode(_protectEscapes(_protectLatex(vv))));
-    // Разметка разбирается и очищается вне документа приложения (см. _sbParse в render.js);
-    // сюда переносятся уже готовые узлы — строка в innerHTML основного документа не попадает
-    mo.replaceChildren(..._sbParse(_rdRestore(_restoreMermaid(_restoreTikz(_restoreEscapes(_restoreLatex(_html)))))));
-    if (_rdFn) mo.append(..._sbParse(_rdFootnoteSection()));
+    mo.innerHTML = _rdRestore(_restoreMermaid(_restoreTikz(_restoreEscapes(_restoreLatex(_html)))));
+    if (_rdFn) mo.insertAdjacentHTML('beforeend', _rdFootnoteSection());
     _rdPost(mo);
     if (hasMmd && typeof mermaid !== 'undefined') {
-      _mmdBusy++;
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           const nodes = Array.from(mo.querySelectorAll('.mermaid'));
           (async () => {
-            try {
             for (let idx = 0; idx < nodes.length; idx++) {
               const node = nodes[idx];
               node.id =
@@ -1906,15 +1880,12 @@ function render(v) {
                 }
               }
             }
-            } finally {
-              _mmdBusy--;
-              _sbSchedule();
-            }
           })();
         });
       });
     }
     _mountTikz();
+    _rdMountEmbeds();
     highlightCodeBlocks(mo);
     addCopyBtns();
   }
@@ -1923,12 +1894,10 @@ function render(v) {
   wc.textContent = (raw.trim() ? raw.trim().split(/\s+/).length : 0).toLocaleString();
   lc.textContent = raw.split('\n').length.toLocaleString();
   schedulePdfPageCount();
-  _sbSchedule();
 }
 
 ed.addEventListener('input', () => render(ed.value));
 _rdBindPreview();
-_sbInit();
 ed.addEventListener('keydown', e => {
   if (e.key === 'Tab') {
     if (docReadOnly) return;
@@ -2076,65 +2045,6 @@ function iTikz() {
   ed.focus();
   render(ed.value);
 }
-// Вставляет блок-примечание GitHub (> [!NOTE]); тип выделен, чтобы его можно было сразу заменить
-// на TIP, IMPORTANT, WARNING или CAUTION
-function iAlert() {
-  if (_roGuard()) return;
-  const t0 = LANGS[currentLang] || LANGS['en'];
-  const { s, e, t } = gs();
-  const body = (t || t0.alertDefault || LANGS['en'].alertDefault)
-    .split('\n')
-    .map(line => '> ' + line)
-    .join('\n');
-  // Примечание распознаётся только в начале цитаты: начинаем с новой строки
-  const pre = s > 0 && ed.value[s - 1] !== '\n' ? '\n\n' : '';
-  const r = pre + '> [!NOTE]\n' + body + '\n';
-  ed.value = ed.value.slice(0, s) + r + ed.value.slice(e);
-  ed.selectionStart = s + pre.length + 4;
-  ed.selectionEnd = ed.selectionStart + 4;
-  ed.focus();
-  render(ed.value);
-}
-// Вставляет сноску: ссылку [^n] после курсора и её текст в конец документа (текст выделен)
-function iFootnote() {
-  if (_roGuard()) return;
-  const t0 = LANGS[currentLang] || LANGS['en'];
-  const { e } = gs();
-  const used = new Set();
-  ed.value.replace(/\[\^([^\]\s]+)\]/g, (m, id) => used.add(id));
-  let n = 1;
-  while (used.has(String(n))) n++;
-  const ref = `[^${n}]`;
-  const note = t0.footnoteDefault || LANGS['en'].footnoteDefault;
-  let v = ed.value.slice(0, e) + ref + ed.value.slice(e);
-  v += v.endsWith('\n\n') ? '' : v.endsWith('\n') ? '\n' : '\n\n';
-  const at = v.length + ref.length + 2;
-  ed.value = v + ref + ': ' + note + '\n';
-  ed.selectionStart = at;
-  ed.selectionEnd = at + note.length;
-  ed.focus();
-  render(ed.value);
-}
-// Вставляет метаданные (front matter) в начало документа; если они уже есть — выделяет их
-function iFrontMatter() {
-  if (_roGuard()) return;
-  const have = /^---[ \t]*\n([\s\S]*?)\n---[ \t]*(?:\n|$)/.exec(ed.value);
-  if (have) {
-    ed.selectionStart = 4;
-    ed.selectionEnd = 4 + have[1].length;
-    ed.focus();
-    return;
-  }
-  const title = getDocTitle();
-  const d = new Date();
-  const date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  const head = '---\ntitle: ';
-  ed.value = head + title + '\nauthor: \ndate: ' + date + '\n---\n\n' + ed.value;
-  ed.selectionStart = head.length;
-  ed.selectionEnd = head.length + title.length;
-  ed.focus();
-  render(ed.value);
-}
 // Переключает вкладки редактор/превью на мобильных экранах
 function mTab(tab, btn) {
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
@@ -2152,6 +2062,15 @@ function _aiPanelReservedWidth() {
   const ai = document.getElementById('aiPanel');
   return ai && ai.classList.contains('open') ? ai.getBoundingClientRect().width : 0;
 }
+function clampEpFlex() {
+  const full = document.getElementById('panes').getBoundingClientRect().width;
+  const reserved = 5 + _aiPanelReservedWidth();
+  const available = full - reserved;
+  if (available <= 0 || full <= 0) return;
+  const cur = eP.getBoundingClientRect().width;
+  const w = Math.max(200, Math.min(available - 200, cur));
+  eP.style.flex = `0 0 ${((w / full) * 100).toFixed(3)}%`;
+}
 rz.addEventListener('mousedown', e => {
   drag = true;
   sx = e.clientX;
@@ -2162,15 +2081,12 @@ rz.addEventListener('mousedown', e => {
 });
 document.addEventListener('mousemove', e => {
   if (!drag) return;
-  const panes = document.getElementById('panes');
-  // Разделитель не занимает места (отрицательные поля в CSS), поэтому его ширина не вычитается
-  const tot = panes.getBoundingClientRect().width - _aiPanelReservedWidth();
-  if (tot <= 0) return;
+  const full = document.getElementById('panes').getBoundingClientRect().width;
+  const tot = full - 5 - _aiPanelReservedWidth();
   const w = Math.max(200, Math.min(tot - 200, sw + (e.clientX - sx)));
-  // Запоминается доля редактора, а не ширина: она сохраняется при изменении размера окна
-  // и при открытии панели ИИ (минимальные ширины панелей обеспечивает CSS)
-  panes.style.setProperty('--ep-r', (w / tot).toFixed(5));
+  eP.style.flex = `0 0 ${((w / full) * 100).toFixed(3)}%`;
 });
+window.addEventListener('resize', clampEpFlex);
 document.addEventListener('mouseup', () => {
   if (!drag) return;
   drag = false;
@@ -2198,10 +2114,10 @@ const LANGS = {
     aboutBtnTitle: 'Credits & Copyright',
     aiBtnTitle: 'AI Assistant',
     aiWelcome:
-      'Hi! I\'m the AI Assistant (Claude) for this Markdown editor.<br><br>Enter your Anthropic API key and press "Save", then select text and click a preset, or ask anything freely.',
+      '👋 Hi! I\'m the AI Assistant (Claude) for this Markdown editor.<br><br>Enter your Anthropic API key and press "Save", then select text and click a preset, or ask anything freely.',
     aiKeyPlaceholder: 'Enter Anthropic API key…',
     aiSaveBtn: 'Save',
-    aiSavedBtn: 'Saved',
+    aiSavedBtn: 'Saved ✓',
     aiPresetContinue: 'Continue',
     aiPresetSummarize: 'Summarize',
     aiPresetTranslateEn: 'To English',
@@ -2218,24 +2134,24 @@ const LANGS = {
     aiPresetFactcheckPrompt:
       'Fact-check this text and correct any claims that are inaccurate, outdated, or unverifiable. Return the corrected text directly, with no annotations or notes about what changed. If everything checks out, return the text unchanged.',
     aiInputPlaceholder: 'Ask a question or give an instruction…',
-    aiInsertBtn: 'Insert into editor',
-    aiAcceptBtn: 'Accept',
-    aiRejectBtn: 'Reject',
-    aiEditApplied: 'Applied to editor',
-    aiEditDiscarded: 'Discarded',
-    aiEditStale: 'Editor changed — could not apply',
-    aiKeyWarning: 'Please enter your {backend} API key and press "Save".',
-    aiThinking: 'Thinking…',
+    aiInsertBtn: '⬇ Insert into editor',
+    aiAcceptBtn: '✓ Accept',
+    aiRejectBtn: '✕ Reject',
+    aiEditApplied: '✓ Applied to editor',
+    aiEditDiscarded: '✕ Discarded',
+    aiEditStale: '⚠ Editor changed — could not apply',
+    aiKeyWarning: '⚠ Please enter your {backend} API key and press "Save".',
+    aiThinking: '● Thinking…',
     pvPopBtnTitle: 'Open in new window',
     ttTikz: 'TikZ figure (```tikz ... ```)',
-    tikzLoadError: 'TikZ: could not load the TeX engine (an internet connection is needed the first time).',
-    tikzCompileError: 'TikZ: compilation failed. Check the code for errors.',
+    tikzLoadError: '⚠ TikZ: could not load the TeX engine (an internet connection is needed the first time).',
+    tikzCompileError: '⚠ TikZ: compilation failed. Check the code for errors.',
     tikzUnsupportedPkgs: 'Packages not available in the browser TeX: {pkgs}',
     aiModelsRefreshTitle: 'Reload the model list from the API',
-    aiModelsFetchError: 'Could not load the model list: ',
+    aiModelsFetchError: '⚠ Could not load the model list: ',
     aiModelNotFound: 'This model is not available. Press ↻ to reload the model list and pick another one.',
-    aiRefusal: 'The model declined to answer this request.',
-    aiErrorPrefix: 'Error: ',
+    aiRefusal: '⚠ The model declined to answer this request.',
+    aiErrorPrefix: '⚠ Error: ',
     aiSelectedSuffix: ' (selected text: {n} chars)',
     aiEmptyResponse: '(empty response)',
     aiNavWarning: 'The AI is still responding. If you leave now, the response will be lost. Continue?',
@@ -2259,7 +2175,7 @@ const LANGS = {
     aiTruncatedError:
       'Response was cut off (max output length reached) before producing any text. Try a shorter selection, or switch model.',
     aiDiffModalTitle: 'Review edit',
-    aiReviewEditMsg: 'Edit proposed',
+    aiReviewEditMsg: '✎ Edit proposed',
     aiOpenReviewBtn: 'Review',
     aiResetBtnTitle: 'Reset conversation',
     aiOfflineTitle: 'AI features are unavailable offline',
@@ -2268,10 +2184,10 @@ const LANGS = {
       'You are an AI assistant that helps write and edit Markdown documents. Use Markdown syntax appropriately and give helpful answers. Keep responses concise and practical. The user has a deliberate personal notation style, so avoid rewriting it more than necessary — instead improve readability with targeted techniques, such as consolidating math expressions into LaTeX.',
     aiAttachBtnTitle: 'Attach file',
     aiRemoveFileTitle: 'Remove file',
-    aiFileTooLarge: 'File "{name}" is too large (max {max}).',
-    aiFileReadError: 'Could not read file "{name}".',
-    aiUnsupportedFile: 'Unsupported file type: "{name}".',
-    aiTooManyFiles: 'Max {max} files per message.',
+    aiFileTooLarge: '⚠ File "{name}" is too large (max {max}).',
+    aiFileReadError: '⚠ Could not read file "{name}".',
+    aiUnsupportedFile: '⚠ Unsupported file type: "{name}".',
+    aiTooManyFiles: '⚠ Max {max} files per message.',
     aboutAuthor: 'Author',
     aboutAnd: ' and ',
     aboutCopyright: 'Copyright',
@@ -2304,7 +2220,7 @@ const LANGS = {
     defaultImgAlt: 'alt text',
     tblHeaderDefault: 'Header',
     tblCellDefault: 'Cell',
-    mermaidSyntaxError: 'Mermaid: syntax error (diagram syntax error)',
+    mermaidSyntaxError: '⚠ Mermaid: syntax error (diagram syntax error)',
     savedLabel: 'Saved',
     toastSaving: 'Saving…',
     toastSaved: 'Saved',
@@ -2341,8 +2257,6 @@ const LANGS = {
     docsCantDeleteLast: 'You must have at least one document.',
     untitledDoc: 'Untitled Document',
     fileOpenFailed: 'Could not open the file “{name}”.',
-    previewEmptyTitle: 'Cannot preview',
-    previewEmptyMsg: 'The document is empty. Enter some content before previewing.',
     openWindow: 'Open',
     diffPrompt: 'Enter language name (leave blank for plain diff):',
     diffDefault: '- removed line\n+ added line',
@@ -2363,11 +2277,6 @@ const LANGS = {
     ttDiff: 'Diff block (diff / diff_lang)',
     ttMermaid: 'Mermaid diagram (```mermaid ... ```)',
     ttTable: 'Insert custom table',
-    ttAlert: 'Alert (> [!NOTE] / TIP / IMPORTANT / WARNING / CAUTION)',
-    ttFootnote: 'Footnote ([^1])',
-    ttFrontMatter: 'Front matter (--- title: ... ---)',
-    alertDefault: 'Note text',
-    footnoteDefault: 'Footnote text',
     fontSizeBtnTitle: 'Font size settings',
     fontPanelTitle: 'Font Sizes',
     fontH1: 'H1',
@@ -2412,9 +2321,9 @@ $$\\int_{-\\infty}^{\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi} \\qquad F_n = \\frac{\
 | Element | Value |
 |---------|-------|
 | Layout ratio | **61.8 %** / **38.2 %** |
-| Spacing scale | 1rem · $\\phi^{n}$: 4.8, 7.8, 12.6, 20.4, 32.9, 53.3 px |
-| Header height | **53.3 px** = 1rem · $\\phi^{2.5}$ |
-| Font sizes | 16, 25.9, 41.9 px = 1rem · $\\phi^{0}, \\phi^{1}, \\phi^{2}$ |
+| Spacing scale | 3, 5, 8, 13, 21, 34, 55, 89 px |
+| Header height | **55 px** (Fibonacci) |
+| Font sizes | 13, 21, 34 px |
 
 ## Code Example
 
@@ -2610,7 +2519,7 @@ async function refreshAiModels(force) {
   if (!_aiKey) {
     if (force) {
       const backendName = AI_BACKEND === 'gemini' ? 'Google AI Studio' : 'Anthropic';
-      _aiAddMsg(t.aiKeyWarning.replace('{backend}', backendName), 'thinking warn');
+      _aiAddMsg(t.aiKeyWarning.replace('{backend}', backendName), 'thinking');
     }
     return;
   }
@@ -2636,7 +2545,7 @@ async function refreshAiModels(force) {
       _populateAiSelects();
     }
   } catch (err) {
-    if (force) _aiAddMsg(t.aiModelsFetchError + err.message, 'thinking warn');
+    if (force) _aiAddMsg(t.aiModelsFetchError + err.message, 'thinking');
   } finally {
     _aiModelsLoading = false;
     if (btn) btn.classList.remove('spin');
@@ -3115,7 +3024,7 @@ function toggleLang() {
   drop.style.top = r.bottom + 6 + 'px';
   drop.style.right = window.innerWidth - r.right + 'px';
   drop.classList.add('open');
-  fitLangDrop(drop, r.bottom + 8); // ≈ φ^-1.5 rem
+  fitLangDrop(drop, r.bottom + 6);
 }
 
 // Пять и более языков: высота списка ограничена (видно 5,5 пункта — последний обрезан,
@@ -3156,7 +3065,7 @@ document.addEventListener('click', e => {
 
 // Twemoji (https://github.com/jdecked/twemoji) — код: MIT License, графика: CC BY 4.0
 const TWEMOJI_SKIP =
-  '#ed, pre, code, svg, textarea, select, option, script, style, noscript, iframe, .katex, .mermaid, [contenteditable]';
+  '#ed, pre, code, svg, textarea, select, option, script, style, noscript, iframe, .katex, .mermaid, .rd-embed, [contenteditable]';
 const _twemojiFailed = new Set();
 
 function twemojiSrc(raw) {
@@ -3226,8 +3135,7 @@ if (typeof twemoji !== 'undefined') {
 if (typeof mermaid !== 'undefined') {
   mermaid.initialize({
     startOnLoad: false,
-    // 'loose' позволял тексту диаграммы вызывать функции страницы (click … call …)
-    securityLevel: 'strict',
+    securityLevel: 'loose',
     theme: 'base',
     themeVariables: {
       primaryColor: '#E8F0FE',
@@ -3331,7 +3239,7 @@ if (typeof mermaid !== 'undefined') {
 const INIT = LANGS['en'].init;
 ed.value = INIT;
 render(INIT);
-if (window.innerWidth > 754) ed.focus();
+if (window.innerWidth > 768) ed.focus();
 applyLang('en');
 
 // Открывает диалоговое окно «О программе»
@@ -3344,7 +3252,7 @@ function toggleAbout() {
   } else {
     overlay.classList.add('open');
     modal.classList.add('open');
-    document.getElementById('aboutBtn').style.color = 'var(--accent)';
+    document.getElementById('aboutBtn').style.color = 'var(--gb)';
   }
 }
 // Закрывает диалоговое окно «О программе»
@@ -3418,7 +3326,6 @@ function setSaveStatus(state) {
 // Применяет текущие размеры шрифтов к CSS-переменным документа
 function applyFontSizesToDOM() {
   const root = document.documentElement;
-  _sbSchedule();
   root.style.setProperty('--fz-h1', fontSizes.h1 + 'px');
   root.style.setProperty('--fz-h2', fontSizes.h2 + 'px');
   root.style.setProperty('--fz-h3', fontSizes.h3 + 'px');
@@ -3434,8 +3341,10 @@ function applyFontSizesToDOM() {
     document.head.appendChild(styleTag);
   }
   styleTag.textContent = `
-    .md h1{font-size:var(--fz-h1-fit,var(--fz-h1))!important}
-    .md h2{font-size:var(--fz-h2-fit,var(--fz-h2))!important}
+    .md h1{font-size:var(--fz-h1)!important;padding-bottom:${Math.round(fontSizes.h1 * 0.24)}px!important}
+    .md h1::after{width:${Math.round(fontSizes.h1 * 1.6)}px!important;height:${Math.max(2, Math.round(fontSizes.h1 * 0.09))}px!important}
+    .md h2{font-size:var(--fz-h2)!important}
+    .md h2::before{height:${Math.round(fontSizes.h2 * 0.9)}px!important;width:${Math.max(3, Math.round(fontSizes.h2 * 0.22))}px!important}
     .md h3{font-size:var(--fz-h3)!important}
     .md p,.md li,.md td,.md th,.md blockquote{font-size:var(--fz-body)!important}
     .md .katex{font-size:var(--fz-latex)!important}
@@ -3504,7 +3413,7 @@ function toggleFontPanel() {
   } else {
     overlay.classList.add('open');
     modal.classList.add('open');
-    document.getElementById('fontSizeBtn').style.color = 'var(--accent)';
+    document.getElementById('fontSizeBtn').style.color = 'var(--gb)';
     syncFontPanelUI();
   }
 }
@@ -3618,7 +3527,7 @@ function toggleSettings() {
   } else {
     overlay.classList.add('open');
     modal.classList.add('open');
-    document.getElementById('settingsBtn').style.color = 'var(--accent)';
+    document.getElementById('settingsBtn').style.color = 'var(--gb)';
     updateSettingsPreview();
     const t = LANGS[currentLang] || LANGS['en'];
     ['settingsHtmlDesc', 'settingsAiDotDesc', 'settingsAutoSaveDesc'].forEach(key => {
@@ -4557,7 +4466,7 @@ async function switchToDoc(id) {
   ed.value = data.content;
   _savedContent = data.content;
   _lastBroadcast = null;
-  fontSizes = cleanFontSizes(data.fontSizes);
+  fontSizes = { ...data.fontSizes };
   applyFontSizesToDOM();
   _render(data.content);
   _invalidateScrollMap();
@@ -4727,7 +4636,7 @@ function toggleDocsPanel() {
     renderDocList();
     overlay.classList.add('open');
     modal.classList.add('open');
-    document.getElementById('docsBtn').style.color = 'var(--accent)';
+    document.getElementById('docsBtn').style.color = 'var(--gb)';
   }
 }
 function closeDocsPanel() {
@@ -4977,19 +4886,19 @@ async function _addAiAttachment(file) {
   const t = LANGS[currentLang] || LANGS['en'];
   if (!_currentAiModelSupportsAttach()) return;
   if (_aiPendingAttachments.length >= AI_MAX_ATTACHMENTS) {
-    _aiAddMsg(t.aiTooManyFiles.replace('{max}', AI_MAX_ATTACHMENTS), 'thinking warn');
+    _aiAddMsg(t.aiTooManyFiles.replace('{max}', AI_MAX_ATTACHMENTS), 'thinking');
     return;
   }
   const kind = _aiFileKind(file);
   if (!kind) {
-    _aiAddMsg(t.aiUnsupportedFile.replace('{name}', file.name), 'thinking warn');
+    _aiAddMsg(t.aiUnsupportedFile.replace('{name}', file.name), 'thinking');
     return;
   }
   const maxSize = kind === 'text' ? AI_MAX_TEXT_SIZE : AI_MAX_BINARY_SIZE;
   if (file.size > maxSize) {
     _aiAddMsg(
       t.aiFileTooLarge.replace('{name}', file.name).replace('{max}', _aiFormatSize(maxSize)),
-      'thinking warn'
+      'thinking'
     );
     return;
   }
@@ -5014,7 +4923,7 @@ async function _addAiAttachment(file) {
     });
     _renderAiPendingAttachments();
   } catch (_) {
-    _aiAddMsg(t.aiFileReadError.replace('{name}', file.name), 'thinking warn');
+    _aiAddMsg(t.aiFileReadError.replace('{name}', file.name), 'thinking');
   }
 }
 
@@ -5081,7 +4990,7 @@ function _buildAiAttachmentChip(a, removable) {
   } else {
     const icon = document.createElement('span');
     icon.className = 'ai-chip-icon';
-    icon.innerHTML = a.kind === 'pdf' ? CHIP_PDF_SVG : CHIP_TEXT_SVG;
+    icon.textContent = a.kind === 'pdf' ? '📄' : '📝';
     chip.appendChild(icon);
   }
   const nameSpan = document.createElement('span');
@@ -5095,8 +5004,7 @@ function _buildAiAttachmentChip(a, removable) {
     rm.className = 'ai-chip-rm';
     rm.title = t.aiRemoveFileTitle;
     rm.setAttribute('data-i18n-title', 'aiRemoveFileTitle');
-    rm.setAttribute('aria-label', t.aiRemoveFileTitle);
-    rm.innerHTML = CHIP_REMOVE_SVG;
+    rm.textContent = '×';
     rm.onclick = () => removeAiAttachment(a.id);
     chip.appendChild(rm);
   }
@@ -5327,7 +5235,7 @@ function _aiOfferEdit(selS, selE, oldText, newText) {
   const card = document.createElement('div');
   card.className = 'ai-bubble a';
   card.id = 'diffCard_' + id;
-  card.innerHTML = `<span data-icon="edit" data-i18n="aiReviewEditMsg">${_escDiffHtml(t.aiReviewEditMsg)}</span> <button class="diff-open-btn" data-i18n="aiOpenReviewBtn" onclick="openDiffModal('${id}')">${_escDiffHtml(t.aiOpenReviewBtn)}</button>`;
+  card.innerHTML = `<span data-i18n="aiReviewEditMsg">${_escDiffHtml(t.aiReviewEditMsg)}</span> <button class="diff-open-btn" data-i18n="aiOpenReviewBtn" onclick="openDiffModal('${id}')">${_escDiffHtml(t.aiOpenReviewBtn)}</button>`;
   msgs.appendChild(card);
   msgs.scrollTop = msgs.scrollHeight;
 
@@ -5356,9 +5264,7 @@ function closeDiffModal() {
 // key — ключ строки интерфейса (текст карточки меняется вместе с языком)
 function _resolveDiffCard(id, key) {
   const card = document.getElementById('diffCard_' + id);
-  // Значок состояния — SVG через data-icon (CSS), чтобы смена языка (textContent) его не стирала
-  const icon = { aiEditApplied: 'check', aiEditDiscarded: 'close', aiEditStale: 'warn' }[key] || '';
-  if (card) card.innerHTML = `<span data-icon="${icon}" data-i18n="${key}">${_escDiffHtml(tr(key))}</span>`;
+  if (card) card.innerHTML = `<span data-i18n="${key}">${_escDiffHtml(tr(key))}</span>`;
   delete _aiPendingEdits[id];
   if (_aiActiveModalEditId === id) closeDiffModal();
 }
@@ -5401,14 +5307,12 @@ async function saveApiKey() {
   } catch (_) {}
   // Новый ключ может давать доступ к другим моделям — обновляем список сразу
   refreshAiModels(true);
-  const btn = document.querySelector('#aiPanel .ai-ksave');
+  const btn = document.querySelector('.ai-ksave');
   // Временная подпись тоже через data-i18n — при смене языка она сразу переводится
   btn.setAttribute('data-i18n', 'aiSavedBtn');
-  btn.dataset.icon = 'check';
   btn.textContent = tr('aiSavedBtn');
   setTimeout(() => {
     btn.setAttribute('data-i18n', 'aiSaveBtn');
-    delete btn.dataset.icon;
     btn.textContent = tr('aiSaveBtn');
   }, 1500);
 }
@@ -5422,6 +5326,7 @@ function toggleAiPanel() {
   const open = p.classList.toggle('open');
   b.classList.toggle('on', open);
   if (open) document.getElementById('aiInput').focus();
+  setTimeout(clampEpFlex, 260);
 }
 
 // Проверяет, находится ли браузер в автономном режиме (без сети)
@@ -5573,7 +5478,6 @@ function _aiAddInsertableMsg(text, pos) {
   btn.className = 'ai-insert vis';
   btn.style.marginTop = 'var(--s8)';
   btn.setAttribute('data-i18n', 'aiInsertBtn');
-  btn.dataset.icon = 'insert';
   btn.textContent = t.aiInsertBtn;
   btn.onclick = () => {
     if (_roGuard()) return;
@@ -5585,7 +5489,6 @@ function _aiAddInsertableMsg(text, pos) {
     btn.style.opacity = '.5';
     btn.style.cursor = 'default';
     btn.setAttribute('data-i18n', 'aiEditApplied');
-    btn.dataset.icon = 'check';
     btn.textContent = tr('aiEditApplied');
   };
   wrap.appendChild(textDiv);
@@ -5717,7 +5620,7 @@ async function sendAi() {
 
   if (!_aiKey) {
     const backendName = AI_BACKEND === 'gemini' ? 'Google AI Studio' : 'Anthropic';
-    _aiAddMsg(t.aiKeyWarning.replace('{backend}', backendName), 'thinking warn');
+    _aiAddMsg(t.aiKeyWarning.replace('{backend}', backendName), 'thinking');
     return;
   }
 
@@ -5730,7 +5633,7 @@ async function sendAi() {
     : prompt;
 
   input.value = '';
-  input.style.height = 'var(--ctl)';
+  input.style.height = '34px';
   _clearAiAttachments();
   _aiAddMsg(
     prompt + (selected ? t.aiSelectedSuffix.replace('{n}', selected.length) : ''),
@@ -5763,7 +5666,7 @@ async function sendAi() {
   } catch (err) {
     thinking.remove();
     if (err.name !== 'AbortError') {
-      _aiAddMsg(t.aiErrorPrefix + err.message, 'thinking warn');
+      _aiAddMsg(t.aiErrorPrefix + err.message, 'thinking');
       if (err instanceof TypeError) _probeNetwork();
     }
   } finally {

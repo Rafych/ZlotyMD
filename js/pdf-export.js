@@ -208,72 +208,6 @@
   function delay(ms) {
     return new Promise(r => setTimeout(r, ms));
   }
-
-  // ---------- Передышки для интерфейса ----------
-  // iframe с документом живёт в том же потоке, что и редактор: пока здесь идёт непрерывная работа,
-  // страница не отвечает на ввод. Поэтому длинные циклы каждые несколько миллисекунд отдают управление
-  // браузеру. MessageChannel, а не setTimeout: таймеры во вкладке в фоне срабатывают раз в секунду
-  const SLICE_MS = 10;
-  let sliceStart = 0;
-  let sliceWaiters = null;
-  const sliceChan = typeof MessageChannel === 'function' ? new MessageChannel() : null;
-  const sliceWake = () => {
-    const list = sliceWaiters;
-    sliceWaiters = null;
-    sliceStart = performance.now();
-    if (list) list.forEach(fn => fn());
-  };
-  if (sliceChan) sliceChan.port1.onmessage = sliceWake;
-  // null — время ещё есть; иначе Promise, который выполнится после передышки:
-  //   const b = breathe(); if (b) await b;
-  function breathe() {
-    if (performance.now() - sliceStart < SLICE_MS) return null;
-    return new Promise(resolve => {
-      if (sliceWaiters) { sliceWaiters.push(resolve); return; }
-      sliceWaiters = [resolve];
-      if (sliceChan) sliceChan.port2.postMessage(0); else setTimeout(sliceWake, 0);
-    });
-  }
-  async function rest() {
-    const b = breathe();
-    if (b) await b;
-  }
-  // Сжатие zlib средствами браузера: выполняется вне основного потока и намного быстрее, чем
-  // сжатие на JavaScript внутри jsPDF. null — если CompressionStream недоступен
-  function nativeDeflate(bytes) {
-    if (typeof CompressionStream !== 'function') return null;
-    try {
-      const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate'));
-      return new Response(stream).arrayBuffer().then(buf => new Uint8Array(buf));
-    } catch (e) {
-      return null;
-    }
-  }
-  // html2canvas рисует весь документ одной цепочкой await без единой паузы (микрозадачи не дают
-  // браузеру обработать ввод). На время его работы Promise в окне iframe заменяется наследником,
-  // у которого then() по истечении кванта времени продолжает цепочку после передышки
-  function sliceHtml2canvas(win) {
-    const Native = win.Promise;
-    const h2c = win.html2canvas;
-    if (!h2c || !Native) return;
-    class Sliced extends Native {
-      then(onOk, onErr) {
-        const b = breathe();
-        if (!b) return super.then(onOk, onErr);
-        const ok = typeof onOk === 'function' ? onOk : v => v;
-        const err = typeof onErr === 'function' ? onErr : e => { throw e; };
-        return super.then(v => b.then(() => ok(v)), e => b.then(() => err(e)));
-      }
-    }
-    win.html2canvas = function () {
-      win.Promise = Sliced;
-      const done = () => { win.Promise = Native; };
-      let res;
-      try { res = h2c.apply(this, arguments); } catch (e) { done(); throw e; }
-      Native.prototype.then.call(res, done, done);
-      return res;
-    };
-  }
   function parseColor(str) {
     const m = /rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:\s*[,/]\s*([\d.]+%?))?\s*\)/.exec(str || '');
     if (!m) return { r: 0, g: 0, b: 0, a: str === 'transparent' ? 0 : 1 };
@@ -571,39 +505,6 @@
     return list.length ? list[0] : null;
   }
 
-  // Чтение и запись раскладки разделены на три прохода. Если чередовать их в одном цикле
-  // (стиль копии → размеры оригинала → запись стиля копии), каждое измерение заново
-  // раскладывает весь документ: время росло квадратично от числа элементов
-  async function treatOverflow(win, cloneEls, origEls) {
-    const todo = [];
-    // 1. Только чтение стилей копии (раскладка не нужна)
-    for (let i = 0; i < cloneEls.length; i++) {
-      const cs = win.getComputedStyle(cloneEls[i]);
-      if (/(auto|scroll|hidden)/.test(cs.overflowX + cs.overflowY)) {
-        todo.push({
-          el: cloneEls[i], orig: origEls[i], block: cs.display === 'block',
-          pb: parseFloat(cs.paddingBottom), pr: parseFloat(cs.paddingRight), bars: null
-        });
-      }
-      if (!(i & 255)) await rest();
-    }
-    // 2. Только измерения оригинала (копию при этом никто не менял)
-    for (const t of todo) t.bars = scrollbarSizes(win, t.orig);
-    await rest();
-    // 3. Только запись стилей копии
-    for (const t of todo) {
-      const el = t.el;
-      el.style.setProperty('overflow', 'clip', 'important');
-      // Внутри прокручиваемых блоков Chrome при печати соблюдает orphans, но не widows (когда
-      // оба правила сразу выполнить нельзя, строка кода может остаться одна в начале страницы),
-      // а в колонках блок целиком ушёл бы на следующую страницу
-      el.style.setProperty('widows', '1', 'important');
-      if (t.block) el.style.setProperty('display', 'flow-root', 'important');
-      if (t.bars.h) el.style.setProperty('padding-bottom', (t.pb + t.bars.h) + 'px', 'important');
-      if (t.bars.w) el.style.setProperty('padding-right', (t.pr + t.bars.w) + 'px', 'important');
-    }
-  }
-
   // Копия документа в многоколоночном контейнере высотой в страницу: те же разрывы, что и при печати
   async function buildMulticol(win, doc, root) {
     // Большой промежуток между колонками: строки кода, выходящие за ширину блока, не должны
@@ -616,7 +517,21 @@
     doc.body.appendChild(M);
     // При печати прокручиваемые блоки фрагментируются, а в колонках — нет: выравниваем поведение.
     // Место под полосы прокрутки (при печати они есть) сохраняем внутренними отступами
-    await treatOverflow(win, R2.querySelectorAll('*'), root.querySelectorAll('*'));
+    const origEls = root.querySelectorAll('*');
+    R2.querySelectorAll('*').forEach((el, i) => {
+      const cs = win.getComputedStyle(el);
+      if (/(auto|scroll|hidden)/.test(cs.overflowX + cs.overflowY)) {
+        const bars = scrollbarSizes(win, origEls[i]);
+        el.style.setProperty('overflow', 'clip', 'important');
+        // Внутри прокручиваемых блоков Chrome при печати соблюдает orphans, но не widows (когда
+        // оба правила сразу выполнить нельзя, строка кода может остаться одна в начале страницы),
+        // а в колонках блок целиком ушёл бы на следующую страницу
+        el.style.setProperty('widows', '1', 'important');
+        if (cs.display === 'block') el.style.setProperty('display', 'flow-root', 'important');
+        if (bars.h) el.style.setProperty('padding-bottom', (parseFloat(cs.paddingBottom) + bars.h) + 'px', 'important');
+        if (bars.w) el.style.setProperty('padding-right', (parseFloat(cs.paddingRight) + bars.w) + 'px', 'important');
+      }
+    });
     // Копии изображений загружаются заново (даже из кэша — асинхронно): ждём их размеров
     await Promise.all(Array.from(R2.querySelectorAll('img')).map(img => Promise.race([
       img.decode().catch(() => null), delay(5000)
@@ -665,68 +580,48 @@
 
   // При печати Chromium повторяет заголовок таблицы (thead) на каждой следующей странице.
   // В многоколоночной раскладке этого нет, поэтому вставляем копии заголовка сами — по одной,
-  // каждый раз заново измеряя раскладку.
-  // Копия документа в колонках строится один раз: очередной заголовок вставляется и в оригинал,
-  // и в копию (раньше после каждой вставки копия всего документа создавалась заново).
-  // Возвращает эту копию (её же использует разбиение на страницы) или null, если таблиц с thead нет
+  // каждый раз заново измеряя раскладку
   async function repeatTableHeaders(win, doc, root) {
-    if (!root.querySelector('table > thead')) return null;
-    const mc = await buildMulticol(win, doc, root);
-    const tablesA = root.querySelectorAll('table'), tablesB = mc.R2.querySelectorAll('table');
-    const bodyRows = tb => {
-      const rows = [];
-      Array.from(tb.tBodies).forEach(b => Array.from(b.rows).forEach(r => rows.push(r)));
-      return rows;
-    };
-    // Таблицы до места последней вставки уже проверены: вставка ниже по документу их не сдвигает
-    let t = 0;
+    if (!root.querySelector('table > thead')) return;
     for (let iter = 0; iter < 300; iter++) {
+      const mc = await buildMulticol(win, doc, root);
+      const tablesA = root.querySelectorAll('table'), tablesB = mc.R2.querySelectorAll('table');
       let inserted = false;
-      for (; t < tablesB.length && !inserted; t++) {
+      for (let t = 0; t < tablesB.length && !inserted; t++) {
         const tb = tablesB[t];
         if (!tb.tHead || !tb.tHead.rows.length) continue;
         const headRects = tb.tHead.getClientRects();
         if (!headRects.length) continue;
         let prevCol = mc.colOf(headRects[headRects.length - 1]);
-        const rowsB = bodyRows(tb), rowsA = bodyRows(tablesA[t]);
+        const rowsB = [];
+        Array.from(tb.tBodies).forEach(b => Array.from(b.rows).forEach(r => rowsB.push(r)));
+        const rowsA = [];
+        Array.from(tablesA[t].tBodies).forEach(b => Array.from(b.rows).forEach(r => rowsA.push(r)));
         for (let i = 0; i < rowsB.length; i++) {
           const rr = rowsB[i].getClientRects();
           if (!rr.length) continue;
           const c0 = mc.colOf(rr[0]);
           const prev = rowsB[i].previousElementSibling;
           if (c0 > prevCol && !rowsB[i].hasAttribute('data-zpdf-thead-repeat') && !(prev && prev.hasAttribute('data-zpdf-thead-repeat'))) {
-            const frag = cloneHeaderRows(win, doc, tablesA[t].tHead);
-            const nodesA = Array.from(frag.childNodes);
-            const nodesB = nodesA.map(n => n.cloneNode(true));
-            rowsA[i].parentNode.insertBefore(frag, rowsA[i]);
-            nodesB.forEach(n => rowsB[i].parentNode.insertBefore(n, rowsB[i]));
-            // Та же обработка, что получает каждый элемент копии в buildMulticol
-            const all = list => list.reduce((acc, n) => acc.concat([n], Array.from(n.querySelectorAll('*'))), []);
-            await treatOverflow(win, all(nodesB), all(nodesA));
-            const imgs = nodesB.reduce((acc, n) => acc.concat(Array.from(n.querySelectorAll('img'))), []);
-            if (imgs.length) await Promise.all(imgs.map(img => Promise.race([img.decode().catch(() => null), delay(5000)])));
+            rowsA[i].parentNode.insertBefore(cloneHeaderRows(win, doc, tablesA[t].tHead), rowsA[i]);
             inserted = true;
             break;
           }
           prevCol = mc.colOf(rr[rr.length - 1]);
         }
-        if (inserted) break;
       }
+      mc.M.remove();
       if (!inserted) break;
-      const b = breathe();
-      if (b) await b;
+      await nextFrame(win);
     }
-    return mc;
   }
 
   // «Листья» копии в колонках: позиции начала каждой колонки и число страниц
-  async function measureItems(win, doc, mc) {
+  function measureItems(win, doc, mc) {
     const { R2, colOf, yOf } = mc;
     const leaves = collectLeaves(win, R2);
     const items = []; // {node(B), offset, col, y}
-    let seq = 0;
     for (const n of leaves) {
-      if (!(++seq & 63)) await rest();
       if (n.nodeType === 3) {
         const data = n.data;
         let first = -1, last = -1;
@@ -767,7 +662,8 @@
   }
 
   async function paginate(win, doc, root) {
-    const mc = (await repeatTableHeaders(win, doc, root)) || (await buildMulticol(win, doc, root));
+    await repeatTableHeaders(win, doc, root);
+    const mc = await buildMulticol(win, doc, root);
     const { M, R2, H, colOf, yOf } = mc;
 
 
@@ -779,7 +675,7 @@
     }
     const toA = new Map(listB.map((b, i) => [b, listA[i]]));
 
-    const { items, maxCol, pageCount } = await measureItems(win, doc, mc);
+    const { items, maxCol, pageCount } = measureItems(win, doc, mc);
     // Колонка, в которой начинается рамка элемента (для решения, куда ставить распорку)
     const boxCol = el => {
       const rs = el.getClientRects();
@@ -882,9 +778,7 @@
       }
     };
     const fixups = [];
-    let itSeq = 0;
     for (const it of items) {
-      if (!(++itSeq & 63)) await rest();
       if (planItems.has(it)) continue;
       const anchorB = fixAnchorB(it.node, it.col);
       if (anchorB) fixups.push({ item: it, anchorB, target: it.col * H + it.y });
@@ -911,7 +805,6 @@
       return { segs, seg, local: offset - seg.start };
     };
     for (const p of plan) {
-      await rest();
       const target = p.col * H + p.y;
       const leafA = toA.get(p.item.node);
       let measureNode, measureOff;
@@ -982,9 +875,7 @@
     }
 
     // Поправочные распорки: первая строка блока — на той же высоте, что и в раскладке по колонкам
-    let fixSeq = 0;
     for (const f of fixups) {
-      if (!(++fixSeq & 31)) await rest();
       const leafA = toA.get(f.item.node);
       if (!leafA) continue;
       let mNode = leafA, mOff = -1;
@@ -1129,7 +1020,7 @@
   }
 
   // Все видимые текстовые узлы → «прогоны» с одинаковым шрифтом на одной строке
-  async function collectText(win, doc, root, metrics) {
+  function collectText(win, doc, root, metrics) {
     const runs = [];
     const decos = [];
     const clipCache = new Map();
@@ -1148,9 +1039,7 @@
       visCache.set(el, v);
       return v;
     };
-    let seq = 0;
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-      if (!(++seq & 31)) await rest();
       const el = node.parentElement;
       if (!el || !node.data || !visible(el)) continue;
       const cs = win.getComputedStyle(el);
@@ -1384,8 +1273,6 @@
               try { bytes = await fetchBytes(url); break; } catch (e) { lastErr = e; }
             }
             if (!bytes) throw lastErr || new Error('font');
-            // Разбор файла шрифта — непрерывная работа: перед ним даём странице ответить на ввод
-            await rest();
             const name = 'zf' + (++seq);
             const file = name + '.ttf';
             pdf.addFileToVFS(file, bytesToBinary(bytes));
@@ -1617,7 +1504,7 @@
     return size * (1 / 24 + (1 / 32 - 1 / 24) * t);
   }
 
-  async function drawPieces(pdf, win, doc, pieces, registry, shaper) {
+  function drawPieces(pdf, win, doc, pieces, registry, shaper) {
     const range = doc.createRange();
     // Текст внутри SVG (подписи диаграмм) сдвигается вместе с корнем SVG, который Chrome ставит в целые пиксели
     const svgShift = new Map();
@@ -1669,7 +1556,7 @@
       });
       b.right = Math.max(...b.glyphs.map(g => g.x + g.w));
     });
-    const drawOne = p => {
+    pieces.forEach(p => {
       const run = p.run;
       const st = run.style;
       const visText = p.text.replace(/[\s 　]+$/, '');
@@ -1804,12 +1691,7 @@
           writeRawText(pdf, entry, vis, pt.x, pt.y, sizePx * PAGE.k, opts.horizontalScale);
         } else pdf.text(p.text, pt.x, pt.y, opts);
       });
-    };
-    let seq = 0;
-    for (const p of pieces) {
-      if (!(++seq & 15)) await rest();
-      drawOne(p);
-    }
+    });
     rasterCanvas.remove();
   }
 
@@ -2031,8 +1913,7 @@
         ctx.restore();
       });
     }
-    // Пиксели берутся прямо с холста (см. makeImageStore); без хранилища — как раньше, через PNG
-    const data = (pdf.__zstore && pdf.__zstore.fromCanvas(canvas)) || canvas.toDataURL('image/png');
+    const data = canvas.toDataURL('image/png');
     const pt = toPt(left - padL, baseline - asc, page);
     withClip(pdf, clip, page, () => {
       setOpacity(pdf, st.opacity);
@@ -2167,128 +2048,6 @@
     });
   }
 
-  // ---------- Изображения с холста без PNG ----------
-  // Раньше каждый растр (тень, текст системным шрифтом, SVG) шёл так: canvas → PNG (toDataURL) →
-  // разбор PNG на JavaScript внутри jsPDF (дважды: getImageProperties и addImage) → повторное сжатие.
-  // Это занимало большую часть времени экспорта и держало интерфейс «замороженным».
-  // Теперь пиксели берутся прямо с холста и записываются как XObject:
-  //  - тень (один цвет) — картинка 1×1 нужного цвета + маска прозрачности (SMask);
-  //  - сжатие — встроенным в браузер CompressionStream (вне основного потока);
-  //  - одинаковые изображения встраиваются один раз.
-  function makeImageStore(pdf) {
-    const list = [];
-    const byKey = new Map();
-    const jobs = [];
-    const pack = plane => {
-      const job = nativeDeflate(plane.raw);
-      if (!job) return; // останется несжатым: сожмёт jsPDF
-      jobs.push(job.then(out => {
-        plane.packed = out;
-        plane.raw = null;
-      }).catch(() => { /* то же */ }));
-    };
-    // Строки с предсказанием PNG «Up» (разность с верхней строкой): размытие сжимается заметно лучше
-    const predictUp = (src, w, h, colors) => {
-      const row = w * colors;
-      const out = new Uint8Array((row + 1) * h);
-      for (let y = 0, o = 0, i = 0; y < h; y++) {
-        out[o++] = 2;
-        if (y === 0) for (let x = 0; x < row; x++) out[o++] = src[i++];
-        else for (let x = 0; x < row; x++, i++) out[o++] = src[i] - src[i - row];
-      }
-      return out;
-    };
-    // color — цвет одноцветного изображения, если он известен заранее (тень)
-    function fromCanvas(canvas, color) {
-      const w = canvas.width, h = canvas.height, n = w * h;
-      if (!n) return null;
-      const px = canvas.getContext('2d').getImageData(0, 0, w, h).data;
-      const u32 = new Uint32Array(px.buffer, px.byteOffset, n);
-      let h1 = 0x811c9dc5, h2 = 0x9e3779b9;
-      for (let i = 0; i < n; i++) {
-        const v = u32[i];
-        h1 = Math.imul(h1 ^ v, 0x01000193);
-        h2 = Math.imul(h2 + v, 0x85ebca6b) ^ (h2 >>> 15);
-      }
-      const key = w + 'x' + h + ':' + (h1 >>> 0) + ':' + (h2 >>> 0) + (color ? ':' + color.r + ',' + color.g + ',' + color.b : '');
-      const known = byKey.get(key);
-      if (known) return known;
-      let opaque = true;
-      for (let i = 3, k = 0; k < n; k++, i += 4) if (px[i] !== 255) { opaque = false; break; }
-      // Одноцветным считается только изображение с заранее известным цветом (тень). У текста цвет
-      // пикселей сохраняется как есть — в точности те же значения, что раньше давал PNG
-      const c = color || null;
-      const img = { __zraw: true, name: 'ZI' + (list.length + 1), width: w, height: h, color: null, rgb: null, alpha: null, used: false };
-      if (c) img.color = c;
-      else {
-        const rgb = new Uint8Array(n * 3);
-        for (let i = 0, o = 0, k = 0; k < n; k++, i += 4) { rgb[o++] = px[i]; rgb[o++] = px[i + 1]; rgb[o++] = px[i + 2]; }
-        img.rgb = { raw: predictUp(rgb, w, h, 3), packed: null };
-        pack(img.rgb);
-      }
-      if (!opaque) {
-        const al = new Uint8Array(n);
-        for (let i = 3, k = 0; k < n; k++, i += 4) al[k] = px[i];
-        img.alpha = { raw: predictUp(al, w, h, 1), packed: null };
-        pack(img.alpha);
-      }
-      list.push(img);
-      byKey.set(key, img);
-      return img;
-    }
-    // Тот же вывод, что у addImage в jsPDF (q … cm /Имя Do Q)
-    function draw(img, x, y, w, h, rotation) {
-      const coord = pdf.internal.getCoordinateString, vcoord = pdf.internal.getVerticalCoordinateString;
-      const out = pdf.internal.write;
-      img.used = true;
-      out('q');
-      if (rotation) {
-        const a = rotation * Math.PI / 180, cos = Math.cos(a), sin = Math.sin(a);
-        out([1, '0', '0', 1, coord(x), vcoord(y + h), 'cm'].join(' '));
-        out([cos.toFixed(4), sin.toFixed(4), (-sin).toFixed(4), cos.toFixed(4), 0, 0, 'cm'].join(' '));
-        out([coord(w), '0', '0', coord(h), '0', '0', 'cm'].join(' '));
-      } else {
-        out([coord(w), '0', '0', coord(h), coord(x), vcoord(y + h), 'cm'].join(' '));
-      }
-      out('/' + img.name + ' Do');
-      out('Q');
-    }
-    const putPlane = (plane, id, kv, w, colors) => {
-      kv.push({ key: 'DecodeParms', value: `<</Predictor 15 /Colors ${colors} /BitsPerComponent 8 /Columns ${w}>>` });
-      if (plane.packed) {
-        pdf.internal.putStream({ data: bytesToBinary(plane.packed), filters: [], alreadyAppliedFilters: ['/FlateDecode'], additionalKeyValues: kv, objectId: id });
-      } else {
-        pdf.internal.putStream({ data: bytesToBinary(plane.raw), additionalKeyValues: kv, objectId: id });
-      }
-      pdf.internal.write('endobj');
-    };
-    const head = (w, h, space) => [
-      { key: 'Type', value: '/XObject' }, { key: 'Subtype', value: '/Image' }, { key: 'Width', value: w },
-      { key: 'Height', value: h }, { key: 'ColorSpace', value: space }, { key: 'BitsPerComponent', value: 8 }
-    ];
-    pdf.internal.events.subscribe('putResources', () => {
-      list.forEach(img => {
-        if (!img.used) return;
-        img.objectId = pdf.internal.newObject();
-        const kv = img.color ? head(1, 1, '/DeviceRGB') : head(img.width, img.height, '/DeviceRGB');
-        // Маска прозрачности может быть другого размера, чем само изображение (здесь — 1×1)
-        if (img.alpha) kv.push({ key: 'SMask', value: (img.objectId + 1) + ' 0 R' });
-        if (img.color) {
-          const c = img.color;
-          pdf.internal.putStream({ data: String.fromCharCode(c.r, c.g, c.b), filters: [], additionalKeyValues: kv, objectId: img.objectId });
-          pdf.internal.write('endobj');
-        } else {
-          putPlane(img.rgb, img.objectId, kv, img.width, 3);
-        }
-        if (img.alpha) putPlane(img.alpha, pdf.internal.newObject(), head(img.width, img.height, '/DeviceGray'), img.width, 1);
-      });
-    });
-    pdf.internal.events.subscribe('putXobjectDict', () => {
-      list.forEach(img => { if (img.used) pdf.internal.write('/' + img.name + ' ' + img.objectId + ' 0 R'); });
-    });
-    return { fromCanvas, draw, ready: () => Promise.all(jobs) };
-  }
-
   // ---------- Доработки context2d jsPDF для html2canvas ----------
   // Холст-обёртка для html2canvas. Его размеры html2canvas использует для маски тени
   // (прямоугольник «весь холст» минус рамка элемента). У холста jsPDF размер 150×300, и маска
@@ -2328,88 +2087,25 @@
     return { width: SENTINEL, height: SENTINEL, style: {}, ownerDocument: doc, getContext: () => ctx };
   }
 
-  function patchContext(pdf, win, images, store) {
+  function patchContext(pdf, win, images) {
     const ctx = pdf.context2d;
     // Изображения всегда сжимаем; одинаковые данные встраиваются один раз
     const origAddImage = pdf.addImage;
     const aliases = new Map();
     let aliasSeq = 0;
     pdf.addImage = function (data, format, x, y, w, h, alias, compression, rotation) {
-      if (data && data.__zraw) {
-        store.draw(data, x, y, w, h, rotation);
-        return this;
-      }
       if (!alias && (typeof data === 'string' || data instanceof win.Uint8Array)) {
         alias = aliases.get(data);
         if (!alias) { alias = 'zimg' + (++aliasSeq); aliases.set(data, alias); }
       }
       return origAddImage.call(this, data, format, x, y, w, h, alias, compression && compression !== 'NONE' ? compression : 'FAST', rotation);
     };
-    // context2d.drawImage перед каждым выводом вызывает getImageProperties, а тот полностью
-    // разбирает изображение только ради ширины и высоты: размеры запоминаем
-    const origProps = pdf.getImageProperties;
-    const props = new Map();
-    pdf.getImageProperties = function (data) {
-      if (data && data.__zraw) return data;
-      const keyable = typeof data === 'string' || data instanceof Uint8Array;
-      let p = keyable ? props.get(data) : null;
-      if (!p) {
-        p = origProps.call(this, data);
-        if (keyable) props.set(data, { width: p.width, height: p.height, fileType: p.fileType });
-      }
-      return p;
-    };
     const origDrawImage = ctx.drawImage;
     // Обрезка jsPDF без откладывания (см. «Отложенная обрезка» ниже)
     const clipNow = ctx.clip;
     const origFill = ctx.fill;
     const origFillRect = ctx.fillRect;
-    // save/restore в context2d jsPDF пишут q/Q на КАЖДУЮ страницу документа: число записей росло
-    // как «элементы × страницы», а в потоках страниц копились тысячи пустых пар q … Q.
-    // Здесь q (и состояние прозрачности) пишется на страницу только при первом обращении к ней,
-    // а Q — только на те страницы, где было q. Порядок операторов на странице тот же.
-    const protoSave = ctx.save, protoRestore = ctx.restore;
-    const levels = [];
-    let quiet = false;
-    const pageNo = () => pdf.internal.getCurrentPageInfo().pageNumber;
-    const touch = p => {
-      let i = levels.length;
-      while (i > 0 && !levels[i - 1].pages.has(p)) i--;
-      for (; i < levels.length; i++) {
-        const L = levels[i];
-        L.pages.add(p);
-        pdf.internal.write('q');
-        if (L.state) L.state();
-      }
-    };
-    const origSetPage = pdf.setPage;
-    pdf.setPage = function (n) {
-      const r = origSetPage.apply(this, arguments);
-      if (!quiet && levels.length) touch(n);
-      return r;
-    };
-    // Сама логика стека состояний остаётся за jsPDF: его циклу по страницам «показываем» ноль страниц
-    const noPages = fn => {
-      const g = pdf.internal.getNumberOfPages;
-      pdf.internal.getNumberOfPages = () => 0;
-      try { return fn(); } finally { pdf.internal.getNumberOfPages = g; }
-    };
-    const origSave = function (doStackPush, state) {
-      levels.push({ pages: new Set(), state: state || null });
-      touch(pageNo());
-      return noPages(() => protoSave.call(this, doStackPush));
-    };
-    const origRestore = function (doStackPop) {
-      const L = levels.pop();
-      if (!L) return protoRestore.call(this, doStackPop);
-      const cur = pageNo();
-      quiet = true;
-      try {
-        L.pages.forEach(p => { origSetPage.call(pdf, p); pdf.internal.write('Q'); });
-        origSetPage.call(pdf, cur);
-      } finally { quiet = false; }
-      return noPages(() => protoRestore.call(this, doStackPop));
-    };
+    const origSave = ctx.save, origRestore = ctx.restore;
     // Параметры тени не входят в состояние context2d jsPDF: сохраняем их сами,
     // иначе после первой box-shadow все последующие заливки рисовались бы как тень
     const shadowStack = [];
@@ -2427,8 +2123,6 @@
     const patterns = new Map();
     let patSeq = 0;
     const canvas = win.document.createElement('canvas');
-    // Пиксели этого холста читаются после каждой отрисовки: такой холст быстрее держать в памяти, а не в GPU
-    canvas.getContext('2d', { willReadFrequently: true });
 
     // Текст рисует отдельный слой, поэтому здесь его пропускаем (вместе с линиями оформления)
     ctx.fillText = function () { lastWasText = true; };
@@ -2478,7 +2172,10 @@
     function withAlpha(fillA, strokeA, fn) {
       const fa = Math.max(0, Math.min(1, fillA)), sa = Math.max(0, Math.min(1, strokeA));
       if (fa >= 0.999 && sa >= 0.999) return fn();
-      origSave.call(this, false, () => gsWrite(pdf, fa, sa));
+      origSave.call(this, false);
+      const cur = pdf.internal.getCurrentPageInfo().pageNumber;
+      for (let i = 1; i <= pdf.internal.getNumberOfPages(); i++) { pdf.setPage(i); gsWrite(pdf, fa, sa); }
+      pdf.setPage(cur);
       try { return fn(); } finally { origRestore.call(this, false); }
     }
 
@@ -2511,7 +2208,6 @@
       return withAlpha.call(this, sa, sa, () => origStroke.apply(this, arguments));
     };
 
-    const shadows = new Map();
     // Тень box-shadow: html2canvas сдвигает фигуру за пределы холста и рисует только тень
     function drawShadow() {
       const path = this.path.filter(p => p.x !== undefined);
@@ -2531,22 +2227,6 @@
       const S = 300 / 72;
       const wPt = maxX - minX + pad * 2, hPt = maxY - minY + pad * 2;
       if (wPt <= 0 || hPt <= 0 || wPt * hPt * S * S > 4e7) return;
-      // Одинаковые тени (та же фигура, цвет и размытие) рисуются один раз
-      const MASK = 10000 * k;
-      const cut = dx > MASK / 2;
-      const f3 = v => (v === undefined ? '' : v.toFixed(3));
-      const shadowKey = [this.shadowColor, f3(blur), cut ? f3(MASK - dx) + ',' + f3(dy) : '-']
-        .concat(path.map(p => p.type + f3(p.x - minX) + ',' + f3(p.y - minY) + ',' +
-          (p.x1 === undefined ? '' : f3(p.x1 - minX) + ',' + f3(p.y1 - minY)) + ',' +
-          (p.x2 === undefined ? '' : f3(p.x2 - minX) + ',' + f3(p.y2 - minY)))).join('|');
-      const put = data => {
-        this.save();
-        this.setTransform(1, 0, 0, 1, 0, 0);
-        origDrawImage.call(this, data, 0, 0, data.width, data.height, minX - pad + dx, minY - pad + dy, wPt, hPt);
-        this.restore();
-      };
-      const ready = shadows.get(shadowKey);
-      if (ready) return put(ready);
       canvas.width = Math.ceil(wPt * S);
       canvas.height = Math.ceil(hPt * S);
       const cx = canvas.getContext('2d');
@@ -2574,7 +2254,8 @@
       cx.fill();
       // Внешняя тень не видна под самим элементом: вырезаем его рамку прямо из растра
       // (html2canvas сдвигает фигуру на MASK_OFFSET = 10000 px, а смещение тени включает этот сдвиг)
-      if (cut) {
+      const MASK = 10000 * k;
+      if (dx > MASK / 2) {
         cx.shadowColor = 'rgba(0,0,0,0)';
         cx.shadowBlur = 0;
         cx.shadowOffsetX = 0;
@@ -2584,10 +2265,11 @@
         cx.fill();
         cx.globalCompositeOperation = 'source-over';
       }
-      const data = store.fromCanvas(canvas, parseColor(this.shadowColor));
-      if (!data) return;
-      shadows.set(shadowKey, data);
-      put(data);
+      const data = canvas.toDataURL('image/png');
+      this.save();
+      this.setTransform(1, 0, 0, 1, 0, 0);
+      origDrawImage.call(this, data, 0, 0, canvas.width, canvas.height, minX - pad + dx, minY - pad + dy, wPt, hPt);
+      this.restore();
     }
 
     // Изображения: исходные байты (без перекодирования в JPEG), SVG — растр высокого разрешения
@@ -2619,11 +2301,10 @@
           cx.setTransform(1, 0, 0, 1, 0, 0);
           cx.clearRect(0, 0, cw, ch);
           cx.drawImage(img, sx, sy, sw, sh, 0, 0, cw, ch);
-          return origDrawImage.call(this, store.fromCanvas(canvas), 0, 0, cw, ch, dx, dy, dw, dh);
+          return origDrawImage.call(this, canvas.toDataURL('image/png'), 0, 0, cw, ch, dx, dy, dw, dh);
         }
         const known = src && images.get(src);
         if (known) {
-          if (!props.has(known.data)) props.set(known.data, { width: known.w, height: known.h });
           const fx = known.w / (img.naturalWidth || img.width || known.w);
           const fy = known.h / (img.naturalHeight || img.height || known.h);
           return origDrawImage.call(this, known.data, sx * fx, sy * fy, sw * fx, sh * fy, dx, dy, dw, dh);
@@ -2635,7 +2316,7 @@
         cx.setTransform(1, 0, 0, 1, 0, 0);
         cx.clearRect(0, 0, w, h);
         cx.drawImage(img, 0, 0);
-        return origDrawImage.call(this, store.fromCanvas(canvas), sx, sy, sw, sh, dx, dy, dw, dh);
+        return origDrawImage.call(this, canvas.toDataURL('image/png'), sx, sy, sw, sh, dx, dy, dw, dh);
       } catch (e) {
         console.warn('[pdf] image skipped', src, e);
       }
@@ -2746,8 +2427,7 @@
       const st = cloneDoc.createElement('style');
       st.textContent = 'svg text,svg foreignObject{visibility:hidden!important}' +
         'input[type=checkbox]{visibility:hidden!important}' +
-        '[data-zpdf-inline]{background:none!important;border-color:transparent!important;box-shadow:none!important}' +
-        '[data-zpdf-skip]{visibility:hidden!important}';
+        '[data-zpdf-inline]{background:none!important;border-color:transparent!important;box-shadow:none!important}';
       cloneDoc.head.appendChild(st);
       // foreignObject делает холст «загрязнённым» при растеризации SVG (toDataURL запрещён),
       // а его содержимое и так рисует слой текста
@@ -2777,49 +2457,6 @@
         return new w.DOMRect(l, t, R - l, B - t);
       };
     };
-  }
-
-  // ---------- Поддеревья, в которых html2canvas нечего рисовать ----------
-  // Текст выводит отдельный слой, а html2canvas нужен только для фона, рамок, теней и изображений.
-  // Но он разбирал стили и измерял текст КАЖДОГО элемента (все span подсветки кода и формул KaTeX).
-  // Поддеревья без фона, рамок, теней, изображений и псевдоэлементов помечаются и в копии документа
-  // получают visibility:hidden: раскладка не меняется, а html2canvas такие поддеревья пропускает целиком
-  const PAINT_TAGS = new Set(['IMG', 'CANVAS', 'VIDEO', 'IFRAME', 'INPUT', 'TEXTAREA', 'SELECT', 'BUTTON', 'OBJECT', 'EMBED', 'PROGRESS', 'METER']);
-  function paintsItself(win, el) {
-    if (el.namespaceURI === 'http://www.w3.org/2000/svg' || PAINT_TAGS.has(el.tagName)) return true;
-    const cs = win.getComputedStyle(el);
-    if (cs.display === 'none') return false;
-    // Строчные элементы с фоном и рамкой рисует drawInlineBoxes (в копии их оформление отключено)
-    if (!el.hasAttribute('data-zpdf-inline')) {
-      if (parseColor(cs.backgroundColor).a > 0 || cs.backgroundImage !== 'none' || cs.boxShadow !== 'none') return true;
-      for (const side of ['Top', 'Right', 'Bottom', 'Left']) {
-        const bs = cs['border' + side + 'Style'];
-        if (bs !== 'none' && bs !== 'hidden' && parseFloat(cs['border' + side + 'Width']) > 0 && parseColor(cs['border' + side + 'Color']).a > 0) return true;
-      }
-    }
-    if (cs.display === 'list-item' && cs.listStyleImage !== 'none') return true;
-    for (const which of ['before', 'after']) {
-      if (el.hasAttribute('data-zpdf-pseudo-' + which)) continue;
-      const c = win.getComputedStyle(el, '::' + which).content;
-      if (c && c !== 'none' && c !== 'normal') return true;
-    }
-    return false;
-  }
-  async function markInert(win, root) {
-    const els = root.querySelectorAll('*');
-    const paints = new Map();
-    // С конца документа: потомки обрабатываются раньше предков
-    for (let i = els.length - 1; i >= 0; i--) {
-      const el = els[i];
-      const p = paints.get(el) === true || paintsItself(win, el);
-      paints.set(el, p);
-      if (p && el.parentElement) paints.set(el.parentElement, true);
-      if (!(i & 255)) { const b = breathe(); if (b) await b; }
-    }
-    for (let i = 0; i < els.length; i++) {
-      const el = els[i];
-      if (!paints.get(el) && (el.parentElement === root || paints.get(el.parentElement))) el.setAttribute('data-zpdf-skip', '');
-    }
   }
 
   // Строчные элементы с фоном или рамкой (код в тексте, ссылки с подчёркиванием-рамкой):
@@ -3081,35 +2718,6 @@
     });
   }
 
-  // ---------- Сжатие потоков страниц ----------
-  // При сборке файла jsPDF сжимает содержимое каждой страницы на JavaScript одним непрерывным куском
-  // (сотни миллисекунд без отклика). Здесь страницы сжимаются заранее средствами браузера, а jsPDF
-  // на время сборки получает уже готовый результат. Возвращает функцию, отменяющую подмену
-  async function packPages(pdf, win) {
-    const API = win.jspdf && win.jspdf.jsPDF && win.jspdf.jsPDF.API;
-    const orig = API && API.processDataByFilters;
-    if (!orig || typeof CompressionStream !== 'function') return () => {};
-    const cache = new Map();
-    const jobs = [];
-    const pages = pdf.internal.pages;
-    for (let i = 1; i <= pdf.internal.getNumberOfPages(); i++) {
-      // Та же строка, что соберёт jsPDF (putPage)
-      const data = pages[i].join('\n');
-      const bytes = new Uint8Array(data.length);
-      for (let k = 0; k < data.length; k++) bytes[k] = data.charCodeAt(k);
-      const job = nativeDeflate(bytes);
-      if (job) jobs.push(job.then(out => { cache.set(data, bytesToBinary(out)); }).catch(() => { /* сожмёт jsPDF */ }));
-      await rest();
-    }
-    await Promise.all(jobs);
-    API.processDataByFilters = function (data, chain) {
-      const list = typeof chain === 'string' ? [chain] : (chain || []);
-      const hit = list.length === 1 && /^\/?FlateEncode$/.test(list[0]) ? cache.get(data) : undefined;
-      return hit !== undefined ? { data: hit, reverseChain: '/FlateDecode' } : orig.apply(this, arguments);
-    };
-    return () => { API.processDataByFilters = orig; };
-  }
-
   // ---------- Главная функция ----------
   // Выполняется внутри iframe: jsPDF, html2canvas и этот модуль работают в одном окне
   // (проверки jsPDF вида instanceof Array / Uint8Array не проходят между разными окнами)
@@ -3124,8 +2732,7 @@
 
     const metrics = makeMetrics(win, doc);
     const lang = opts.lang || doc.documentElement.lang || 'en';
-    const { runs, decos } = await collectText(win, doc, root, metrics);
-    await rest();
+    const { runs, decos } = collectText(win, doc, root, metrics);
     const markers = collectMarkers(win, doc, root, metrics);
     const markerRuns = markers.filter(m => m.kind === 'text').map(m => {
       const am = metrics.ascent(m.style.familyCss, m.style.sizePx, m.style.weight, m.style.fontStyle);
@@ -3143,20 +2750,15 @@
         top: m.baseline - am.ascent, height: am.height, baselineY: m.baseline, style: m.style, clip: null, isMarker: true
       };
     });
-    await rest();
     const checkboxes = collectCheckboxes(win, root);
     const links = collectLinks(win, root);
     const fgRects = collectForeignBackgrounds(win, root);
-    await rest();
     const inlineBoxes = collectInlineBoxes(win, root);
     const scrollbars = collectScrollbars(win, doc, root);
-    await markInert(win, root);
-    await rest();
     inlineSvgStyles(win, root);
     const cloneInfo = { svgs: prepareSvgImages(win, root) };
     const images = await prefetchImages(doc);
 
-    await rest();
     const pdf = new win.jspdf.jsPDF({ unit: 'pt', format: [PAGE.wPt, PAGE.hPt], orientation: 'portrait', compress: true });
     // jsPDF пишет цвет заливки и обводки с двумя знаками (#EA4335 → 0.92 → 235): цвета немного
     // отличались бы от Chrome. Компоненты-строки jsPDF выводит как есть — передаём их с пятью знаками
@@ -3174,9 +2776,7 @@
     const pieces = await assignFonts(registry, runs, markerRuns, lang, webFontRanges(doc));
 
     hookGradients(win);
-    const store = makeImageStore(pdf);
-    pdf.__zstore = store;
-    patchContext(pdf, win, images, store);
+    patchContext(pdf, win, images);
     // Все страницы создаются заранее: context2d выводит q/Q (save/restore) на каждую существующую
     // страницу, и страница, добавленная посреди отрисовки, получила бы непарные Q и «утёкшую» обрезку
     ensurePages(pdf, pages);
@@ -3186,8 +2786,6 @@
     for (let i = 1; i <= pages; i++) { pdf.setPage(i); pdf.internal.write(pageClip); }
     pdf.setPage(1);
     const vectors = await planSvgVectors(win, doc, cloneInfo.svgs);
-    sliceHtml2canvas(win);
-    await rest();
     await pdf.html(root, {
       x: 0,
       y: 0,
@@ -3197,11 +2795,6 @@
       autoPaging: 'slice',
       html2canvas: {
         backgroundColor: null, logging: false, useCORS: true, allowTaint: false, onclone: makeOnClone(cloneInfo),
-        // html2canvas копирует документ целиком, а рисует только контейнер jsPDF (в нём уже есть копия
-        // содержимого): сам оригинал в копии документа не нужен — иначе всё клонировалось бы дважды.
-        // Содержимое SVG тоже не нужно: SVG целиком заменяется изображением (см. makeOnClone), а
-        // html2canvas переносил бы в каждый его элемент все вычисленные стили (сотни свойств)
-        ignoreElements: el => el === root || (!!el.ownerSVGElement && !!el.closest('svg[data-zpdf-svg]')),
         canvas: makeH2cCanvas(pdf, doc, pages * PAGE.contentH - 0.01, cloneInfo)
       },
       callback: () => {}
@@ -3211,13 +2804,11 @@
     for (let i = 1; i <= pages; i++) { pdf.setPage(i); pdf.internal.write('Q'); }
 
     await drawSvgVectors(pdf, win, doc, root, vectors);
-    await rest();
     drawRects(pdf, fgRects);
     drawInlineBoxes(pdf, inlineBoxes);
     drawMarkers(pdf, markers);
     drawCheckboxes(pdf, checkboxes);
-    await drawPieces(pdf, win, doc, pieces, registry, await loadShaper(win, lang));
-    await rest();
+    drawPieces(pdf, win, doc, pieces, registry, await loadShaper(win, lang));
     drawDecorations(pdf, decos, registry);
     drawScrollbars(pdf, scrollbars);
     drawLinks(pdf, links);
@@ -3227,15 +2818,7 @@
     pdf.setProperties({ title, creator: 'Złoty MD', producer: 'Złoty MD (jsPDF)' });
     try { pdf.setLanguage(lang); } catch (e) { /* код языка не из списка jsPDF */ }
     pdf.viewerPreferences({ DisplayDocTitle: true });
-    // Сжатие изображений идёт вне основного потока: дожидаемся его перед сборкой файла
-    await store.ready();
-    const unpack = await packPages(pdf, win);
-    await rest();
-    try {
-      return { buffer: pdf.output('arraybuffer') };
-    } finally {
-      unpack();
-    }
+    return { buffer: pdf.output('arraybuffer') };
   }
 
   // Адрес этого файла: тот же модуль загружается внутрь iframe
@@ -3273,9 +2856,10 @@
     await waitReady(win, doc);
     const root = doc.getElementById('mo') || doc.body.firstElementChild;
     if (!root || root.getBoundingClientRect().height <= 0) return 0;
-    const mc = (await repeatTableHeaders(win, doc, root)) || (await buildMulticol(win, doc, root));
+    await repeatTableHeaders(win, doc, root);
+    const mc = await buildMulticol(win, doc, root);
     try {
-      return (await measureItems(win, doc, mc)).pageCount;
+      return measureItems(win, doc, mc).pageCount;
     } finally {
       mc.M.remove();
     }

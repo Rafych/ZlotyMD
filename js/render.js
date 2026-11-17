@@ -44,6 +44,10 @@ function _rdEsc(s) {
 
 let _rdFm = null;
 let _rdFn = null;
+let _rdEmbedStore = [];
+const _rdEmbedLive = new Map();
+let _rdEmbedTimer = null;
+const RD_EMBED_RE_SRC = 'geojson|topojson|stl';
 
 function _rdFrontMatter(v) {
   _rdFm = null;
@@ -115,7 +119,7 @@ function _rdFootnoteSection() {
       const total = _rdFn.counts[id] || 1;
       let backs = '';
       for (let k = 1; k <= total; k++) {
-        backs += ` <a class="rd-fnback" aria-label="Back to reference" href="#zmd-fnref-${_rdEsc(id)}${k > 1 ? '-' + k : ''}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="rd-fnback-ico" width="1em" height="1em"><path d="M6 4 2.6 7.4 6 10.8"/><path d="M2.6 7.4h7.6a3.3 3.3 0 0 1 0 6.6H8.4"/></svg>${k > 1 ? '<sup>' + k + '</sup>' : ''}</a>`;
+        backs += ` <a class="rd-fnback" href="#zmd-fnref-${_rdEsc(id)}${k > 1 ? '-' + k : ''}">↩${k > 1 ? '<sup>' + k + '</sup>' : ''}</a>`;
       }
       return `<li id="zmd-fn-${_rdEsc(id)}">${html}${backs}</li>`;
     })
@@ -123,10 +127,23 @@ function _rdFootnoteSection() {
   return `<section class="footnotes"><h2 class="sr-only">Footnotes</h2><ol>${items}</ol></section>`;
 }
 
+function _rdEmbeds(v) {
+  _rdEmbedStore = [];
+  return v.replace(_diagramBlockRe(RD_EMBED_RE_SRC), (_, fence, lang, body) => {
+    _rdEmbedStore.push({ kind: lang, src: _restoreCode(body).trim() });
+    return `\n\n\x02EMB${_rdEmbedStore.length - 1}\x03\n\n`;
+  });
+}
+
 function _rdRestore(html) {
   return html
     .replace(/(?:<p>)?\x02FMT\x03(?:<\/p>)?/g, () => _rdFrontMatterHtml())
-    .replace(/\x02FNR(\d+)_(\d+)\x03/g, (_, n, k) => _rdFootnoteRefHtml(n, k));
+    .replace(/\x02FNR(\d+)_(\d+)\x03/g, (_, n, k) => _rdFootnoteRefHtml(n, k))
+    .replace(/(?:<p>)?\x02EMB(\d+)\x03(?:<\/p>)?/g, (_, i) => {
+      const item = _rdEmbedStore[+i];
+      if (!item) return '';
+      return `<div class="rd-embed rd-embed-${item.kind}" data-kind="${item.kind}" data-idx="${i}"></div>`;
+    });
 }
 
 const RD_ALERTS = {
@@ -141,27 +158,11 @@ function _rdAlerts(root) {
   root.querySelectorAll('blockquote').forEach(bq => {
     const p = bq.firstElementChild;
     if (!p || p.tagName !== 'P') return;
-    // Метка убирается правкой узлов, а не через innerHTML: повторный разбор уже очищенной
-    // разметки строкой — лазейка для внедрения кода
-    const first = p.firstChild;
-    if (!first || first.nodeType !== 3) return;
-    const m = /^\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][ \t]*/i.exec(first.data);
+    const m = /^\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][ \t]*(?:<br\s*\/?>|\n)?\s*/i.exec(p.innerHTML);
     if (!m) return;
     const type = m[1].toLowerCase();
     const [label, icon] = RD_ALERTS[type];
-    first.data = first.data.slice(m[0].length);
-    if (!first.data.trim()) {
-      let next = first.nextSibling;
-      first.remove();
-      if (next && next.nodeName === 'BR') {
-        const br = next;
-        next = next.nextSibling;
-        br.remove();
-      }
-      if (next && next.nodeType === 3) next.data = next.data.replace(/^\s+/, '');
-    } else {
-      first.data = first.data.replace(/^\s+/, '');
-    }
+    p.innerHTML = p.innerHTML.slice(m[0].length);
     if (!p.innerHTML.trim()) p.remove();
     const title = document.createElement('p');
     title.className = 'markdown-alert-title';
@@ -270,13 +271,227 @@ function _rdBindPreview() {
     return;
   }
   const a = e.target.closest && e.target.closest('a[href^="#"]');
-  if (!a) return;
+  if (!a || a.closest('.rd-embed')) return;
   e.preventDefault();
   _rdScrollTo(a.getAttribute('href'));
   });
 }
 
+const _rdScripts = new Map();
+
+function _rdLoadScript(url) {
+  if (!_rdScripts.has(url)) {
+    _rdScripts.set(
+      url,
+      new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = url;
+        s.onload = resolve;
+        s.onerror = () => {
+          _rdScripts.delete(url);
+          reject(new Error('Failed to load ' + url));
+        };
+        document.head.appendChild(s);
+      })
+    );
+  }
+  return _rdScripts.get(url);
+}
+
+const RD_LEAFLET_BASE = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist';
+
+function _rdLeaflet() {
+  if (!document.getElementById('rd-leaflet-css')) {
+    const l = document.createElement('link');
+    l.id = 'rd-leaflet-css';
+    l.rel = 'stylesheet';
+    l.href = RD_LEAFLET_BASE + '/leaflet.css';
+    document.head.appendChild(l);
+  }
+  return _rdLoadScript(RD_LEAFLET_BASE + '/leaflet.js').then(() => window.L);
+}
+
+function _rdSimpleStyle(feature) {
+  const p = (feature && feature.properties) || {};
+  const style = {};
+  if (p.stroke) style.color = p.stroke;
+  if (p['stroke-width'] != null) style.weight = +p['stroke-width'];
+  if (p['stroke-opacity'] != null) style.opacity = +p['stroke-opacity'];
+  if (p.fill) style.fillColor = p.fill;
+  if (p['fill-opacity'] != null) style.fillOpacity = +p['fill-opacity'];
+  return style;
+}
+
+async function _rdBuildMap(el, kind, src) {
+  const L = await _rdLeaflet();
+  let data = JSON.parse(src);
+  if (kind === 'topojson') {
+    await _rdLoadScript('https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js');
+    const feats = [];
+    Object.keys(data.objects || {}).forEach(name => {
+      const f = window.topojson.feature(data, data.objects[name]);
+      if (f.features) feats.push(...f.features);
+      else feats.push(f);
+    });
+    data = { type: 'FeatureCollection', features: feats };
+  }
+  const map = L.map(el, { scrollWheelZoom: false });
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+  const layer = L.geoJSON(data, {
+    style: _rdSimpleStyle,
+    pointToLayer: (f, latlng) => {
+      const color = f.properties && f.properties['marker-color'];
+      return color
+        ? L.circleMarker(latlng, { radius: 8, color, fillColor: color, fillOpacity: 0.8 })
+        : L.marker(latlng);
+    },
+    onEachFeature: (f, lyr) => {
+      const p = f.properties || {};
+      if (p.title || p.description) {
+        lyr.bindPopup(
+          (p.title ? `<strong>${_rdEsc(p.title)}</strong>` : '') + (p.description ? `<div>${_rdEsc(p.description)}</div>` : '')
+        );
+      }
+    }
+  }).addTo(map);
+  const bounds = layer.getBounds();
+  if (bounds.isValid()) map.fitBounds(bounds, { maxZoom: 16, padding: [16, 16] });
+  else map.setView([0, 0], 2);
+  el._rdMap = map;
+}
+
+function _rdParseStl(text) {
+  const out = [];
+  const re = /vertex\s+([-+\d.eE]+)\s+([-+\d.eE]+)\s+([-+\d.eE]+)/g;
+  let m;
+  while ((m = re.exec(text))) out.push(+m[1], +m[2], +m[3]);
+  if (out.length < 9 || out.length % 9) throw new Error('Invalid ASCII STL');
+  return new Float32Array(out);
+}
+
+async function _rdBuildStl(el, src) {
+  await _rdLoadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js');
+  const THREE = window.THREE;
+  const positions = _rdParseStl(src);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.computeVertexNormals();
+  geo.center();
+  geo.computeBoundingSphere();
+  const r = geo.boundingSphere.radius || 1;
+  const w = el.clientWidth || 600;
+  const h = 400;
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(window.devicePixelRatio || 1);
+  renderer.setSize(w, h);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, w / h, r / 100, r * 100);
+  camera.position.set(0, 0, r * 3);
+  const mesh = new THREE.Mesh(
+    geo,
+    new THREE.MeshStandardMaterial({ color: 0x4285f4, metalness: 0.1, roughness: 0.55, side: THREE.DoubleSide })
+  );
+  mesh.rotation.x = -Math.PI / 2;
+  scene.add(mesh);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.65));
+  const k1 = new THREE.DirectionalLight(0xffffff, 0.8);
+  k1.position.set(1, 1, 1);
+  scene.add(k1);
+  const k2 = new THREE.DirectionalLight(0xffffff, 0.35);
+  k2.position.set(-1, -1, -1);
+  scene.add(k2);
+  const draw = () => renderer.render(scene, camera);
+  let drag = null;
+  const cv = renderer.domElement;
+  cv.style.touchAction = 'none';
+  cv.addEventListener('pointerdown', e => {
+    drag = { x: e.clientX, y: e.clientY };
+    cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!drag) return;
+    mesh.rotation.z += (e.clientX - drag.x) * 0.01;
+    mesh.rotation.x += (e.clientY - drag.y) * 0.01;
+    drag = { x: e.clientX, y: e.clientY };
+    draw();
+  });
+  cv.addEventListener('pointerup', () => {
+    drag = null;
+  });
+  cv.addEventListener(
+    'wheel',
+    e => {
+      e.preventDefault();
+      camera.position.z = Math.min(r * 20, Math.max(r * 1.2, camera.position.z * (e.deltaY > 0 ? 1.1 : 0.9)));
+      draw();
+    },
+    { passive: false }
+  );
+  el.appendChild(cv);
+  draw();
+}
+
+function _rdEmbedError(el, kind, err) {
+  el.innerHTML = '';
+  const d = document.createElement('div');
+  d.className = 'mermaid-error';
+  d.textContent = `⚠ ${kind}: ${err && err.message ? err.message : err}`;
+  el.appendChild(d);
+}
+
+function _rdMountEmbeds() {
+  const nodes = Array.from(mo.querySelectorAll('.rd-embed'));
+  const present = new Set();
+  let pending = false;
+  nodes.forEach(node => {
+    const item = _rdEmbedStore[+node.dataset.idx];
+    if (!item) return;
+    const key = item.kind + '\u0000' + item.src;
+    node.dataset.rdKey = key;
+    present.add(key);
+    const live = _rdEmbedLive.get(key);
+    if (live && !live.contains(node)) {
+      node.appendChild(live);
+      if (live._rdMap) live._rdMap.invalidateSize();
+    } else if (!live) {
+      pending = true;
+    }
+  });
+  for (const key of Array.from(_rdEmbedLive.keys())) if (!present.has(key)) _rdEmbedLive.delete(key);
+  clearTimeout(_rdEmbedTimer);
+  if (pending) _rdEmbedTimer = setTimeout(_rdBuildPending, 500);
+}
+
+function _rdBuildPending() {
+  mo.querySelectorAll('.rd-embed').forEach(node => {
+    const key = node.dataset.rdKey;
+    const item = _rdEmbedStore[+node.dataset.idx];
+    if (!key || !item || _rdEmbedLive.has(key) || node.firstChild) return;
+    const box = document.createElement('div');
+    box.className = 'rd-embed-box rd-embed-box-' + item.kind;
+    node.appendChild(box);
+    _rdEmbedLive.set(key, box);
+    const job = item.kind === 'stl' ? _rdBuildStl(box, item.src) : _rdBuildMap(box, item.kind, item.src);
+    job.catch(err => _rdEmbedError(box, item.kind.toUpperCase(), err));
+  });
+}
+
 function _rdPrepareExport(clone) {
+  clone.querySelectorAll('.rd-embed').forEach(node => {
+    const live = _rdEmbedLive.get(node.dataset.rdKey);
+    const cv = live && live.querySelector('canvas');
+    if (cv) {
+      const img = document.createElement('img');
+      img.src = cv.toDataURL('image/png');
+      img.style.cssText = 'max-width:100%;height:auto;display:block;margin:0 auto';
+      node.innerHTML = '';
+      node.appendChild(img);
+    }
+    node.querySelectorAll('.leaflet-control-container').forEach(n => n.remove());
+  });
   clone.querySelectorAll('input[type=checkbox]').forEach(cb => cb.setAttribute('disabled', ''));
   const ids = new Set(Array.from(clone.querySelectorAll('[id]')).map(n => n.id));
   clone.querySelectorAll('a[href^="#"]').forEach(a => {
@@ -285,15 +500,18 @@ function _rdPrepareExport(clone) {
     const slug = 'zmd-' + _rdSlug(decodeURIComponent(h));
     if (ids.has(slug)) a.setAttribute('href', '#' + slug);
   });
+  return clone.querySelector('.leaflet-container')
+    ? `<link rel="stylesheet" href="${RD_LEAFLET_BASE}/leaflet.css">\n`
+    : '';
 }
 
 const RD_CSS = `
-    .md .rd-anchor{position:absolute;left:-21px;top:50%;transform:translateY(-50%);width:21px;height:21px;display:flex;align-items:center;justify-content:center;color:var(--mut);border:0!important;opacity:0;text-decoration:none}
+    .md .rd-anchor{position:absolute;left:-24px;top:50%;transform:translateY(-50%);width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--mut);border:0!important;opacity:0;text-decoration:none}
     .md h1,.md h2,.md h3,.md h4,.md h5,.md h6{position:relative}
     .md h1:hover>.rd-anchor,.md h2:hover>.rd-anchor,.md h3:hover>.rd-anchor,.md h4:hover>.rd-anchor,.md h5:hover>.rd-anchor,.md h6:hover>.rd-anchor,.md .rd-anchor:focus{opacity:1}
     @media print{.md .rd-anchor{display:none}}
     .md .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
-    .md .markdown-alert{margin:0 0 var(--s21);padding:var(--s5) var(--s21);border-left:5px solid var(--ga,#0969da);border-radius:var(--r5);background:transparent}
+    .md .markdown-alert{margin:0 0 var(--s21);padding:var(--s5) var(--s21);border-left:4px solid var(--ga,#0969da);border-radius:var(--r5);background:transparent}
     .md .markdown-alert>:last-child{margin-bottom:var(--s8)}
     .md .markdown-alert-title{display:flex;align-items:center;gap:var(--s8);font-weight:700;color:var(--ga,#0969da);margin:var(--s8) 0 var(--s5)!important;font-size:var(--fz-body,13px)}
     .md .markdown-alert-note{--ga:#0969da}
@@ -301,16 +519,19 @@ const RD_CSS = `
     .md .markdown-alert-important{--ga:#8250df}
     .md .markdown-alert-warning{--ga:#9a6700}
     .md .markdown-alert-caution{--ga:#cf222e}
-    .md .footnotes{margin-top:var(--s34);padding-top:var(--s13);border-top:1px solid var(--bord);font-size:.9em;color:var(--mut)}
+    .md .footnotes{margin-top:var(--s34);padding-top:var(--s13);border-top:1.5px solid var(--bord);font-size:.9em;color:var(--mut)}
     .md .footnotes ol{padding-left:var(--s21)}
     .md .rd-fnref a,.md .rd-fnback{border:0!important}
     .md .rd-fnback{margin-left:var(--s5)}
-    .md .rd-fnback-ico{display:inline-block;width:1em;height:1em;vertical-align:-.146em}
     .md .rd-color-chip{display:inline-block;width:.9em;height:.9em;border-radius:50%;margin-right:.4em;vertical-align:-.1em;border:1px solid rgba(0,0,0,.25)}
     .md .rd-frontmatter{margin-bottom:var(--s21)}
+    .md .rd-embed{margin-bottom:var(--s21)}
+    .md .rd-embed-box-geojson,.md .rd-embed-box-topojson{height:400px;border-radius:var(--r8);overflow:hidden;border:1.5px solid var(--bord);position:relative;z-index:0}
+    .md .rd-embed-box-stl{border-radius:var(--r8);overflow:hidden;border:1.5px solid var(--bord);background:var(--surf);line-height:0}
+    .md .rd-embed-box-stl canvas{max-width:100%;display:block;cursor:grab}
     .md details{margin-bottom:var(--s13)}
     .md details>summary{cursor:pointer;font-weight:600}
-    .md kbd{font-family:var(--mono);font-size:.85em;padding:2px 5px;border:1px solid var(--bord);border-bottom-width:2px;border-radius:var(--r5);background:var(--surf)}
+    .md kbd{font-family:var(--mono);font-size:.85em;padding:2px 6px;border:1px solid var(--bord);border-bottom-width:2px;border-radius:var(--r5);background:var(--surf)}
     .md sup,.md sub{font-size:.75em;line-height:0}
     .md mark{background:var(--gyt)}
 `;
@@ -321,333 +542,3 @@ const RD_CSS = `
   st.textContent = RD_CSS;
   document.head.appendChild(st);
 })();
-
-// ───────── Защита от внедрения кода ─────────
-// Всё, что попадает в превью, сначала разбирается в документе без окна (в нём не выполняются
-// скрипты, не срабатывают обработчики и не загружаются ресурсы) и очищается: активное содержимое
-// вынимается и запоминается в _sbStash. В основной документ приложения попадает только очищенное
-// дерево — без повторного разбора строки. Запомненное возвращается на место лишь в документе для
-// изолированного iframe (см. _sbRestore), где коду пользователя разрешено всё.
-const SB_DROP = new Set([
-  'script', 'style', 'link', 'meta', 'base', 'iframe', 'frame', 'frameset', 'object', 'embed', 'applet',
-  'noscript', 'noembed', 'noframes', 'xmp', 'plaintext', 'title', 'portal', 'fencedframe'
-]);
-const SB_URL_ATTRS = new Set([
-  'href', 'src', 'xlink:href', 'action', 'formaction', 'data', 'poster', 'background', 'ping', 'srcset',
-  'lowsrc', 'dynsrc', 'manifest', 'codebase', 'cite', 'longdesc', 'classid', 'icon'
-]);
-let _sbStash = [];
-let _sbDocCache = null;
-function _sbInertDoc() {
-  return _sbDocCache || (_sbDocCache = document.implementation.createHTMLDocument(''));
-}
-function _sbBadUrl(v) {
-  return /^(?:javascript|vbscript|livescript):/i.test(String(v).replace(/[\u0000-\u0020\u007f-\u009f\u00ad\u200b-\u200f\u2028\u2029\ufeff]/g, ''));
-}
-// Атрибуты, которые нельзя оставлять в документе приложения: обработчики событий, адреса со
-// скриптами, имена и id (подмена элементов интерфейса), служебные атрибуты самого приложения
-function _sbBadAttr(name, value) {
-  const n = name.toLowerCase();
-  if (n.startsWith('on') || n.startsWith('data-i18n') || n.startsWith('data-zmd-')) return true;
-  if (n === 'srcdoc' || n === 'name' || n === 'autofocus' || n === 'is' || n === 'inert') return true;
-  if (n === 'action' || n === 'formaction' || n === 'ping') return true;
-  if (n === 'id') return !/^(?:zmd-fn|mmd-)/.test(value);
-  return SB_URL_ATTRS.has(n) && _sbBadUrl(value);
-}
-function _sbClean(root) {
-  const doc = root.ownerDocument;
-  Array.from(root.querySelectorAll('*')).forEach(el => {
-    if (!root.contains(el)) return;
-    const tag = el.localName.toLowerCase();
-    // SVG-анимация, подменяющая адрес ссылки
-    const anim = /^(?:set|animate|animatetransform|animatemotion)$/.test(tag) && /href/i.test(el.getAttribute('attributeName') || '');
-    if (SB_DROP.has(tag) || anim) {
-      const ph = doc.createElement('template');
-      ph.setAttribute('data-zmd-sb', String(_sbStash.push({ node: el }) - 1));
-      el.replaceWith(ph);
-      return;
-    }
-    let removed = null;
-    Array.from(el.attributes).forEach(a => {
-      if (!_sbBadAttr(a.name, a.value)) return;
-      (removed || (removed = [])).push([a.name, a.value]);
-      el.removeAttributeNode(a);
-    });
-    if (removed) el.setAttribute('data-zmd-sa', String(_sbStash.push({ attrs: removed }) - 1));
-  });
-  return root;
-}
-// Разбирает HTML вне документа приложения и возвращает очищенные узлы
-function _sbParse(html) {
-  const box = _sbInertDoc().createElement('div');
-  box.innerHTML = html;
-  return Array.from(_sbClean(box).childNodes);
-}
-// Возвращает вынутое содержимое в копию превью. Копия должна принадлежать документу без окна
-// (_sbInertDoc): в документе приложения восстановленные обработчики могли бы сработать.
-//   'full' — всё, как написал пользователь: только для изолированного iframe и сохраняемого HTML-файла;
-//   'safe' — только стили: для PDF и печати (их iframe того же происхождения, что и приложение);
-//            текст стилей не вставляется обратно в разметку, а возвращается списком —
-//            он попадает в <head> (см. _sbStyleTag);
-//   иначе  — ничего (метки просто убираются).
-function _sbRestore(clone, level) {
-  const doc = clone.ownerDocument;
-  const css = [];
-  // Номера флажков задач ставятся до возврата содержимого пользователя: в превью приложения
-  // те же флажки в том же порядке. После возврата номера назначаются заново, чтобы атрибут,
-  // написанный пользователем, не мог подменить номер
-  const tasks = Array.from(clone.querySelectorAll('input[type=checkbox]'));
-  clone.querySelectorAll('template[data-zmd-sb]').forEach(ph => {
-    const item = _sbStash[+ph.getAttribute('data-zmd-sb')];
-    const node = item && item.node;
-    if (node && level === 'full') {
-      ph.replaceWith(doc.importNode(node, true));
-    } else {
-      if (node && level === 'safe' && node.localName === 'style' && node.namespaceURI === 'http://www.w3.org/1999/xhtml') {
-        const media = (node.getAttribute('media') || '').replace(/[{}<>]/g, '');
-        css.push(media ? `@media ${media}{${node.textContent}}` : node.textContent);
-      }
-      ph.remove();
-    }
-  });
-  clone.querySelectorAll('[data-zmd-sa]').forEach(el => {
-    const item = _sbStash[+el.getAttribute('data-zmd-sa')];
-    el.removeAttribute('data-zmd-sa');
-    if (level !== 'full' || !item || !item.attrs) return;
-    item.attrs.forEach(([n, v]) => {
-      try {
-        el.setAttribute(n, v);
-      } catch (e) {
-        /* имя атрибута, допустимое только для парсера */
-      }
-    });
-  });
-  clone.querySelectorAll('[data-zmd-task]').forEach(el => el.removeAttribute('data-zmd-task'));
-  tasks.forEach((cb, i) => cb.setAttribute('data-zmd-task', String(i)));
-  return css;
-}
-// Стили пользователя для документа PDF/печати: «</» экранируется, чтобы текст не мог закрыть тег
-function _sbStyleTag(css) {
-  return css.length ? `<style>${css.join('\n').replace(/<\//g, '<\\/').replace(/<!--/g, '<\\!--')}</style>\n` : '';
-}
-// Очищенная разметка должна оставаться чистой и после того, как её запишут строкой и разберут
-// заново (документ PDF, сохранённый файл): из-за особенностей разбора HTML (вложенные svg/math
-// и т. п.) при повторном разборе текст может превратиться в теги и атрибуты. Поэтому копия
-// записывается, разбирается и очищается, пока очередной проход ничего не находит
-function _sbStabilize(clone) {
-  for (let pass = 0; pass < 6; pass++) {
-    const box = _sbInertDoc().createElement('div');
-    box.innerHTML = clone.innerHTML;
-    const before = _sbStash.length;
-    _sbClean(box);
-    const dirty = _sbStash.length !== before;
-    _sbStash.length = before;
-    box.querySelectorAll('template[data-zmd-sb]').forEach(n => n.remove());
-    box.querySelectorAll('[data-zmd-sa]').forEach(n => n.removeAttribute('data-zmd-sa'));
-    clone.replaceChildren(...Array.from(box.childNodes));
-    if (!dirty) return;
-  }
-  // Разметка так и не стала устойчивой — оставляем только текст
-  clone.textContent = clone.textContent;
-}
-// Одноразовая метка для собственных скриптов документа (см. CSP в buildPreviewHTML)
-function _sbNonce() {
-  const a = new Uint8Array(16);
-  crypto.getRandomValues(a);
-  return Array.from(a, b => b.toString(16).padStart(2, '0')).join('');
-}
-
-// ───────── Превью в изолированном iframe (режим «HTML-рендеринг») ─────────
-// sandbox без allow-same-origin: у документа внутри собственное «пустое» происхождение — ему недоступны
-// DOM приложения, localStorage (ключи API), cookie и service worker, и он не может перейти на другую
-// страницу в окне приложения. Внутри при этом работает любой код: скрипты, таймеры, обработчики, формы
-const SB_SANDBOX = 'allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-modals allow-downloads allow-pointer-lock';
-let _sbFrame = null;
-let _sbNext = null;
-let _sbTimer = 0;
-let _sbLastHtml = null;
-let _sbEcho = null;
-let _mmdBusy = 0;
-function _sbActive() {
-  return !!appSettings.htmlRendering && !!ed.value.trim();
-}
-function _sbSchedule(delay) {
-  clearTimeout(_sbTimer);
-  _sbTimer = setTimeout(_sbRefresh, delay == null ? 200 : delay);
-}
-function _sbTeardown() {
-  if (_sbFrame) _sbFrame.remove();
-  if (_sbNext) _sbNext.remove();
-  _sbFrame = _sbNext = _sbLastHtml = null;
-  pv.parentElement.classList.remove('sb-on');
-  pv.removeAttribute('inert');
-}
-function _sbPushScroll() {
-  if (!_sbFrame || !_sbFrame.contentWindow) return;
-  const max = pv.scrollHeight - pv.clientHeight;
-  _sbFrame.contentWindow.postMessage({ zmd: 'scroll', f: max > 0 ? pv.scrollTop / max : 0 }, '*');
-}
-function _sbRefresh() {
-  clearTimeout(_sbTimer);
-  if (!_sbActive()) {
-    _sbTeardown();
-    return;
-  }
-  // Диаграммы ещё рисуются — дождёмся, чтобы не перезапускать документ дважды
-  if (_mmdBusy > 0) {
-    _sbSchedule(150);
-    return;
-  }
-  const pp = pv.parentElement;
-  // Обычное превью остаётся «мастерской» рендера (и источником для синхронной прокрутки),
-  // но скрыто под iframe и недоступно для щелчков и фокуса
-  pp.classList.add('sb-on');
-  pv.setAttribute('inert', '');
-  const html = buildPreviewHTML(getDocTitle(), { level: 'full', embed: true });
-  // Ничего не изменилось — не перезапускаем скрипты пользователя
-  if (html === _sbLastHtml && (_sbFrame || _sbNext)) return;
-  _sbLastHtml = html;
-  const f = document.createElement('iframe');
-  f.className = 'pv-frame';
-  f.setAttribute('sandbox', SB_SANDBOX);
-  f.setAttribute('referrerpolicy', 'no-referrer');
-  f.title = 'Preview';
-  // Новый документ показывается после загрузки, старый до этого остаётся на экране (без мигания)
-  f.style.visibility = 'hidden';
-  const show = () => {
-    if (_sbNext !== f) return;
-    _sbNext = null;
-    if (_sbFrame) _sbFrame.remove();
-    _sbFrame = f;
-    f.style.visibility = '';
-    _sbPushScroll();
-  };
-  f.addEventListener('load', show, { once: true });
-  setTimeout(show, 1500);
-  if (_sbNext) _sbNext.remove();
-  _sbNext = f;
-  f.srcdoc = html;
-  pp.appendChild(f);
-}
-function _sbInit() {
-  // Любое изменение превью (рендер, готовая диаграмма или рисунок TikZ) обновляет iframe
-  new MutationObserver(() => {
-    if (_sbActive() || _sbFrame || _sbNext) _sbSchedule();
-  }).observe(mo, { childList: true, subtree: true, characterData: true, attributes: true });
-  // Прокрутка: скрытое превью остаётся «истинным» положением, iframe повторяет его долю
-  pv.addEventListener('scroll', () => {
-    if (!_sbFrame) return;
-    if (_sbEcho !== null && Math.abs(pv.scrollTop - _sbEcho) < 2) {
-      _sbEcho = null;
-      return;
-    }
-    _sbEcho = null;
-    _sbPushScroll();
-  });
-  // Из iframe принимается только одно сообщение — доля прокрутки (число от 0 до 1)
-  window.addEventListener('message', e => {
-    if (!_sbFrame || e.source !== _sbFrame.contentWindow) return;
-    const d = e.data;
-    if (d && d.zmd === 'task') {
-      _sbTask(d);
-      return;
-    }
-    if (!d || d.zmd !== 'pv-scroll' || typeof d.f !== 'number' || !isFinite(d.f)) return;
-    const max = Math.max(0, pv.scrollHeight - pv.clientHeight);
-    const v = Math.max(0, Math.min(1, d.f)) * max;
-    if (Math.abs(pv.scrollTop - v) < 1) return;
-    _sbEcho = v;
-    pv.scrollTop = v;
-  });
-}
-// Флажок задачи, отмеченный в iframe. Код документа может отправить такое сообщение и сам,
-// поэтому оно может только поставить или снять одну отметку [ ]/[x] — ровно то, что делает
-// щелчок в обычном превью, — и только если:
-//  - фокус находится в iframe (пользователь щёлкнул по нему; сам документ забрать фокус не может);
-//  - флажок с таким номером есть в текущем превью, а его состояние отличается от запрошенного;
-//  - этот iframe ещё не менял документ: одна отметка на один экземпляр iframe.
-// После правки документ перерисовывается в новом iframe без фокуса, так что следующая
-// отметка снова требует щелчка пользователя. В худшем случае код документа может
-// переключить одну отметку задачи этого же документа на один щелчок пользователя
-let _sbTaskFrame = null;
-function _sbTask(d) {
-  if (!Number.isInteger(d.i) || d.i < 0 || typeof d.v !== 'boolean') return;
-  if (document.activeElement !== _sbFrame || !document.hasFocus()) return;
-  if (_sbTaskFrame === _sbFrame) return;
-  const cb = mo.querySelectorAll('input[type=checkbox]')[d.i];
-  if (!cb || cb.checked === d.v) return;
-  _sbTaskFrame = _sbFrame;
-  if (_roGuard()) return;
-  _rdToggleTask(d.i);
-}
-// Скрипт внутри изолированного документа: прокрутка по команде редактора и обратно,
-// внешние ссылки — в новой вкладке (иначе страница открылась бы внутри превью)
-const SB_FRAME_JS = `<script>
-(function(){
-  var expect=null;
-  function se(){return document.scrollingElement||document.documentElement;}
-  window.addEventListener('message',function(e){
-    if(e.source!==window.parent)return;
-    var d=e.data;
-    if(!d)return;
-    if(d.zmd==='print'){window.print();return;}
-    if(d.zmd!=='scroll'||typeof d.f!=='number')return;
-    var s=se(),y=d.f*Math.max(0,s.scrollHeight-s.clientHeight);
-    expect=y;s.scrollTop=y;
-  });
-  window.addEventListener('scroll',function(){
-    var s=se();
-    if(expect!==null&&Math.abs(s.scrollTop-expect)<2){expect=null;return;}
-    expect=null;
-    var m=s.scrollHeight-s.clientHeight;
-    window.parent.postMessage({zmd:'pv-scroll',f:m>0?s.scrollTop/m:0},'*');
-  },{passive:true});
-  document.addEventListener('click',function(e){
-    var a=e.target&&e.target.closest&&e.target.closest('a[href]');
-    if(!a)return;
-    var h=a.getAttribute('href')||'';
-    if(h.charAt(0)==='#'||a.target||/^\\s*javascript:/i.test(h))return;
-    a.target='_blank';a.rel='noopener noreferrer';
-  },true);
-  document.addEventListener('keydown',function(e){
-    if((e.ctrlKey||e.metaKey)&&!e.altKey&&String(e.key).toLowerCase()==='p'){e.preventDefault();window.print();}
-  });
-  document.addEventListener('click',function(e){
-    var cb=e.isTrusted&&e.target&&e.target.closest&&e.target.closest('input[type=checkbox][data-zmd-task]');
-    if(!cb||cb.disabled)return;
-    window.parent.postMessage({zmd:'task',i:+cb.getAttribute('data-zmd-task'),v:cb.checked},'*');
-  },true);
-})();
-<\/script>
-`;
-const SB_FRAME_CSS = `
-    body{max-width:none}
-    html::-webkit-scrollbar{width:5px;height:5px}
-    html::-webkit-scrollbar-thumb{background:var(--bord);border-radius:99px}
-    @supports not selector(::-webkit-scrollbar){html{scrollbar-width:thin;scrollbar-color:var(--bord) transparent}}
-`;
-// Страница-оболочка для окна предпросмотра: сам документ — в изолированном iframe, поэтому его
-// скрипты не получают доступа к приложению (обычная страница blob: имела бы то же происхождение)
-function _sbShellHTML(title, inner) {
-  const attr = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
-  return `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>${_rdEsc(title)}</title>
-<style>html,body{margin:0;height:100%;background:#fff}iframe{display:block;border:0;width:100%;height:100%}</style>
-</head>
-<body>
-<iframe sandbox="${SB_SANDBOX}" referrerpolicy="no-referrer" title="Preview" srcdoc="${attr(inner)}"></iframe>
-<script>
-document.addEventListener('keydown',function(e){
-  if((e.ctrlKey||e.metaKey)&&!e.altKey&&String(e.key).toLowerCase()==='p'){
-    e.preventDefault();
-    document.querySelector('iframe').contentWindow.postMessage({zmd:'print'},'*');
-  }
-});
-<\/script>
-</body>
-</html>`;
-}
