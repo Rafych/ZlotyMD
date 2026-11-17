@@ -402,6 +402,35 @@ body {
   }
 }
 
+/* Узкий редактор: индикатор страницы всегда виден. Подпись «Редактор» сначала сокращается
+   многоточием, затем прячется; при совсем малой ширине прячется и значок индикатора */
+.ep {
+  container-type: inline-size;
+}
+#eP .pl {
+  min-width: 0;
+  overflow: hidden;
+}
+#eP .pl > .badge {
+  flex-shrink: 0;
+}
+#eP .pl > [data-i18n='editorLabel'] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@container (max-width: 300px) {
+  #eP .pl > [data-i18n='editorLabel'] {
+    display: none;
+  }
+}
+@container (max-width: 220px) {
+  #eP .pg-ind svg {
+    display: none;
+  }
+}
+
 .pl {
   height: 34px;
   padding: 0 var(--s21);
