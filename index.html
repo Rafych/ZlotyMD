@@ -189,7 +189,7 @@
   .copy p{font-size:var(--f16);color:var(--mut);max-width:29.0344rem;text-wrap:pretty}
   .copy .num{display:block;font-family:var(--mono);font-size:var(--f13);color:var(--sub);margin-bottom:var(--s13)}
   .demo{background:var(--bg);border:1px solid var(--bord);border-radius:var(--s13);box-shadow:var(--e1);overflow:hidden;min-width:0}
-  .demo.pad{padding:var(--s26)}
+  .demo.pad{padding:var(--s26);overflow-x:auto}
   .demo .katex-display{margin:0}
   .demo .katex{font-size:1.272em}
 
@@ -230,10 +230,12 @@
   .scale li{display:grid;grid-template-columns:5.3884rem 1fr;align-items:baseline;gap:var(--s21);padding-block:var(--s13);border-bottom:1px solid var(--bord)}
   .scale .k sup{font-size:.618em;vertical-align:.618em;line-height:0}
   .scale .k{font-family:var(--mono);font-size:var(--f13);color:var(--sub);font-variant-numeric:tabular-nums}
-  .scale .v{font-weight:700;line-height:1;letter-spacing:-.0213em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .scale .v{font-size:min(var(--fs),11.09vw);font-weight:700;line-height:1;letter-spacing:-.0213em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .props{display:flex;flex-direction:column;gap:var(--s34)}
   .strip{display:grid;grid-template-columns:44.72fr 27.64fr 17.08fr 10.56fr;height:var(--s42);border-radius:var(--s8);overflow:hidden}
   .strip i:nth-child(1){background:var(--gb)}.strip i:nth-child(2){background:var(--gr)}.strip i:nth-child(3){background:var(--gy)}.strip i:nth-child(4){background:var(--gg)}
+  .strip-legend span{white-space:nowrap}
+  .strip-legend span:last-child{text-align:right}
   .strip-legend{display:grid;grid-template-columns:44.72fr 27.64fr 17.08fr 10.56fr;font-family:var(--mono);font-size:var(--f10);color:var(--sub);margin-top:var(--s8)}
   .props h3{font-size:var(--f18);font-weight:700;margin-bottom:var(--s8)}
   .props p{font-size:var(--f13);color:var(--mut);text-wrap:pretty}
@@ -268,6 +270,15 @@
     .split .src{border-right:0;border-bottom:1px solid var(--bord)}
     footer .right{text-align:left}
     .bar nav a:not(.gh){display:none}
+  }
+  /* Live-preview demo stacks when its column gets narrower than the text needs (φ^8.5 rem) */
+  @media (max-width:59.7576em){
+    .split{grid-template-columns:1fr}
+    .split .src{border-right:0;border-bottom:1px solid var(--bord)}
+  }
+  @media (max-width:29.0344em){
+    .demo .katex{font-size:1em}
+    .scale li{grid-template-columns:3.3302rem 1fr;gap:var(--s13)}
   }
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{animation:none!important;transition:none!important}
@@ -393,11 +404,11 @@
       </div>
       <div class="system">
         <ol class="scale reveal" aria-label="Type scale">
-          <li><span class="k">16·φ<sup>2</sup></span><span class="v" style="font-size:2.618rem">Heading 1</span></li>
-          <li><span class="k">16·φ<sup>1</sup></span><span class="v" style="font-size:1.618rem">Heading 2</span></li>
-          <li><span class="k">16·φ<sup>1/2</sup></span><span class="v" style="font-size:1.272rem">Heading 3</span></li>
-          <li><span class="k">16·φ<sup>0</sup></span><span class="v" style="font-size:1rem;font-weight:400;letter-spacing:0">Body text, line height φ</span></li>
-          <li><span class="k">16·φ<sup>−1/4</sup></span><span class="v" style="font-size:.8867rem;font-weight:400;letter-spacing:0;font-family:var(--mono)">code, interface</span></li>
+          <li><span class="k">16·φ<sup>2</sup></span><span class="v" style="--fs:2.618rem">Heading 1</span></li>
+          <li><span class="k">16·φ<sup>1</sup></span><span class="v" style="--fs:1.618rem">Heading 2</span></li>
+          <li><span class="k">16·φ<sup>1/2</sup></span><span class="v" style="--fs:1.272rem">Heading 3</span></li>
+          <li><span class="k">16·φ<sup>0</sup></span><span class="v" style="--fs:1rem;font-weight:400;letter-spacing:0">Body text, line height φ</span></li>
+          <li><span class="k">16·φ<sup>−1/4</sup></span><span class="v" style="--fs:.8867rem;font-weight:400;letter-spacing:0;font-family:var(--mono)">code, interface</span></li>
         </ol>
         <div class="props reveal">
           <div>
