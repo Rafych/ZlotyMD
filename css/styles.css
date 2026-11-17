@@ -2824,6 +2824,51 @@ img.emoji {
   margin-bottom: var(--s8);
 }
 
+/* Подтверждение и ввод текста: поверх панелей (в том числе списка документов), ниже окна ошибки */
+.dlg-overlay {
+  z-index: 880;
+}
+.dlg-modal {
+  z-index: 881;
+}
+.dlg-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--txt);
+  margin-bottom: var(--s8);
+}
+.dlg-title:empty {
+  display: none;
+}
+.dlg-modal.has-input .ai-nav-msg {
+  margin-bottom: var(--s13);
+}
+.dlg-input {
+  display: none;
+  width: 100%;
+  margin-bottom: var(--s21);
+  padding: var(--s8) var(--s13);
+  border: 1.5px solid var(--bord);
+  border-radius: var(--r8);
+  background: var(--bg);
+  color: var(--txt);
+  font-family: var(--mono);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.dlg-modal.has-input .dlg-input {
+  display: block;
+}
+.dlg-input:focus {
+  border-color: var(--gb);
+  box-shadow: 0 0 0 3px var(--gbt);
+}
+.ai-nav-btn:focus-visible {
+  outline: 2px solid var(--gb);
+  outline-offset: 2px;
+}
+
 .ai-attach {
   width: 34px;
   height: 34px;
