@@ -25,7 +25,7 @@ const FONT_DEFAULTS = {
   body: 13,
   latex: 13,
   mmd: 13,
-  code: 13
+  code: 12
 };
 let fontSizes = { ...FONT_DEFAULTS };
 // Размеры шрифтов из файла или хранилища: только известные ключи и только числа. Значения
@@ -93,36 +93,36 @@ function buildPreviewHTML(title, opts) {
       --fz-mmd:${fontSizes.mmd}px;
       --fz-code:${fontSizes.code}px;
     }
-    body{font-family:var(--font);background:var(--bg);color:var(--txt);padding:34px;max-width:754px;margin:0 auto;line-height:1.618}
+    body{font-family:var(--font);background:var(--bg);color:var(--txt);padding:34px;max-width:860px;margin:0 auto;line-height:1.85}
     .md h1{font-size:var(--fz-h1,var(--f34));font-weight:800;margin-top:var(--s34);margin-bottom:var(--s13);position:relative;padding-bottom:${Math.round(fontSizes.h1 * 0.24)}px}
     .md h1::after{content:'';position:absolute;bottom:0;left:0;width:${Math.round(fontSizes.h1 * 1.6)}px;height:${Math.max(2, Math.round(fontSizes.h1 * 0.09))}px;background:linear-gradient(90deg,var(--gb),var(--gg));border-radius:99px}
     .md h2{font-size:var(--fz-h2,var(--f21));font-weight:700;margin-top:var(--s34);margin-bottom:var(--s8);display:flex;align-items:center;gap:var(--s8)}
     .md h2::before{content:'';display:block;width:${Math.max(3, Math.round(fontSizes.h2 * 0.22))}px;height:${Math.round(fontSizes.h2 * 0.9)}px;background:var(--gr);border-radius:99px;flex-shrink:0}
     .md h3{font-size:var(--fz-h3,16px);font-weight:700;margin-top:var(--s21);margin-bottom:var(--s5)}
-    .md p{font-size:var(--fz-body,var(--f13));line-height:1.618;margin-bottom:var(--s13)}
-    .md .katex{font-size:var(--fz-latex,1em)!important}
+    .md p{font-size:var(--fz-body,var(--f13));line-height:1.85;margin-bottom:var(--s13)}
+    .md .katex{font-size:var(--fz-latex,1.08em)!important}
     .md .mermaid svg text,.md .mermaid svg .label{font-size:var(--fz-mmd,inherit)!important}
-    .md code{font-family:var(--mono);font-size:var(--fz-code,13px);background:var(--gbt);color:var(--gb);border-radius:var(--r5);padding:2px var(--s5)}
-    .md pre code{font-size:var(--fz-code,13px)!important}
-    .md a {color: var(--gb);text-decoration: none;border-bottom: 1px solid var(--gbt);}
+    .md code{font-family:var(--mono);font-size:var(--fz-code,12px);background:var(--gbt);color:var(--gb);border-radius:var(--r5);padding:2px var(--s5)}
+    .md pre code{font-size:var(--fz-code,12.5px)!important}
+    .md a {color: var(--gb);text-decoration: none;border-bottom: 1.5px solid var(--gbt);}
     .md a:visited{color:var(--gb)}
     .md a:hover{border-bottom-color:var(--gb)}
     .md ul,.md ol{padding-left:var(--s21);margin-bottom:var(--s13)}
-    .md li{font-size:var(--f13);line-height:1.618;margin-bottom:var(--s5)}
+    .md li{font-size:var(--f13);line-height:1.85;margin-bottom:var(--s5)}
     .md ul li::marker{color:var(--gb);font-weight:700}
     .md ol li::marker{color:var(--gr);font-weight:700}
-    .md code{font-family:var(--mono);font-size:13px;background:var(--gbt);color:var(--gb);border-radius:var(--r5);padding:2px var(--s5)}
+    .md code{font-family:var(--mono);font-size:12px;background:var(--gbt);color:var(--gb);border-radius:var(--r5);padding:2px var(--s5)}
     .md pre{background:#202124;color:#E8EAED;border-radius:var(--r13);margin-bottom:var(--s21);border-top:3px solid var(--gb);overflow:hidden;position:relative;padding:0}
     .pre-header{display:flex;align-items:center;gap:8px;padding:5px 8px;background:#2a2d31;border-bottom:1px solid rgba(255,255,255,.07);position:relative;flex-shrink:0;min-height:34px}
-    .pre-header::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gr) 0 33.3%,var(--gy) 33.3% 66.6%,var(--gg) 66.6%);opacity:0.618}
+    .pre-header::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gr) 0 33.3%,var(--gy) 33.3% 66.6%,var(--gg) 66.6%);opacity:.7}
     .pre-body{overflow-x:auto;padding:var(--s21)}
     .pre-body--diff{padding:var(--s13) 0}
     .pre-body::-webkit-scrollbar{height:5px}
     .pre-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:99px}
     .pre-body::-webkit-scrollbar-track{background:transparent}
     @supports not selector(::-webkit-scrollbar){.pre-body{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}}
-    .lang-badge{padding:2px 8px;border-radius:5px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;background:rgba(255,255,255,.1);color:#9AA0A6;line-height:1.618;pointer-events:none;-webkit-user-select:none;user-select:none;flex-shrink:0}
-    .md pre code{background:transparent;color:inherit;padding:0;font-size:13px;white-space:pre}
+    .lang-badge{padding:2px 8px;border-radius:5px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;background:rgba(255,255,255,.1);color:#9AA0A6;line-height:1.6;pointer-events:none;-webkit-user-select:none;user-select:none;flex-shrink:0}
+    .md pre code{background:transparent;color:inherit;padding:0;font-size:12.5px;white-space:pre}
     .md pre .hljs-keyword,.md pre .hljs-selector-tag,.md pre .hljs-doctag,.md pre .hljs-template-tag,.md pre .hljs-meta .hljs-keyword{color:#8ab4f8}
     .md pre .hljs-built_in,.md pre .hljs-type,.md pre .hljs-title.class_,.md pre .hljs-title.class_.inherited__,.md pre .hljs-variable.language_{color:#78d9ec}
     .md pre .hljs-string,.md pre .hljs-char.escape_,.md pre .hljs-addition,.md pre .hljs-meta .hljs-string{color:#81c995}
@@ -134,24 +134,24 @@ function buildPreviewHTML(title, opts) {
     .md pre .hljs-emphasis{font-style:italic}
     .md pre .hljs-strong{font-weight:700}
     .diff-wrap{display:block;min-width:max-content}
-    .diff-add,.diff-del,.diff-meta,.diff-ctx{display:block;padding:0 var(--s21) 0 calc(var(--s8)*4 + 13px);position:relative;line-height:1.618;min-height:1.6em;white-space:pre;min-width:100%;box-sizing:border-box}
-    .diff-add::before,.diff-del::before,.diff-meta::before,.diff-ctx::before{content:attr(data-mark);position:absolute;left:8px;width:13px;text-align:center;font-weight:700;font-size:10px;line-height:1.618;-webkit-user-select:none;user-select:none;pointer-events:none;opacity:0.786}
+    .diff-add,.diff-del,.diff-meta,.diff-ctx{display:block;padding:0 var(--s21) 0 calc(var(--s8)*4 + 13px);position:relative;line-height:1.6;min-height:1.6em;white-space:pre;min-width:100%;box-sizing:border-box}
+    .diff-add::before,.diff-del::before,.diff-meta::before,.diff-ctx::before{content:attr(data-mark);position:absolute;left:8px;width:13px;text-align:center;font-weight:700;font-size:11px;line-height:1.6;-webkit-user-select:none;user-select:none;pointer-events:none;opacity:.9}
     .diff-add{background:rgba(52,168,83,.13);color:#B4EFCA;border-left:3px solid #34A853}
     .diff-add::before{color:#34A853}
     .diff-del{background:rgba(234,67,53,.13);color:#FFADA6;border-left:3px solid #EA4335}
     .diff-del::before{color:#EA4335}
-    .diff-meta{background:rgba(66,133,244,.1);color:#8AB4F8;border-left:3px solid #4285F4;font-style:italic;opacity:0.786}
+    .diff-meta{background:rgba(66,133,244,.1);color:#8AB4F8;border-left:3px solid #4285F4;font-style:italic;opacity:.85}
     .diff-meta::before{color:#4285F4}
     .diff-ctx{color:#9AA0A6;border-left:3px solid transparent}
-    .diff-ctx::before{color:#5F6368;opacity:0.618}
-    .md .mermaid-wrap{background:var(--bg);border:1px solid var(--gb);border-top:3px solid var(--gb);border-radius:var(--r13);padding:var(--s34) var(--s21) var(--s21);margin-bottom:var(--s21);overflow-x:auto;overflow-y:hidden;text-align:center;position:relative;box-shadow:0 2px 13px rgba(66,133,244,.08)}
-    .md .mermaid{display:block;min-width:89px;max-width:100%}
+    .diff-ctx::before{color:#5F6368;opacity:.6}
+    .md .mermaid-wrap{background:var(--bg);border:1.5px solid var(--gb);border-top:3px solid var(--gb);border-radius:var(--r13);padding:var(--s34) var(--s21) var(--s21);margin-bottom:var(--s21);overflow-x:auto;overflow-y:hidden;text-align:center;position:relative;box-shadow:0 2px 12px rgba(66,133,244,.08)}
+    .md .mermaid{display:block;min-width:80px;max-width:100%}
     .md .mermaid svg{display:block;max-width:100%;height:auto;overflow:hidden;margin:0 auto;font-family:var(--font) !important}
     .md .mermaid svg text,.md .mermaid svg .label{font-family:var(--font) !important}
     .md .mermaid svg .edgePath .path{stroke-width:1.5px}
     .md .tikz-wrap{text-align:center;margin-bottom:var(--s21);overflow-x:auto}
     .md .tikz-wrap svg{display:inline-block;max-width:100%;height:auto}
-    .md .mermaid-error{background:var(--grt);border:1px solid var(--gr);border-radius:var(--r8);padding:var(--s13) var(--s21);color:var(--gr);font-size:13px;font-family:var(--mono);text-align:left}
+    .md .mermaid-error{background:var(--grt);border:1px solid var(--gr);border-radius:var(--r8);padding:var(--s13) var(--s21);color:var(--gr);font-size:12px;font-family:var(--mono);text-align:left}
     .md blockquote{border-left:3px solid var(--gy);background:var(--gyt);padding:var(--s13) var(--s21);border-radius:0 var(--r8) var(--r8) 0;margin-bottom:var(--s13);color:var(--mut);font-style:italic}
     .md table{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13);background:#fff}
     .md th{background:var(--gbt);color:var(--gb);padding:var(--s8) var(--s13);font-weight:700;text-align:left}
@@ -175,21 +175,21 @@ function buildPreviewHTML(title, opts) {
     .ztbl td.ac,.ztbl th.ac{text-align:center}
     .ztbl td.ar,.ztbl th.ar{text-align:right}
     .ztbl td.fw,.ztbl th.fw{font-weight:700}
-    .md hr{border:none;height:2px;background:var(--bord);margin:var(--s34) 0}
+    .md hr{border:none;height:1.5px;background:var(--bord);margin:var(--s34) 0}
     .md strong{font-weight:700}
     .md img{max-width:100%;border-radius:var(--r13)}
     img.emoji{display:inline-block;width:1em;height:1em;margin:0 .05em 0 .1em;vertical-align:-.1em}
     .md img.emoji{max-width:none;border-radius:0}
     .md input[type=checkbox]{accent-color:var(--gg)}
     .md .katex-display{overflow-x:auto;overflow-y:hidden;padding:var(--s13) 0;margin:var(--s13) 0}
-    .md .katex{font-size:1em}
+    .md .katex{font-size:1.08em}
     .md .katex-display>.katex{
       background:linear-gradient(135deg,var(--gbt) 0%,#f0f4ff 100%);
-      border:1px solid var(--gb);border-left:5px solid var(--gb);
+      border:1.5px solid var(--gb);border-left:4px solid var(--gb);
       border-radius:var(--r8);padding:var(--s21) var(--s34);display:block;overflow-x:auto;
       box-shadow:0 2px 8px rgba(66,133,244,.08)
     }
-    .md .katex:not(.katex-display .katex){padding:1px 5px}
+    .md .katex:not(.katex-display .katex){padding:1px 4px}
   `;
 
   // Копия создаётся в документе без окна: пока в неё возвращается содержимое пользователя
@@ -226,7 +226,7 @@ function buildPreviewHTML(title, opts) {
   // Стили кнопки копирования — как в редакторе; при печати кнопка скрыта
   const COPY_CSS = withCopy
     ? `
-    .cpbtn{margin-left:auto;flex-shrink:0;display:flex;align-items:center;gap:var(--s5);padding:var(--s5) var(--s8);border-radius:var(--r8);border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#9aa0a6;font-family:var(--font);font-size:10px;font-weight:600;cursor:pointer;opacity:0;transition:opacity 144ms,background 144ms,color 144ms,transform 144ms;line-height:1;white-space:nowrap}
+    .cpbtn{margin-left:auto;flex-shrink:0;display:flex;align-items:center;gap:var(--s5);padding:var(--s5) var(--s8);border-radius:var(--r8);border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#9aa0a6;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;opacity:0;transition:opacity .15s,background .15s,color .15s,transform .12s;line-height:1;white-space:nowrap}
     .cpbtn svg{width:13px;height:13px;flex-shrink:0}
     .md pre:hover .cpbtn,.cpbtn:focus-visible{opacity:1}
     .cpbtn:hover{background:rgba(255,255,255,.16);color:#fff}
@@ -750,12 +750,12 @@ let _pdfPagesRunning = false;
 let _pdfPagesDirty = false;
 let _pdfPagesSeq = 0;
 let _pdfPagesSkipped = false;
-// Чип появляется/скрывается по ширине окна (см. styles.css: 466 px)
+// Чип появляется/скрывается по ширине окна (см. styles.css: 768 и 1100 px)
 const _pdfPagesOnShow = () => {
   if (_pdfPagesSkipped) schedulePdfPageCount();
 };
 window.addEventListener('resize', _pdfPagesOnShow);
-['(max-width: 466px)'].forEach(q => {
+['(max-width: 768px)', '(max-width: 1100px)'].forEach(q => {
   const mq = window.matchMedia && window.matchMedia(q);
   if (mq && mq.addEventListener) mq.addEventListener('change', _pdfPagesOnShow);
 });
@@ -3319,7 +3319,7 @@ if (typeof mermaid !== 'undefined') {
 const INIT = LANGS['en'].init;
 ed.value = INIT;
 render(INIT);
-if (window.innerWidth > 754) ed.focus();
+if (window.innerWidth > 768) ed.focus();
 applyLang('en');
 
 // Открывает диалоговое окно «О программе»

@@ -288,12 +288,12 @@ function _rdPrepareExport(clone) {
 }
 
 const RD_CSS = `
-    .md .rd-anchor{position:absolute;left:-21px;top:50%;transform:translateY(-50%);width:21px;height:21px;display:flex;align-items:center;justify-content:center;color:var(--mut);border:0!important;opacity:0;text-decoration:none}
+    .md .rd-anchor{position:absolute;left:-24px;top:50%;transform:translateY(-50%);width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:var(--mut);border:0!important;opacity:0;text-decoration:none}
     .md h1,.md h2,.md h3,.md h4,.md h5,.md h6{position:relative}
     .md h1:hover>.rd-anchor,.md h2:hover>.rd-anchor,.md h3:hover>.rd-anchor,.md h4:hover>.rd-anchor,.md h5:hover>.rd-anchor,.md h6:hover>.rd-anchor,.md .rd-anchor:focus{opacity:1}
     @media print{.md .rd-anchor{display:none}}
     .md .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
-    .md .markdown-alert{margin:0 0 var(--s21);padding:var(--s5) var(--s21);border-left:5px solid var(--ga,#0969da);border-radius:var(--r5);background:transparent}
+    .md .markdown-alert{margin:0 0 var(--s21);padding:var(--s5) var(--s21);border-left:4px solid var(--ga,#0969da);border-radius:var(--r5);background:transparent}
     .md .markdown-alert>:last-child{margin-bottom:var(--s8)}
     .md .markdown-alert-title{display:flex;align-items:center;gap:var(--s8);font-weight:700;color:var(--ga,#0969da);margin:var(--s8) 0 var(--s5)!important;font-size:var(--fz-body,13px)}
     .md .markdown-alert-note{--ga:#0969da}
@@ -301,7 +301,7 @@ const RD_CSS = `
     .md .markdown-alert-important{--ga:#8250df}
     .md .markdown-alert-warning{--ga:#9a6700}
     .md .markdown-alert-caution{--ga:#cf222e}
-    .md .footnotes{margin-top:var(--s34);padding-top:var(--s13);border-top:1px solid var(--bord);font-size:.9em;color:var(--mut)}
+    .md .footnotes{margin-top:var(--s34);padding-top:var(--s13);border-top:1.5px solid var(--bord);font-size:.9em;color:var(--mut)}
     .md .footnotes ol{padding-left:var(--s21)}
     .md .rd-fnref a,.md .rd-fnback{border:0!important}
     .md .rd-fnback{margin-left:var(--s5)}
@@ -309,7 +309,7 @@ const RD_CSS = `
     .md .rd-frontmatter{margin-bottom:var(--s21)}
     .md details{margin-bottom:var(--s13)}
     .md details>summary{cursor:pointer;font-weight:600}
-    .md kbd{font-family:var(--mono);font-size:.85em;padding:2px 5px;border:1px solid var(--bord);border-bottom-width:2px;border-radius:var(--r5);background:var(--surf)}
+    .md kbd{font-family:var(--mono);font-size:.85em;padding:2px 6px;border:1px solid var(--bord);border-bottom-width:2px;border-radius:var(--r5);background:var(--surf)}
     .md sup,.md sub{font-size:.75em;line-height:0}
     .md mark{background:var(--gyt)}
 `;
