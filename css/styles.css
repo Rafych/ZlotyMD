@@ -227,10 +227,6 @@ body {
   visibility: hidden;
   pointer-events: none;
 }
-/* Тесная шапка: сначала убирается статистика, чтобы панели инструментов хватило места */
-.hd.hd-nostats .stats {
-  display: none;
-}
 .tg {
   display: flex;
   align-items: center;
@@ -311,23 +307,34 @@ body {
   color: var(--gg);
 }
 
-/* Статистика документа (символы/слова) и индикатор статуса сохранения */
+/* Строка состояния внизу окна: статистика документа справа (символы, слова, строки, страницы PDF) */
+.sb {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  height: 26px;
+  padding: 0 var(--s21);
+  border-top: 1px solid var(--bord);
+  background: var(--surf);
+  position: relative;
+  z-index: 2;
+}
 .stats {
   display: flex;
-  gap: var(--s8);
-  margin-left: auto;
+  align-items: center;
+  gap: var(--s21);
+  min-width: 0;
 }
 .chip {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--s5);
-  padding: var(--s5) var(--s8);
-  border-radius: var(--r34);
-  background: var(--surf);
-  border: 1px solid var(--bord);
-  font-size: 11px;
+  font-size: 12px;
+  line-height: 1;
   color: var(--mut);
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 .chip strong {
   font-weight: 700;
@@ -338,17 +345,12 @@ body {
   opacity: 0.45;
   transition: opacity 0.15s;
 }
-/* Число страниц PDF — только на широких экранах: на более узких шапка не вмещает ещё один чип */
-@media (max-width: 1100px) {
-  .chip-pdf {
-    display: none;
-  }
-}
 .dot {
-  width: 5px;
-  height: 5px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
+  align-self: center;
 }
 
 /* Раскладка панелей редактор/превью (split-view) */
@@ -1277,8 +1279,11 @@ body {
   .rz {
     display: none;
   }
+  .sb {
+    padding: 0 var(--s13);
+  }
   .stats {
-    display: none;
+    gap: var(--s13);
   }
   .hsep {
     display: none;
@@ -3030,7 +3035,7 @@ body.ai-dot-on .ai-dot {
   font-size: 12px;
   line-height: 1;
   cursor: pointer;
-  transition: border-color 0.12s, color 0.12s;
+  transition: border-color 0.12s, color 0.12s, background 0.2s;
 }
 .ai-models-refresh svg {
   width: 12px;
@@ -3040,12 +3045,52 @@ body.ai-dot-on .ai-dot {
   border-color: var(--gb);
   color: var(--gb);
 }
-.ai-models-refresh.spin svg {
+.ai-models-refresh.spin .amr-ico {
   animation: ai-models-spin 0.8s linear infinite;
 }
+/* Обновление завершено: кнопка зелёная, вместо стрелок — галочка (рисуется штрихом) */
+.ai-models-refresh .amr-ok {
+  display: none;
+}
+.ai-models-refresh.ok,
+.ai-models-refresh.ok:hover {
+  background: var(--gg);
+  border-color: var(--gg);
+  color: #fff;
+}
+.ai-models-refresh.ok .amr-ico {
+  display: none;
+}
+.ai-models-refresh.ok .amr-ok {
+  display: block;
+  animation: ai-models-pop 0.25s ease-out;
+}
+.ai-models-refresh.ok .amr-ok path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: ai-models-check 0.32s ease-out 0.05s forwards;
+}
+@keyframes ai-models-pop {
+  from {
+    transform: scale(0.6);
+  }
+}
+@keyframes ai-models-check {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ai-models-refresh.ok .amr-ok,
+  .ai-models-refresh.ok .amr-ok path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+/* Против часовой стрелки */
 @keyframes ai-models-spin {
   to {
-    transform: rotate(360deg);
+    transform: rotate(-360deg);
   }
 }
 /* Поле ввода и сохранения API-ключа */
@@ -3411,6 +3456,7 @@ body.ai-dot-on .ai-dot {
   }
   .doodle,
   .hd,
+  .sb,
   .ep,
   .rz,
   .tabbar,
@@ -3631,4 +3677,196 @@ body.ai-dot-on .ai-dot {
 }
 .toast.err {
   background: #d93025;
+}
+
+/* ---------- Страницы (разметка страниц PDF в редакторе и превью) ----------
+   Рисуется поверх текста отдельными слоями: в #mo ничего не добавляется, поэтому
+   в скачиваемый HTML и превью в новом окне разметка не попадает. Цвет — жёлтый, как у числа страниц */
+.ep {
+  position: relative;
+}
+#pv {
+  position: relative;
+}
+.pg-layer {
+  display: none;
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+.pg-on .pg-layer {
+  display: block;
+}
+.pg-ed {
+  overflow: hidden;
+}
+.pg-layer-in {
+  position: absolute;
+  inset: 0 0 auto 0;
+  will-change: transform;
+}
+.pg-pv {
+  inset: 0 0 auto 0;
+  height: 0;
+}
+.pg-mark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1.5px dashed rgba(249, 171, 0, 0.85);
+  transition: opacity 0.2s;
+}
+/* Пока раскладка пересчитывается после правки — разметка приглушена */
+.pg-stale .pg-mark {
+  opacity: 0.38;
+}
+.pg-pill {
+  position: absolute;
+  top: 0;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 var(--s8);
+  border-radius: var(--r34);
+  background: var(--gyt);
+  border: 1px solid rgba(249, 171, 0, 0.5);
+  color: #9a6000;
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+/* Превью: граница листов — линия во всю ширину, «нижний край» предыдущего листа слегка затенён */
+.pg-pv .pg-mark {
+  left: var(--s13);
+  right: var(--s13);
+}
+.pg-pv .pg-mark::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--s13);
+  background: linear-gradient(to top, rgba(32, 33, 36, 0.045), transparent);
+}
+.pg-pv .pg-pill {
+  right: 0;
+  height: 16px;
+  padding: 0 6px;
+  font-size: 9px;
+  box-shadow: 0 0 0 2px var(--bg);
+}
+/* Ручной разрыв: линию рисует сам блок \newpage, слой добавляет только номер страницы */
+.pg-pv .pg-mark.manual {
+  border-top-color: transparent;
+}
+.pg-pv .pg-mark.manual::before {
+  display: none;
+}
+/* Редактор: линия между строками, номер страницы — в правом поле */
+.pg-ed .pg-mark {
+  border-top-width: 1px;
+  border-top-color: rgba(249, 171, 0, 0.8);
+}
+.pg-ed .pg-pill {
+  right: 3px;
+  height: 15px;
+  min-width: 15px;
+  justify-content: center;
+  padding: 0 4px;
+  font-size: 9px;
+  letter-spacing: 0;
+}
+
+/* Блок \newpage в превью */
+.md .zmd-pagebreak {
+  position: relative;
+  height: var(--s34);
+  margin: var(--s8) 0;
+}
+.md .zmd-pagebreak::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1.5px dashed rgba(249, 171, 0, 0.75);
+}
+.md .zmd-pagebreak::after {
+  content: attr(data-label);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0 var(--s8);
+  background: var(--bg);
+  color: #9a6000;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Текущая страница в заголовках панелей */
+.pg-ind {
+  display: flex;
+  align-items: center;
+  gap: var(--s5);
+  margin-left: auto;
+  height: 22px;
+  padding: 0 var(--s8);
+  border-radius: var(--r34);
+  background: var(--bg);
+  border: 1px solid var(--bord);
+  color: var(--mut);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+.pg-ind[hidden] {
+  display: none;
+}
+.pg-ind svg {
+  width: 11px;
+  height: 11px;
+  color: #f9ab00;
+  flex-shrink: 0;
+}
+.pg-stale .pg-ind {
+  opacity: 0.55;
+}
+#pP .pl .pg-ind:not([hidden]) + .pv-pop-btn {
+  margin-left: 0 !important;
+}
+@container (max-width: 260px) {
+  #pP .pg-ind svg {
+    display: none;
+  }
+}
+
+@media print {
+  .pg-layer,
+  .pg-ind {
+    display: none !important;
+  }
+  .md .zmd-pagebreak {
+    break-after: page;
+    height: 0;
+    margin: 0;
+  }
+  .md .zmd-pagebreak::before,
+  .md .zmd-pagebreak::after {
+    display: none;
+  }
 }
