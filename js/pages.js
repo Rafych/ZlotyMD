@@ -295,10 +295,12 @@
     raf = 0;
     if (!edLayer) return;
     mo.querySelectorAll('.zmd-pagebreak').forEach(n => (n.dataset.label = tr('pageBreak')));
-    const on = enabled() && ed.value.trim() && mo.style.display !== 'none' && layoutData.count > 0;
+    // Индикаторы видны сразу (приглушены, пока страницы считаются), разметка — когда есть раскладка
+    const on = enabled() && ed.value.trim() && mo.style.display !== 'none';
+    const pending = layoutText === null || layoutData.count <= 0;
     document.body.classList.toggle('pg-on', !!on);
-    document.body.classList.toggle('pg-stale', !!on && stale);
-    if (!on) {
+    document.body.classList.toggle('pg-stale', !!on && (stale || pending));
+    if (!on || pending) {
       clearMarks();
       updateIndicators();
       return;
@@ -407,8 +409,10 @@
     const on = document.body.classList.contains('pg-on');
     node.hidden = !on;
     if (!on) return;
-    const total = Math.max(layoutData.count, page);
-    const txt = `${Number(page).toLocaleString()} / ${Number(total).toLocaleString()}`;
+    const txt =
+      layoutData.count > 0
+        ? `${Number(page).toLocaleString()} / ${Number(Math.max(layoutData.count, page)).toLocaleString()}`
+        : '– / –';
     const t = node.querySelector('.pg-ind-num');
     if (t.textContent !== txt) t.textContent = txt;
   }

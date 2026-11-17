@@ -708,6 +708,58 @@ window.addEventListener('resize', _pdfPagesOnShow);
   const mq = window.matchMedia && window.matchMedia(q);
   if (mq && mq.addEventListener) mq.addEventListener('change', _pdfPagesOnShow);
 });
+// Кэш раскладки страниц (localStorage): после перезагрузки или при возврате к документу число
+// страниц и их разметка показываются сразу, если HTML для PDF не изменился
+const PDF_LAYOUT_CACHE_KEY = 'zmd_pdf_layouts';
+const PDF_LAYOUT_CACHE_MAX = 12;
+// Для какого документа уже показан результат: первый подсчёт для документа — без паузы набора
+let _pdfPagesDocId = {}; // «ещё ни одного документа»
+// currentDocId объявлен ниже; до его объявления (ранний рендер при запуске) — undefined
+function _pdfPagesCurDoc() {
+  try {
+    return currentDocId;
+  } catch (e) {
+    return undefined;
+  }
+}
+function _pdfLayoutHash(s) {
+  // Заголовок документа на раскладку не влияет (и при открытии документа задаётся позже содержимого)
+  s = s.replace(/<title>[\s\S]*?<\/title>/, '');
+  let h = 0x811c9dc5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return s.length.toString(36) + '.' + (h >>> 0).toString(36);
+}
+function _pdfLayoutCacheRead() {
+  try {
+    const v = JSON.parse(localStorage.getItem(PDF_LAYOUT_CACHE_KEY) || '[]');
+    return Array.isArray(v) ? v : [];
+  } catch (e) {
+    return [];
+  }
+}
+function _pdfLayoutCacheGet(html) {
+  const h = _pdfLayoutHash(html);
+  return _pdfLayoutCacheRead().find(e => e && e.h === h) || null;
+}
+function _pdfLayoutCachePut(html, count, lay) {
+  try {
+    const h = _pdfLayoutHash(html);
+    const list = _pdfLayoutCacheRead().filter(e => e && e.h !== h);
+    list.unshift({ h, count, breaks: lay ? Array.from(lay.breaks || []) : [] });
+    localStorage.setItem(PDF_LAYOUT_CACHE_KEY, JSON.stringify(list.slice(0, PDF_LAYOUT_CACHE_MAX)));
+  } catch (e) {}
+}
+function _pdfPagesApply(pc, html, n, lay) {
+  _pdfPagesLastHtml = html;
+  _pdfPagesLastCount = n;
+  _pdfPagesLastLayout = lay;
+  _pdfPagesDocId = _pdfPagesCurDoc();
+  pc.textContent = Number(n).toLocaleString();
+  if (window.ZmdPages) ZmdPages.setLayout(lay || n);
+}
 function schedulePdfPageCount() {
   const pc = document.getElementById('pc');
   if (!pc) return;
@@ -719,8 +771,22 @@ function schedulePdfPageCount() {
     if (window.ZmdPages) ZmdPages.setLayout({ count: 0, breaks: [] });
     return;
   }
+  // Документ только что открыт (перезагрузка, переключение): сначала кэш, иначе считаем сразу
+  // (до открытия сохранённого документа — ранний рендер при запуске — обычный порядок).
+  // Результат подсчёта, идущего сейчас, устареет сам: номер подсчёта (seq) уже другой
+  const cur = _pdfPagesCurDoc();
+  const fresh = !!cur && _pdfPagesDocId !== cur;
+  if (fresh) {
+    const html = buildPdfHTML(getDocTitle());
+    const hit = _pdfLayoutCacheGet(html);
+    if (hit) {
+      _pdfPagesApply(pc, html, hit.count, { count: hit.count, breaks: hit.breaks });
+      pc.parentElement.classList.remove('busy');
+      return;
+    }
+  }
   pc.parentElement.classList.add('busy');
-  _pdfPagesTimer = setTimeout(runPdfPageCount, PDF_PAGES_DELAY_MS);
+  _pdfPagesTimer = setTimeout(runPdfPageCount, fresh ? 0 : PDF_PAGES_DELAY_MS);
 }
 async function runPdfPageCount() {
   const pc = document.getElementById('pc');
@@ -754,12 +820,13 @@ async function runPdfPageCount() {
     } else {
       n = await window.ZmdPdf.countPages(html);
     }
-    _pdfPagesLastHtml = html;
-    _pdfPagesLastCount = n;
-    _pdfPagesLastLayout = lay;
+    _pdfLayoutCachePut(html, n, lay);
     if (seq === _pdfPagesSeq) {
-      pc.textContent = Number(n).toLocaleString();
-      if (window.ZmdPages) ZmdPages.setLayout(lay || n);
+      _pdfPagesApply(pc, html, n, lay);
+    } else {
+      _pdfPagesLastHtml = html;
+      _pdfPagesLastCount = n;
+      _pdfPagesLastLayout = lay;
     }
   } catch (e) {
     console.warn('PDF page count failed:', e);
@@ -770,7 +837,9 @@ async function runPdfPageCount() {
     if (_pdfPagesDirty || seq !== _pdfPagesSeq) {
       _pdfPagesDirty = false;
       clearTimeout(_pdfPagesTimer);
-      _pdfPagesTimer = setTimeout(runPdfPageCount, PDF_PAGES_DELAY_MS);
+      // Для только что открытого документа ещё ничего не показано — без паузы набора
+      const cur = _pdfPagesCurDoc();
+      _pdfPagesTimer = setTimeout(runPdfPageCount, cur && _pdfPagesDocId !== cur ? 0 : PDF_PAGES_DELAY_MS);
     }
   }
 }
