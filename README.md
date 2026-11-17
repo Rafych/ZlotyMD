@@ -49,11 +49,9 @@ The libraries below are not part of this repository. The browser loads them from
 | Library | Version | License | Loaded from |
 |---|---|---|---|
 | emmalloc (Emscripten) / Zephyr libc string functions | — | Apache-2.0 | bundled in the harfbuzzjs WebAssembly build |
-| [Leaflet](https://github.com/Leaflet/Leaflet) | 1.9.4 | BSD-2-Clause | jsDelivr, only when a document contains geojson / topojson |
 | [highlight.js](https://github.com/highlightjs/highlight.js) | 11.11.1 | BSD-3-Clause | cdnjs (extra languages are loaded only when a code block uses them) |
 | [Twemoji](https://github.com/jdecked/twemoji) graphics | 17.0.3 | CC-BY-4.0 | jsDelivr (emoji images in the editor interface, the preview and exported documents) |
 | [TikZJax](https://github.com/drgrice1/tikzjax) (`@drgrice1/tikzjax`) | 1.0.0-beta24 | GPL-3.0-or-later | jsDelivr, only when a document contains TikZ |
-| [topojson-client](https://github.com/topojson/topojson-client) | 3.1.0 | ISC | jsDelivr, only when a document contains topojson |
 | [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs) ([HarfBuzz](https://github.com/harfbuzz/harfbuzz)) | 0.4.12 | MIT (HarfBuzz: Old MIT; parts Apache-2.0) | jsDelivr, only when exporting to PDF (text shaping) |
 | [html2canvas](https://github.com/niklasvh/html2canvas) | 1.4.1 | MIT | cdnjs, only when exporting to PDF (used by jsPDF `html()`) |
 | [jsPDF](https://github.com/parallax/jsPDF) | 4.2.1 | MIT | cdnjs, only when exporting to PDF |
@@ -61,9 +59,7 @@ The libraries below are not part of this repository. The browser loads them from
 | [marked](https://github.com/markedjs/marked) | 9.1.6 | MIT | cdnjs |
 | [Mermaid](https://github.com/mermaid-js/mermaid) | 10.6.1 | MIT | cdnjs |
 | [svg2pdf.js](https://github.com/yWorks/svg2pdf.js) | 2.9.0 | MIT | jsDelivr, only when exporting to PDF (SVG as vectors) |
-| [three.js](https://github.com/mrdoob/three.js) | r128 | MIT | jsDelivr, only when a document contains stl |
 | [Twemoji](https://github.com/jdecked/twemoji) (`@twemoji/api`) | 17.0.3 | MIT | jsDelivr |
-| [OpenStreetMap](https://www.openstreetmap.org/copyright) map data and tiles | — | ODbL-1.0 | OpenStreetMap tile servers, only when a document contains geojson / topojson |
 | [Google Sans](https://fonts.google.com/) | — | SIL OFL 1.1 | Google Fonts |
 | [JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) | 2020 | SIL OFL 1.1 | Google Fonts |
 | KaTeX fonts | 0.16.9 | SIL OFL 1.1 | jsDelivr / cdnjs |
