@@ -1782,6 +1782,19 @@
           </div>
         </div>
 
+        <!-- Подтверждение и ввод текста (вместо window.confirm / window.prompt; стили общие с aiNavModal) -->
+        <div class="ai-nav-overlay dlg-overlay" id="dlgOverlay"></div>
+        <div class="ai-nav-modal dlg-modal" id="dlgModal" role="dialog" aria-modal="true" aria-labelledby="dlgTitle" aria-describedby="dlgMsg">
+          <div class="dlg-title" id="dlgTitle"></div>
+          <div class="ai-nav-msg" id="dlgMsg"></div>
+          <input class="dlg-input" id="dlgInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" list="dlgList" />
+          <datalist id="dlgList"></datalist>
+          <div class="ai-nav-actions">
+            <button class="ai-nav-btn ai-nav-btn-no" id="dlgCancelBtn" type="button"></button>
+            <button class="ai-nav-btn ai-nav-btn-yes" id="dlgOkBtn" type="button"></button>
+          </div>
+        </div>
+
         <!-- Несохранённые изменения при переходе к другому документу (автосохранение выключено) -->
         <div class="ai-nav-overlay" id="unsavedOverlay"></div>
         <div class="ai-nav-modal" id="unsavedModal" role="alertdialog" aria-modal="true" aria-describedby="unsavedMsg">
