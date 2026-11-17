@@ -60,6 +60,67 @@ const FAVICON_HREF = 'data:image/svg+xml,' + encodeURIComponent(FAVICON_SVG);
 
 // Сборка полного HTML-документа для экспорта/печати: включает лицензии, шрифты и стили превью.
 // opts.copyButtons === false — без кнопок копирования кода (для PDF и печати)
+// Комментарий о лицензиях в начале экспортируемого HTML. В нём перечислено только то, что загружает
+// сам экспортированный файл (а не весь редактор), и сказано, что содержимое принадлежит автору документа
+function _exportLicenseHeader(hasEmoji, hasTikz) {
+  const parts = [
+    `<!--
+  Created with Złoty MD — https://github.com/Rafych/ZlotyMD
+  The content of this document belongs to its author. The page code and styles come from Złoty MD:
+  © 2026 Rafych (https://github.com/Rafych) and Hiromichi (https://github.com/hiromichipixel),
+  MIT License — https://github.com/Rafych/ZlotyMD/blob/main/LICENSE
+
+  This page loads the following third-party components at runtime from a CDN (none of their files
+  are copied into this file):
+
+  KaTeX v0.16.9 — formula styles and fonts
+    Copyright (c) 2013-2020 Khan Academy and other contributors
+    MIT License — https://github.com/KaTeX/KaTeX/blob/main/LICENSE
+    KaTeX fonts: Copyright (c) 2009-2010, Design Science, Inc. (www.mathjax.org); Copyright (c) 2014-2018
+    Khan Academy (www.khanacademy.org), with Reserved Font Names KaTeX_AMS, KaTeX_Caligraphic, KaTeX_Fraktur,
+    KaTeX_Main, KaTeX_Math, KaTeX_SansSerif, KaTeX_Script, KaTeX_Size1-4, KaTeX_Typewriter
+    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
+
+  Mermaid v10.6.1 — diagrams
+    Copyright (c) 2014 - 2022 Knut Sveidqvist
+    MIT License — https://github.com/mermaid-js/mermaid/blob/develop/LICENSE
+    The distributed bundle includes dependencies (e.g. d3, dagre-d3-es, DOMPurify, dayjs, khroma)
+    under their own permissive licenses (MIT / ISC / BSD-3-Clause / Apache-2.0 / MPL-2.0).
+`
+  ];
+  if (hasEmoji) {
+    parts.push(`
+  Twemoji graphics v17.0.3 — emoji images
+    Copyright (c) Twitter, Inc and other contributors; Copyright (c) jdecked/twemoji contributors
+    CC BY 4.0 — https://github.com/jdecked/twemoji/blob/main/LICENSE-GRAPHICS
+`);
+  }
+  if (hasTikz) {
+    parts.push(`
+  TikZJax (@drgrice1/tikzjax v1.0.0-beta24) — fonts of the TikZ figures
+    Copyright (c) Jim Fowler, Glenn Rice and contributors
+    GPL-3.0-or-later — https://github.com/drgrice1/tikzjax
+    The TeX fonts (Computer Modern, BaKoMa) are distributed under their own licenses.
+`);
+  }
+  parts.push(`
+  Google Sans
+    Copyright 2025 The Google Sans Project Authors (https://github.com/googlefonts/googlesans)
+    SIL Open Font License 1.1 — https://github.com/google/fonts/blob/main/ofl/googlesans/OFL.txt
+
+  JetBrains Mono
+    Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono)
+    SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
+
+  The text was converted from Markdown with marked (MIT License, Copyright (c) 2018+, MarkedJS;
+  Copyright (c) 2011-2018, Christopher Jeffrey) and code was highlighted with highlight.js
+  (BSD 3-Clause License, Copyright (c) 2006, Ivan Sagalaev) in the editor.
+
+  Content delivery / font services (no code included): cdnjs (Cloudflare), jsDelivr, Google Fonts.
+-->`);
+  return parts.join('');
+}
+
 function buildPreviewHTML(title, opts) {
   title = title || 'Złoty MD Preview';
   const withCopy = !opts || opts.copyButtons !== false;
@@ -142,6 +203,7 @@ function buildPreviewHTML(title, opts) {
     .md .tikz-wrap{text-align:center;margin-bottom:var(--s21);overflow-x:auto}
     .md .tikz-wrap svg{display:inline-block;max-width:100%;height:auto}
     .md .mermaid-error{background:var(--grt);border:1px solid var(--gr);border-radius:var(--r8);padding:var(--s13) var(--s21);color:var(--gr);font-size:12px;font-family:var(--mono);text-align:left}
+    .md .mermaid-error svg.zi{display:inline-block;width:1.25em;height:1.25em;max-width:none;margin:0 .5em 0 0;vertical-align:-.25em;flex-shrink:0}
     .md blockquote{border-left:3px solid var(--gy);background:var(--gyt);padding:var(--s13) var(--s21);border-radius:0 var(--r8) var(--r8) 0;margin-bottom:var(--s13);color:var(--mut);font-style:italic}
     .md table{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13);background:#fff}
     .md th{background:var(--gbt);color:var(--gb);padding:var(--s8) var(--s13);font-weight:700;text-align:left}
@@ -183,7 +245,7 @@ function buildPreviewHTML(title, opts) {
   `;
 
   const clone = mo.cloneNode(true);
-  const rdHead = _rdPrepareExport(clone);
+  _rdPrepareExport(clone);
   if (withCopy) {
     // Кнопки копирования остаются; подписи на текущем языке передаются через data-атрибуты
     clone.querySelectorAll('.cpbtn').forEach(b => {
@@ -255,123 +317,7 @@ function buildPreviewHTML(title, opts) {
   });
   const bodyInner = clone.outerHTML;
   return `<!DOCTYPE html>
-<!--
-  Złoty MD — © 2026 Rafych (https://github.com/Rafych) and Hiromichi (https://github.com/hiromichipixel)
-  MIT License — https://github.com/Rafych/ZlotyMD/blob/main/LICENSE
-
-  Third-party components used (loaded at runtime from a CDN; none of their files are copied into this file),
-  sorted by license:
-
-  Apache License 2.0
-
-  emmalloc (Emscripten) and Zephyr libc string functions — bundled in the harfbuzzjs WebAssembly build
-    Copyright (c) the Emscripten authors; Copyright (c) the Zephyr Project contributors
-    Apache License 2.0 — https://www.apache.org/licenses/LICENSE-2.0
-
-  BSD 2-Clause License
-
-  Leaflet v1.9.4 — maps for geojson / topojson blocks; loaded only when a document contains them
-    Copyright (c) 2010-2023, Vladimir Agafonkin; Copyright (c) 2010-2011, CloudMade
-    BSD 2-Clause License — https://github.com/Leaflet/Leaflet/blob/main/LICENSE
-
-  BSD 3-Clause License
-
-  highlight.js v11.11.1 — syntax highlighting in code blocks
-    Copyright (c) 2006, Ivan Sagalaev
-    BSD 3-Clause License — https://github.com/highlightjs/highlight.js/blob/main/LICENSE
-
-  Creative Commons Attribution 4.0 International
-
-  Twemoji graphics v17.0.3 — emoji images in the editor interface, the preview and exported documents
-    Copyright (c) Twitter, Inc and other contributors; Copyright (c) jdecked/twemoji contributors
-    CC BY 4.0 — https://github.com/jdecked/twemoji/blob/main/LICENSE-GRAPHICS
-
-  GPL-3.0-or-later
-
-  TikZJax (@drgrice1/tikzjax v1.0.0-beta24) — loaded only when a document contains TikZ
-    Copyright (c) Jim Fowler, Glenn Rice and contributors
-    GPL-3.0-or-later — https://github.com/drgrice1/tikzjax
-    It bundles TeX and TeX packages (e.g. PGF/TikZ, pgfplots) under their own licenses.
-
-  ISC License
-
-  topojson-client v3.1.0 — topojson blocks; loaded only when a document contains them
-    Copyright (c) 2012-2019, Michael Bostock
-    ISC License — https://github.com/topojson/topojson-client/blob/master/LICENSE.md
-
-  MIT License
-
-  harfbuzzjs v0.4.12 (HarfBuzz) — used by the editor for PDF export (text shaping: ligatures)
-    Copyright (c) 2019 Ebrahim Byagowi; HarfBuzz: Copyright (c) the HarfBuzz authors
-    MIT License — https://github.com/harfbuzz/harfbuzzjs/blob/main/LICENSE
-    HarfBuzz: "Old MIT" License — https://github.com/harfbuzz/harfbuzz/blob/main/COPYING
-
-  html2canvas v1.4.1 — used by jsPDF (html()) for PDF export
-    Copyright (c) 2012 Niklas von Hertzen
-    MIT License — https://github.com/niklasvh/html2canvas/blob/master/LICENSE
-
-  jsPDF v4.2.1 — used by the editor for PDF export
-    Copyright (c) 2010-2025 James Hall (https://github.com/parallax/jsPDF), (c) 2015-2025 yWorks GmbH (https://www.yworks.com/)
-    MIT License — https://github.com/parallax/jsPDF/blob/master/LICENSE
-
-  KaTeX v0.16.9
-    Copyright (c) 2013-2020 Khan Academy and other contributors
-    MIT License — https://github.com/KaTeX/KaTeX/blob/main/LICENSE
-
-  marked v9.1.6
-    Copyright (c) 2011-2018, Christopher Jeffrey (https://github.com/markedjs/marked)
-    MIT License — https://github.com/markedjs/marked/blob/master/LICENSE
-
-  Mermaid v10.6.1
-    Copyright (c) 2014-2023 Knut Sveidqvist and contributors
-    MIT License — https://github.com/mermaid-js/mermaid/blob/develop/LICENSE
-    The distributed bundle includes dependencies (e.g. d3, dagre-d3-es, DOMPurify, dayjs, khroma)
-    under their own permissive licenses (MIT / ISC / BSD-3-Clause / Apache-2.0 / MPL-2.0).
-
-  svg2pdf.js v2.9.0 — used by the editor for PDF export (SVG diagrams and formulas as vectors)
-    Copyright (c) 2015-2026 yWorks GmbH
-    MIT License — https://github.com/yWorks/svg2pdf.js/blob/master/LICENSE
-
-  three.js r128 — 3D view for stl blocks; loaded only when a document contains them
-    Copyright (c) 2010-2021 three.js authors
-    MIT License — https://github.com/mrdoob/three.js/blob/dev/LICENSE
-
-  Twemoji (@twemoji/api v17.0.3) — replaces emoji in the editor interface and the preview with Twemoji images
-    Copyright (c) 2014-2021 Twitter; Copyright (c) 2022-present Jason Sofonia & Justine De Caires
-    MIT License — https://github.com/jdecked/twemoji/blob/main/LICENSE
-
-  Open Database License 1.0
-
-  OpenStreetMap map data and tiles — shown in geojson / topojson blocks (no code included)
-    Copyright (c) OpenStreetMap contributors
-    ODbL 1.0 — https://www.openstreetmap.org/copyright
-
-  SIL Open Font License 1.1
-
-  Google Sans
-    Copyright (c) Google Inc.
-    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
-
-  JetBrains Mono v2020
-    Copyright (c) 2020 JetBrains s.r.o.
-    SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
-
-  KaTeX fonts (derived from AMS Fonts / Computer Modern)
-    Copyright (c) 2013-2020 Khan Academy and other contributors
-    SIL Open Font License 1.1 — https://github.com/KaTeX/KaTeX/blob/main/LICENSE
-
-  Noto Sans, Noto Sans JP / KR / SC / TC, Noto Sans Arabic, Noto Sans Hebrew, Noto Sans Math,
-  Noto Sans Symbols 2 — embedded into exported PDF files
-  only for characters the document fonts do not cover
-    Copyright (c) Google LLC
-    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
-
-  Content delivery / font / map tile services (no code included): cdnjs (Cloudflare), jsDelivr, Google Fonts,
-  OpenStreetMap tile servers.
-
-  Optional AI features call external APIs with the user's own key (no code included; each
-  provider's terms of service apply): Anthropic API, Google Gemini API.
--->
+${_exportLicenseHeader(!!clone.querySelector('img.emoji'), !!tikzFonts)}
 <html lang="${currentLang}">
 <head>
 <meta charset="UTF-8">
@@ -383,7 +329,7 @@ function buildPreviewHTML(title, opts) {
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-${tikzFonts}${rdHead}<style>${PREVIEW_CSS}${RD_CSS}${COPY_CSS}</style>
+${tikzFonts}<style>${PREVIEW_CSS}${RD_CSS}${COPY_CSS}</style>
 </head>
 <body>
 ${bodyInner}
@@ -443,7 +389,11 @@ ${COPY_JS}</body>
 
 // Открывает предпросмотр в новом окне браузера (для печати/просмотра)
 function openPreviewWindow() {
-  if (!ed.value.trim()) return;
+  // Пустой документ показывать нечего — сообщаем об этом в модальном окне (как при скачивании)
+  if (!ed.value.trim()) {
+    showErrorModal(tr('pvEmptyMsg'), tr('pvEmptyTitle'));
+    return;
+  }
   const html = buildPreviewHTML();
   const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
   const win = window.open(url, '_blank');
@@ -738,6 +688,12 @@ let _pdfPagesRunning = false;
 let _pdfPagesDirty = false;
 let _pdfPagesSeq = 0;
 let _pdfPagesSkipped = false;
+// Последний посчитанный документ: тот же HTML (например, после смены языка интерфейса или
+// повторного рендера без правок) не раскладывается заново
+let _pdfPagesLastHtml = null;
+let _pdfPagesLastCount = null;
+// Идёт экспорт в PDF: фоновый подсчёт страниц ждёт его окончания, чтобы не нагружать браузер вдвойне
+let _pdfExporting = false;
 // Чип появляется/скрывается по ширине окна (см. styles.css: 768 и 1100 px)
 const _pdfPagesOnShow = () => {
   if (_pdfPagesSkipped) schedulePdfPageCount();
@@ -770,14 +726,22 @@ async function runPdfPageCount() {
     return;
   }
   _pdfPagesSkipped = false;
-  if (_pdfPagesRunning) {
+  if (_pdfPagesRunning || _pdfExporting) {
     _pdfPagesDirty = true;
+    return;
+  }
+  const html = buildPdfHTML(getDocTitle());
+  if (html === _pdfPagesLastHtml && _pdfPagesLastCount !== null) {
+    pc.textContent = Number(_pdfPagesLastCount).toLocaleString();
+    pc.parentElement.classList.remove('busy');
     return;
   }
   _pdfPagesRunning = true;
   const seq = _pdfPagesSeq;
   try {
-    const n = await window.ZmdPdf.countPages(buildPdfHTML(getDocTitle()));
+    const n = await window.ZmdPdf.countPages(html);
+    _pdfPagesLastHtml = html;
+    _pdfPagesLastCount = n;
     if (seq === _pdfPagesSeq) pc.textContent = Number(n).toLocaleString();
   } catch (e) {
     console.warn('PDF page count failed:', e);
@@ -797,18 +761,28 @@ async function runPdfPageCount() {
 // и скачивает его под именем документа. Если экспорт невозможен (например, без сети при пустом кэше),
 // используется прежний способ — диалог печати
 async function executePdfDownload() {
+  // Повторное нажатие во время экспорта не запускает второй экспорт параллельно
+  if (_pdfExporting) return;
   const title = getDocTitle();
   const pdfHTML = buildPdfHTML(title);
 
   if (window.ZmdPdf) {
     const stopBusy = startBusy('pdfGenerating');
+    _pdfExporting = true;
     try {
       await window.ZmdPdf.save(pdfHTML, { title, lang: currentLang });
       return;
     } catch (e) {
       console.warn('PDF export failed, falling back to the print dialog:', e);
     } finally {
+      _pdfExporting = false;
       stopBusy();
+      // Подсчёт страниц, отложенный на время экспорта
+      if (_pdfPagesDirty) {
+        _pdfPagesDirty = false;
+        clearTimeout(_pdfPagesTimer);
+        _pdfPagesTimer = setTimeout(runPdfPageCount, PDF_PAGES_DELAY_MS);
+      }
     }
   }
   printPdfViaDialog(pdfHTML);
@@ -839,6 +813,52 @@ function printPdfViaDialog(pdfHTML) {
 
 const COPY_SVG = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"/><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"/></svg>`;
 const CHECK_SVG = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 9 6 13 14 4"/></svg>`;
+
+// Значки интерфейса (SVG вместо символов ✓ ✕ ⚠ ⬇ ● ✎ × и эмодзи): одинаково выглядят во всех шрифтах,
+// не превращаются в цветные эмодзи Twemoji и не попадают в переводимые строки.
+const _ZI_OPEN =
+  '<svg class="zi" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">';
+const ZI = {
+  check: _ZI_OPEN + '<path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg>',
+  close: _ZI_OPEN + '<path d="M4 4l8 8M12 4l-8 8"/></svg>',
+  remove:
+    '<svg class="zi" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 4l8 8M12 4l-8 8"/></svg>',
+  warn:
+    _ZI_OPEN +
+    '<path d="M7.1 2.5a1 1 0 0 1 1.8 0l5.6 10a1 1 0 0 1-.9 1.5H2.4a1 1 0 0 1-.9-1.5Z"/><path d="M8 6.3v3"/><circle cx="8" cy="11.4" r=".9" fill="currentColor" stroke="none"/></svg>',
+  edit: _ZI_OPEN + '<path d="M10.6 2.6a1.6 1.6 0 0 1 2.3 2.3L5.4 12.4l-3 .7.7-3Z"/><path d="M9.4 3.8l2.3 2.3"/></svg>',
+  insert:
+    _ZI_OPEN +
+    '<path d="M8 2v7.6M4.8 6.6 8 9.8l3.2-3.2"/><path d="M2.5 10.5v1.8a1.7 1.7 0 0 0 1.7 1.7h7.6a1.7 1.7 0 0 0 1.7-1.7v-1.8"/></svg>',
+  refresh:
+    _ZI_OPEN +
+    '<path d="M13.4 6.2A5.6 5.6 0 0 0 3.3 4.6L2.2 5.9M2.6 9.8a5.6 5.6 0 0 0 10.1 1.6l1.1-1.3"/><path d="M2.2 2.6v3.3h3.3M13.8 13.4v-3.3h-3.3"/></svg>',
+  fileText:
+    _ZI_OPEN +
+    '<path d="M9.5 1.5H4.3a1.6 1.6 0 0 0-1.6 1.6v9.8a1.6 1.6 0 0 0 1.6 1.6h7.4a1.6 1.6 0 0 0 1.6-1.6V5.3Z"/><path d="M9.5 1.5v3.8h3.8"/><path d="M5.4 8.6h5.2M5.4 11.2h3.6"/></svg>',
+  filePdf:
+    _ZI_OPEN +
+    '<path d="M9.5 1.5H4.3a1.6 1.6 0 0 0-1.6 1.6v9.8a1.6 1.6 0 0 0 1.6 1.6h7.4a1.6 1.6 0 0 0 1.6-1.6V5.3Z"/><path d="M9.5 1.5v3.8h3.8"/><path d="M5.4 11.6V8.4h1a1 1 0 0 1 0 2h-1"/></svg>',
+  dots:
+    '<svg class="zi zi-dots" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><circle cx="3" cy="8" r="1.6"/><circle cx="8" cy="8" r="1.6"/><circle cx="13" cy="8" r="1.6"/></svg>'
+};
+
+// Значок + подпись: подпись в отдельном <span data-i18n>, чтобы applyLang менял только текст
+function _ziLabel(icon, key, text) {
+  return ZI[icon] + `<span data-i18n="${key}">${_escZi(text != null ? text : tr(key))}</span>`;
+}
+function _escZi(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+}
+// Вставляет текст в элемент; символ ↻ в переводах (ссылка на кнопку обновления) заменяется тем же SVG
+function _ziText(el, text) {
+  String(text)
+    .split('↻')
+    .forEach((part, i) => {
+      if (i) el.insertAdjacentHTML('beforeend', ZI.refresh);
+      if (part) el.appendChild(document.createTextNode(part));
+    });
+}
 
 const LANG_NAMES = {
   javascript: 'JavaScript',
@@ -1241,7 +1261,7 @@ function _findCodeRanges(v) {
     else if (prevBlank && info.bq === 0 && info.indent < 2) inList = false;
 
     if (info.bq === 0 && !inList) {
-      const dg = /^\s*(`{3,}|~{3,})\s*(?:mermaid|tikz|math|geojson|topojson|stl)\s*$/.exec(line);
+      const dg = /^\s*(`{3,}|~{3,})\s*(?:mermaid|tikz|math)\s*$/.exec(line);
       if (dg) {
         const endRe = new RegExp('^\\s*' + (dg[1][0] === '`' ? '`' : '~') + '{' + dg[1].length + ',}\\s*$');
         if (opaque(endRe, i + 1)) continue;
@@ -1664,7 +1684,8 @@ function _tikzShowError(wrap, item, kind) {
   // Вид ошибки и пакеты сохраняются, чтобы при смене языка пересобрать текст (_refreshTikzErrors)
   div.dataset.kind = kind;
   div.dataset.pkgs = kind !== 'load' && item && item.unsupported.length ? item.unsupported.join(', ') : '';
-  div.textContent = _tikzErrorText(div.dataset.kind, div.dataset.pkgs);
+  div.innerHTML = ZI.warn + '<span class="zi-txt"></span>';
+  div.lastChild.textContent = _tikzErrorText(div.dataset.kind, div.dataset.pkgs);
   wrap.replaceChildren(div);
 }
 function _tikzErrorText(kind, pkgs) {
@@ -1674,7 +1695,8 @@ function _tikzErrorText(kind, pkgs) {
 }
 function _refreshTikzErrors() {
   document.querySelectorAll('#mo .tikz-error[data-kind]').forEach(div => {
-    div.textContent = _tikzErrorText(div.dataset.kind, div.dataset.pkgs);
+    const txt = div.querySelector('.zi-txt') || div;
+    txt.textContent = _tikzErrorText(div.dataset.kind, div.dataset.pkgs);
   });
 }
 
@@ -1821,7 +1843,6 @@ function render(v) {
   // LaTeX-документы, Mermaid и TikZ вынимаем до экранирования HTML: в их коде бывают «<» и «>»
   v = _protectMermaid(v);
   v = _protectTikz(v);
-  v = _rdEmbeds(v);
   v = _rdFootnotes(v);
   if (!appSettings.htmlRendering) {
     // Код спрятан в токены, поэтому экранировать можно весь оставшийся текст
@@ -1873,9 +1894,11 @@ function render(v) {
                 if (wrap && !wrap.querySelector('svg') && !wrap.querySelector('.mermaid-error')) {
                   const errDiv = document.createElement('div');
                   errDiv.className = 'mermaid-error';
-                  errDiv.setAttribute('data-i18n', 'mermaidSyntaxError');
-                  errDiv.textContent =
-                    LANGS[currentLang]?.mermaidSyntaxError || LANGS['en'].mermaidSyntaxError;
+                  errDiv.innerHTML = _ziLabel(
+                    'warn',
+                    'mermaidSyntaxError',
+                    LANGS[currentLang]?.mermaidSyntaxError || LANGS['en'].mermaidSyntaxError
+                  );
                   wrap.appendChild(errDiv);
                 }
               }
@@ -1885,7 +1908,6 @@ function render(v) {
       });
     }
     _mountTikz();
-    _rdMountEmbeds();
     highlightCodeBlocks(mo);
     addCopyBtns();
   }
@@ -2045,6 +2067,70 @@ function iTikz() {
   ed.focus();
   render(ed.value);
 }
+// Вставляет блок-выноску GitHub (> [!NOTE]); выделенные строки становятся её текстом.
+// Тип (NOTE, TIP, IMPORTANT, WARNING, CAUTION) выделяется, чтобы его можно было сразу заменить
+function iAlert() {
+  if (_roGuard()) return;
+  const dt = LANGS[currentLang]?.defaultText || 'text';
+  const { s, e, t } = gs();
+  const pre = s > 0 && ed.value[s - 1] !== '\n' ? '\n\n' : '';
+  const body = (t || dt)
+    .split('\n')
+    .map(l => '> ' + l)
+    .join('\n');
+  const head = '> [!';
+  const r = `${pre}${head}NOTE]\n${body}\n`;
+  ed.value = ed.value.slice(0, s) + r + ed.value.slice(e);
+  ed.selectionStart = s + pre.length + head.length;
+  ed.selectionEnd = ed.selectionStart + 'NOTE'.length;
+  ed.focus();
+  render(ed.value);
+}
+// Вставляет ссылку на сноску [^n] у курсора и её определение в конец документа
+function iFootnote() {
+  if (_roGuard()) return;
+  const dt = LANGS[currentLang]?.defaultText || 'text';
+  const { s, e, t } = gs();
+  let n = 0;
+  ed.value.replace(/\[\^(\d+)\]/g, (_, d) => {
+    n = Math.max(n, +d);
+    return _;
+  });
+  n += 1;
+  const ref = `${t}[^${n}]`;
+  let v = ed.value.slice(0, s) + ref + ed.value.slice(e);
+  v = v.replace(/\s*$/, '');
+  const defHead = `\n\n[^${n}]: `;
+  v += defHead + dt + '\n';
+  ed.value = v;
+  // Курсор — на текст определения сноски, чтобы его сразу можно было вписать
+  ed.selectionStart = v.length - 1 - dt.length;
+  ed.selectionEnd = v.length - 1;
+  ed.focus();
+  ed.scrollTop = ed.scrollHeight;
+  render(ed.value);
+}
+// Вставляет блок метаданных (front matter) в начало документа; если он уже есть — выделяет его
+function iFrontMatter() {
+  if (_roGuard()) return;
+  const m = /^---[ \t]*\n([\s\S]*?)\n---[ \t]*(?:\n|$)/.exec(ed.value);
+  if (m) {
+    ed.selectionStart = 4;
+    ed.selectionEnd = 4 + m[1].length;
+    ed.focus();
+    return;
+  }
+  const dt = LANGS[currentLang]?.defaultText || 'text';
+  const d = new Date();
+  const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const head = '---\ntitle: ';
+  const r = `${head}${dt}\ndate: ${date}\n---\n\n`;
+  ed.value = r + ed.value;
+  ed.selectionStart = head.length;
+  ed.selectionEnd = head.length + dt.length;
+  ed.focus();
+  render(ed.value);
+}
 // Переключает вкладки редактор/превью на мобильных экранах
 function mTab(tab, btn) {
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('on'));
@@ -2114,10 +2200,10 @@ const LANGS = {
     aboutBtnTitle: 'Credits & Copyright',
     aiBtnTitle: 'AI Assistant',
     aiWelcome:
-      '👋 Hi! I\'m the AI Assistant (Claude) for this Markdown editor.<br><br>Enter your Anthropic API key and press "Save", then select text and click a preset, or ask anything freely.',
+      'Hi! I\'m the AI Assistant (Claude) for this Markdown editor.<br><br>Enter your Anthropic API key and press "Save", then select text and click a preset, or ask anything freely.',
     aiKeyPlaceholder: 'Enter Anthropic API key…',
     aiSaveBtn: 'Save',
-    aiSavedBtn: 'Saved ✓',
+    aiSavedBtn: 'Saved',
     aiPresetContinue: 'Continue',
     aiPresetSummarize: 'Summarize',
     aiPresetTranslateEn: 'To English',
@@ -2134,24 +2220,24 @@ const LANGS = {
     aiPresetFactcheckPrompt:
       'Fact-check this text and correct any claims that are inaccurate, outdated, or unverifiable. Return the corrected text directly, with no annotations or notes about what changed. If everything checks out, return the text unchanged.',
     aiInputPlaceholder: 'Ask a question or give an instruction…',
-    aiInsertBtn: '⬇ Insert into editor',
-    aiAcceptBtn: '✓ Accept',
-    aiRejectBtn: '✕ Reject',
-    aiEditApplied: '✓ Applied to editor',
-    aiEditDiscarded: '✕ Discarded',
-    aiEditStale: '⚠ Editor changed — could not apply',
-    aiKeyWarning: '⚠ Please enter your {backend} API key and press "Save".',
-    aiThinking: '● Thinking…',
+    aiInsertBtn: 'Insert into editor',
+    aiAcceptBtn: 'Accept',
+    aiRejectBtn: 'Reject',
+    aiEditApplied: 'Applied to editor',
+    aiEditDiscarded: 'Discarded',
+    aiEditStale: 'Editor changed — could not apply',
+    aiKeyWarning: 'Please enter your {backend} API key and press "Save".',
+    aiThinking: 'Thinking…',
     pvPopBtnTitle: 'Open in new window',
     ttTikz: 'TikZ figure (```tikz ... ```)',
-    tikzLoadError: '⚠ TikZ: could not load the TeX engine (an internet connection is needed the first time).',
-    tikzCompileError: '⚠ TikZ: compilation failed. Check the code for errors.',
+    tikzLoadError: 'TikZ: could not load the TeX engine (an internet connection is needed the first time).',
+    tikzCompileError: 'TikZ: compilation failed. Check the code for errors.',
     tikzUnsupportedPkgs: 'Packages not available in the browser TeX: {pkgs}',
     aiModelsRefreshTitle: 'Reload the model list from the API',
-    aiModelsFetchError: '⚠ Could not load the model list: ',
+    aiModelsFetchError: 'Could not load the model list: ',
     aiModelNotFound: 'This model is not available. Press ↻ to reload the model list and pick another one.',
-    aiRefusal: '⚠ The model declined to answer this request.',
-    aiErrorPrefix: '⚠ Error: ',
+    aiRefusal: 'The model declined to answer this request.',
+    aiErrorPrefix: 'Error: ',
     aiSelectedSuffix: ' (selected text: {n} chars)',
     aiEmptyResponse: '(empty response)',
     aiNavWarning: 'The AI is still responding. If you leave now, the response will be lost. Continue?',
@@ -2164,6 +2250,8 @@ const LANGS = {
     errOk: 'OK',
     dlEmptyTitle: 'Nothing to download',
     dlEmptyMsg: 'The document is empty. Write something before downloading.',
+    pvEmptyTitle: 'Cannot preview',
+    pvEmptyMsg: 'The document is empty. Write something before previewing.',
     errLangInvalid: 'Invalid language code: “{lang}”.',
     errLangNotFound: 'The language file “{file}” was not found.',
     errLangHttp: 'Failed to load the language file “{file}” (HTTP {status}).',
@@ -2175,7 +2263,7 @@ const LANGS = {
     aiTruncatedError:
       'Response was cut off (max output length reached) before producing any text. Try a shorter selection, or switch model.',
     aiDiffModalTitle: 'Review edit',
-    aiReviewEditMsg: '✎ Edit proposed',
+    aiReviewEditMsg: 'Edit proposed',
     aiOpenReviewBtn: 'Review',
     aiResetBtnTitle: 'Reset conversation',
     aiOfflineTitle: 'AI features are unavailable offline',
@@ -2184,10 +2272,10 @@ const LANGS = {
       'You are an AI assistant that helps write and edit Markdown documents. Use Markdown syntax appropriately and give helpful answers. Keep responses concise and practical. The user has a deliberate personal notation style, so avoid rewriting it more than necessary — instead improve readability with targeted techniques, such as consolidating math expressions into LaTeX.',
     aiAttachBtnTitle: 'Attach file',
     aiRemoveFileTitle: 'Remove file',
-    aiFileTooLarge: '⚠ File "{name}" is too large (max {max}).',
-    aiFileReadError: '⚠ Could not read file "{name}".',
-    aiUnsupportedFile: '⚠ Unsupported file type: "{name}".',
-    aiTooManyFiles: '⚠ Max {max} files per message.',
+    aiFileTooLarge: 'File "{name}" is too large (max {max}).',
+    aiFileReadError: 'Could not read file "{name}".',
+    aiUnsupportedFile: 'Unsupported file type: "{name}".',
+    aiTooManyFiles: 'Max {max} files per message.',
     aboutAuthor: 'Author',
     aboutAnd: ' and ',
     aboutCopyright: 'Copyright',
@@ -2197,12 +2285,12 @@ const LANGS = {
       'A Markdown editor with golden-ratio proportions and a Google-inspired color palette.',
     aboutLibraries: 'Libraries',
     aboutLibKatexCopy: '© 2013–2020 Khan Academy and contributors',
-    aboutLibMermaidCopy: '© 2014–2023 Knut Sveidqvist and contributors',
+    aboutLibMermaidCopy: '© 2014–2022 Knut Sveidqvist',
     aboutLibGoogleFontsBadge: 'SIL OFL 1.1',
-    aboutLibGoogleSansCopy: '© Google Inc. — SIL Open Font License 1.1',
-    aboutLibMarkedCopy: '© 2011–2018 Christopher Jeffrey',
+    aboutLibGoogleSansCopy: '© 2025 The Google Sans Project Authors',
+    aboutLibMarkedCopy: '© 2018+ MarkedJS, © 2011–2018 Christopher Jeffrey',
     aboutLibJetbrainsBadge: 'SIL OFL 1.1',
-    aboutLibJetbrainsCopy: '© 2020 JetBrains s.r.o.',
+    aboutLibJetbrainsCopy: '© 2020 The JetBrains Mono Project Authors',
     aboutLibTikzjaxBadge: 'GPL-3.0-or-later',
     aboutLibTikzjaxCopy: '© Jim Fowler, Glenn Rice and contributors',
     langBtnTitle: 'Language',
@@ -2220,7 +2308,7 @@ const LANGS = {
     defaultImgAlt: 'alt text',
     tblHeaderDefault: 'Header',
     tblCellDefault: 'Cell',
-    mermaidSyntaxError: '⚠ Mermaid: syntax error (diagram syntax error)',
+    mermaidSyntaxError: 'Mermaid: syntax error (diagram syntax error)',
     savedLabel: 'Saved',
     toastSaving: 'Saving…',
     toastSaved: 'Saved',
@@ -2277,6 +2365,9 @@ const LANGS = {
     ttDiff: 'Diff block (diff / diff_lang)',
     ttMermaid: 'Mermaid diagram (```mermaid ... ```)',
     ttTable: 'Insert custom table',
+    ttAlert: 'Callout (> [!NOTE])',
+    ttFootnote: 'Footnote ([^1])',
+    ttFrontMatter: 'Front matter (--- … ---)',
     fontSizeBtnTitle: 'Font size settings',
     fontPanelTitle: 'Font Sizes',
     fontH1: 'H1',
@@ -2519,7 +2610,7 @@ async function refreshAiModels(force) {
   if (!_aiKey) {
     if (force) {
       const backendName = AI_BACKEND === 'gemini' ? 'Google AI Studio' : 'Anthropic';
-      _aiAddMsg(t.aiKeyWarning.replace('{backend}', backendName), 'thinking');
+      _aiAddMsg(t.aiKeyWarning.replace('{backend}', backendName), 'thinking', null, 'warn');
     }
     return;
   }
@@ -2545,7 +2636,7 @@ async function refreshAiModels(force) {
       _populateAiSelects();
     }
   } catch (err) {
-    if (force) _aiAddMsg(t.aiModelsFetchError + err.message, 'thinking');
+    if (force) _aiAddMsg(t.aiModelsFetchError + err.message, 'thinking', null, 'warn');
   } finally {
     _aiModelsLoading = false;
     if (btn) btn.classList.remove('spin');
@@ -3065,7 +3156,7 @@ document.addEventListener('click', e => {
 
 // Twemoji (https://github.com/jdecked/twemoji) — код: MIT License, графика: CC BY 4.0
 const TWEMOJI_SKIP =
-  '#ed, pre, code, svg, textarea, select, option, script, style, noscript, iframe, .katex, .mermaid, .rd-embed, [contenteditable]';
+  '#ed, pre, code, svg, textarea, select, option, script, style, noscript, iframe, .katex, .mermaid, [contenteditable]';
 const _twemojiFailed = new Set();
 
 function twemojiSrc(raw) {
@@ -4886,19 +4977,21 @@ async function _addAiAttachment(file) {
   const t = LANGS[currentLang] || LANGS['en'];
   if (!_currentAiModelSupportsAttach()) return;
   if (_aiPendingAttachments.length >= AI_MAX_ATTACHMENTS) {
-    _aiAddMsg(t.aiTooManyFiles.replace('{max}', AI_MAX_ATTACHMENTS), 'thinking');
+    _aiAddMsg(t.aiTooManyFiles.replace('{max}', AI_MAX_ATTACHMENTS), 'thinking', null, 'warn');
     return;
   }
   const kind = _aiFileKind(file);
   if (!kind) {
-    _aiAddMsg(t.aiUnsupportedFile.replace('{name}', file.name), 'thinking');
+    _aiAddMsg(t.aiUnsupportedFile.replace('{name}', file.name), 'thinking', null, 'warn');
     return;
   }
   const maxSize = kind === 'text' ? AI_MAX_TEXT_SIZE : AI_MAX_BINARY_SIZE;
   if (file.size > maxSize) {
     _aiAddMsg(
       t.aiFileTooLarge.replace('{name}', file.name).replace('{max}', _aiFormatSize(maxSize)),
-      'thinking'
+      'thinking',
+      null,
+      'warn'
     );
     return;
   }
@@ -4923,7 +5016,7 @@ async function _addAiAttachment(file) {
     });
     _renderAiPendingAttachments();
   } catch (_) {
-    _aiAddMsg(t.aiFileReadError.replace('{name}', file.name), 'thinking');
+    _aiAddMsg(t.aiFileReadError.replace('{name}', file.name), 'thinking', null, 'warn');
   }
 }
 
@@ -4989,8 +5082,8 @@ function _buildAiAttachmentChip(a, removable) {
     chip.appendChild(img);
   } else {
     const icon = document.createElement('span');
-    icon.className = 'ai-chip-icon';
-    icon.textContent = a.kind === 'pdf' ? '📄' : '📝';
+    icon.className = 'ai-chip-icon ' + (a.kind === 'pdf' ? 'pdf' : 'txt');
+    icon.innerHTML = a.kind === 'pdf' ? ZI.filePdf : ZI.fileText;
     chip.appendChild(icon);
   }
   const nameSpan = document.createElement('span');
@@ -5004,7 +5097,7 @@ function _buildAiAttachmentChip(a, removable) {
     rm.className = 'ai-chip-rm';
     rm.title = t.aiRemoveFileTitle;
     rm.setAttribute('data-i18n-title', 'aiRemoveFileTitle');
-    rm.textContent = '×';
+    rm.innerHTML = ZI.remove;
     rm.onclick = () => removeAiAttachment(a.id);
     chip.appendChild(rm);
   }
@@ -5235,7 +5328,7 @@ function _aiOfferEdit(selS, selE, oldText, newText) {
   const card = document.createElement('div');
   card.className = 'ai-bubble a';
   card.id = 'diffCard_' + id;
-  card.innerHTML = `<span data-i18n="aiReviewEditMsg">${_escDiffHtml(t.aiReviewEditMsg)}</span> <button class="diff-open-btn" data-i18n="aiOpenReviewBtn" onclick="openDiffModal('${id}')">${_escDiffHtml(t.aiOpenReviewBtn)}</button>`;
+  card.innerHTML = `${ZI.edit}<span data-i18n="aiReviewEditMsg">${_escDiffHtml(t.aiReviewEditMsg)}</span> <button class="diff-open-btn" data-i18n="aiOpenReviewBtn" onclick="openDiffModal('${id}')">${_escDiffHtml(t.aiOpenReviewBtn)}</button>`;
   msgs.appendChild(card);
   msgs.scrollTop = msgs.scrollHeight;
 
@@ -5264,7 +5357,11 @@ function closeDiffModal() {
 // key — ключ строки интерфейса (текст карточки меняется вместе с языком)
 function _resolveDiffCard(id, key) {
   const card = document.getElementById('diffCard_' + id);
-  if (card) card.innerHTML = `<span data-i18n="${key}">${_escDiffHtml(tr(key))}</span>`;
+  const icon = key === 'aiEditApplied' ? 'check' : key === 'aiEditDiscarded' ? 'close' : 'warn';
+  if (card) {
+    card.classList.add('zi-' + icon);
+    card.innerHTML = `${ZI[icon]}<span data-i18n="${key}">${_escDiffHtml(tr(key))}</span>`;
+  }
   delete _aiPendingEdits[id];
   if (_aiActiveModalEditId === id) closeDiffModal();
 }
@@ -5309,11 +5406,9 @@ async function saveApiKey() {
   refreshAiModels(true);
   const btn = document.querySelector('.ai-ksave');
   // Временная подпись тоже через data-i18n — при смене языка она сразу переводится
-  btn.setAttribute('data-i18n', 'aiSavedBtn');
-  btn.textContent = tr('aiSavedBtn');
+  btn.innerHTML = _ziLabel('check', 'aiSavedBtn');
   setTimeout(() => {
-    btn.setAttribute('data-i18n', 'aiSaveBtn');
-    btn.textContent = tr('aiSaveBtn');
+    btn.innerHTML = `<span data-i18n="aiSaveBtn">${_escZi(tr('aiSaveBtn'))}</span>`;
   }, 1500);
 }
 
@@ -5325,8 +5420,30 @@ function toggleAiPanel() {
   if (_isOffline() && !p.classList.contains('open')) return;
   const open = p.classList.toggle('open');
   b.classList.toggle('on', open);
+  _splitForAiPanel(open);
   if (open) document.getElementById('aiInput').focus();
   setTimeout(clampEpFlex, 260);
+}
+
+// При открытии ИИ-панели оставшаяся ширина делится между редактором и превью в золотой
+// пропорции (61.8 : 38.2) — иначе редактор сохраняет ширину, а превью сжимается до минимума.
+// При закрытии возвращается прежнее соотношение (в том числе заданное перетаскиванием).
+let _epFlexBeforeAi = null;
+function _splitForAiPanel(open) {
+  const panes = document.getElementById('panes');
+  if (!panes || window.matchMedia('(max-width: 768px)').matches) return;
+  if (open) {
+    _epFlexBeforeAi = eP.style.flex;
+    const full = panes.getBoundingClientRect().width;
+    const aiW = 300; // ширина .ai-panel.open в styles.css
+    const available = full - aiW - 5;
+    if (full <= 0 || available <= 0) return;
+    const w = Math.max(200, available * 0.618);
+    eP.style.flex = `0 0 ${((w / full) * 100).toFixed(3)}%`;
+  } else if (_epFlexBeforeAi !== null) {
+    eP.style.flex = _epFlexBeforeAi;
+    _epFlexBeforeAi = null;
+  }
 }
 
 // Проверяет, находится ли браузер в автономном режиме (без сети)
@@ -5445,10 +5562,11 @@ updateAiOnlineState();
 _probeNetwork();
 _scheduleNetProbe();
 
-function _aiAddMsg(text, role, attachments) {
+// icon — необязательный значок из ZI для служебных сообщений (предупреждение, «думает…»)
+function _aiAddMsg(text, role, attachments, icon) {
   const msgs = document.getElementById('aiMsgs');
   const d = document.createElement('div');
-  d.className = 'ai-bubble ' + role;
+  d.className = 'ai-bubble ' + role + (icon ? ' zi-' + icon : '');
   if (attachments && attachments.length) {
     const row = document.createElement('div');
     row.className = 'ai-attachments';
@@ -5458,7 +5576,12 @@ function _aiAddMsg(text, role, attachments) {
   if (text) {
     const textNode = document.createElement('div');
     textNode.style.whiteSpace = 'pre-wrap';
-    textNode.textContent = text;
+    if (icon) {
+      textNode.innerHTML = ZI[icon];
+      _ziText(textNode, text);
+    } else {
+      textNode.textContent = text;
+    }
     d.appendChild(textNode);
   }
   msgs.appendChild(d);
@@ -5477,8 +5600,7 @@ function _aiAddInsertableMsg(text, pos) {
   const btn = document.createElement('button');
   btn.className = 'ai-insert vis';
   btn.style.marginTop = 'var(--s8)';
-  btn.setAttribute('data-i18n', 'aiInsertBtn');
-  btn.textContent = t.aiInsertBtn;
+  btn.innerHTML = _ziLabel('insert', 'aiInsertBtn', t.aiInsertBtn);
   btn.onclick = () => {
     if (_roGuard()) return;
     ed.value = ed.value.slice(0, pos) + text + ed.value.slice(pos);
@@ -5488,8 +5610,7 @@ function _aiAddInsertableMsg(text, pos) {
     btn.disabled = true;
     btn.style.opacity = '.5';
     btn.style.cursor = 'default';
-    btn.setAttribute('data-i18n', 'aiEditApplied');
-    btn.textContent = tr('aiEditApplied');
+    btn.innerHTML = _ziLabel('check', 'aiEditApplied');
   };
   wrap.appendChild(textDiv);
   wrap.appendChild(btn);
@@ -5620,7 +5741,7 @@ async function sendAi() {
 
   if (!_aiKey) {
     const backendName = AI_BACKEND === 'gemini' ? 'Google AI Studio' : 'Anthropic';
-    _aiAddMsg(t.aiKeyWarning.replace('{backend}', backendName), 'thinking');
+    _aiAddMsg(t.aiKeyWarning.replace('{backend}', backendName), 'thinking', null, 'warn');
     return;
   }
 
@@ -5643,7 +5764,7 @@ async function sendAi() {
 
   setAiResponding(true);
   _aiAbortController = new AbortController();
-  const thinking = _aiAddMsg(t.aiThinking, 'thinking');
+  const thinking = _aiAddMsg(t.aiThinking, 'thinking', null, 'dots');
 
   try {
     const text =
@@ -5666,7 +5787,7 @@ async function sendAi() {
   } catch (err) {
     thinking.remove();
     if (err.name !== 'AbortError') {
-      _aiAddMsg(t.aiErrorPrefix + err.message, 'thinking');
+      _aiAddMsg(t.aiErrorPrefix + err.message, 'thinking', null, 'warn');
       if (err instanceof TypeError) _probeNetwork();
     }
   } finally {

@@ -44,10 +44,6 @@ function _rdEsc(s) {
 
 let _rdFm = null;
 let _rdFn = null;
-let _rdEmbedStore = [];
-const _rdEmbedLive = new Map();
-let _rdEmbedTimer = null;
-const RD_EMBED_RE_SRC = 'geojson|topojson|stl';
 
 function _rdFrontMatter(v) {
   _rdFm = null;
@@ -119,7 +115,7 @@ function _rdFootnoteSection() {
       const total = _rdFn.counts[id] || 1;
       let backs = '';
       for (let k = 1; k <= total; k++) {
-        backs += ` <a class="rd-fnback" href="#zmd-fnref-${_rdEsc(id)}${k > 1 ? '-' + k : ''}">↩${k > 1 ? '<sup>' + k + '</sup>' : ''}</a>`;
+        backs += ` <a class="rd-fnback" aria-label="↩" href="#zmd-fnref-${_rdEsc(id)}${k > 1 ? '-' + k : ''}"><svg class="rd-fnback-ico" width="1em" height="1em" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4 2.6 7.4 6 10.8"/><path d="M2.6 7.4h7.6a3.3 3.3 0 0 1 0 6.6H8.4"/></svg>${k > 1 ? '<sup>' + k + '</sup>' : ''}</a>`;
       }
       return `<li id="zmd-fn-${_rdEsc(id)}">${html}${backs}</li>`;
     })
@@ -127,23 +123,10 @@ function _rdFootnoteSection() {
   return `<section class="footnotes"><h2 class="sr-only">Footnotes</h2><ol>${items}</ol></section>`;
 }
 
-function _rdEmbeds(v) {
-  _rdEmbedStore = [];
-  return v.replace(_diagramBlockRe(RD_EMBED_RE_SRC), (_, fence, lang, body) => {
-    _rdEmbedStore.push({ kind: lang, src: _restoreCode(body).trim() });
-    return `\n\n\x02EMB${_rdEmbedStore.length - 1}\x03\n\n`;
-  });
-}
-
 function _rdRestore(html) {
   return html
     .replace(/(?:<p>)?\x02FMT\x03(?:<\/p>)?/g, () => _rdFrontMatterHtml())
-    .replace(/\x02FNR(\d+)_(\d+)\x03/g, (_, n, k) => _rdFootnoteRefHtml(n, k))
-    .replace(/(?:<p>)?\x02EMB(\d+)\x03(?:<\/p>)?/g, (_, i) => {
-      const item = _rdEmbedStore[+i];
-      if (!item) return '';
-      return `<div class="rd-embed rd-embed-${item.kind}" data-kind="${item.kind}" data-idx="${i}"></div>`;
-    });
+    .replace(/\x02FNR(\d+)_(\d+)\x03/g, (_, n, k) => _rdFootnoteRefHtml(n, k));
 }
 
 const RD_ALERTS = {
@@ -271,227 +254,13 @@ function _rdBindPreview() {
     return;
   }
   const a = e.target.closest && e.target.closest('a[href^="#"]');
-  if (!a || a.closest('.rd-embed')) return;
+  if (!a) return;
   e.preventDefault();
   _rdScrollTo(a.getAttribute('href'));
   });
 }
 
-const _rdScripts = new Map();
-
-function _rdLoadScript(url) {
-  if (!_rdScripts.has(url)) {
-    _rdScripts.set(
-      url,
-      new Promise((resolve, reject) => {
-        const s = document.createElement('script');
-        s.src = url;
-        s.onload = resolve;
-        s.onerror = () => {
-          _rdScripts.delete(url);
-          reject(new Error('Failed to load ' + url));
-        };
-        document.head.appendChild(s);
-      })
-    );
-  }
-  return _rdScripts.get(url);
-}
-
-const RD_LEAFLET_BASE = 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist';
-
-function _rdLeaflet() {
-  if (!document.getElementById('rd-leaflet-css')) {
-    const l = document.createElement('link');
-    l.id = 'rd-leaflet-css';
-    l.rel = 'stylesheet';
-    l.href = RD_LEAFLET_BASE + '/leaflet.css';
-    document.head.appendChild(l);
-  }
-  return _rdLoadScript(RD_LEAFLET_BASE + '/leaflet.js').then(() => window.L);
-}
-
-function _rdSimpleStyle(feature) {
-  const p = (feature && feature.properties) || {};
-  const style = {};
-  if (p.stroke) style.color = p.stroke;
-  if (p['stroke-width'] != null) style.weight = +p['stroke-width'];
-  if (p['stroke-opacity'] != null) style.opacity = +p['stroke-opacity'];
-  if (p.fill) style.fillColor = p.fill;
-  if (p['fill-opacity'] != null) style.fillOpacity = +p['fill-opacity'];
-  return style;
-}
-
-async function _rdBuildMap(el, kind, src) {
-  const L = await _rdLeaflet();
-  let data = JSON.parse(src);
-  if (kind === 'topojson') {
-    await _rdLoadScript('https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js');
-    const feats = [];
-    Object.keys(data.objects || {}).forEach(name => {
-      const f = window.topojson.feature(data, data.objects[name]);
-      if (f.features) feats.push(...f.features);
-      else feats.push(f);
-    });
-    data = { type: 'FeatureCollection', features: feats };
-  }
-  const map = L.map(el, { scrollWheelZoom: false });
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
-  const layer = L.geoJSON(data, {
-    style: _rdSimpleStyle,
-    pointToLayer: (f, latlng) => {
-      const color = f.properties && f.properties['marker-color'];
-      return color
-        ? L.circleMarker(latlng, { radius: 8, color, fillColor: color, fillOpacity: 0.8 })
-        : L.marker(latlng);
-    },
-    onEachFeature: (f, lyr) => {
-      const p = f.properties || {};
-      if (p.title || p.description) {
-        lyr.bindPopup(
-          (p.title ? `<strong>${_rdEsc(p.title)}</strong>` : '') + (p.description ? `<div>${_rdEsc(p.description)}</div>` : '')
-        );
-      }
-    }
-  }).addTo(map);
-  const bounds = layer.getBounds();
-  if (bounds.isValid()) map.fitBounds(bounds, { maxZoom: 16, padding: [16, 16] });
-  else map.setView([0, 0], 2);
-  el._rdMap = map;
-}
-
-function _rdParseStl(text) {
-  const out = [];
-  const re = /vertex\s+([-+\d.eE]+)\s+([-+\d.eE]+)\s+([-+\d.eE]+)/g;
-  let m;
-  while ((m = re.exec(text))) out.push(+m[1], +m[2], +m[3]);
-  if (out.length < 9 || out.length % 9) throw new Error('Invalid ASCII STL');
-  return new Float32Array(out);
-}
-
-async function _rdBuildStl(el, src) {
-  await _rdLoadScript('https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js');
-  const THREE = window.THREE;
-  const positions = _rdParseStl(src);
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geo.computeVertexNormals();
-  geo.center();
-  geo.computeBoundingSphere();
-  const r = geo.boundingSphere.radius || 1;
-  const w = el.clientWidth || 600;
-  const h = 400;
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
-  renderer.setPixelRatio(window.devicePixelRatio || 1);
-  renderer.setSize(w, h);
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(45, w / h, r / 100, r * 100);
-  camera.position.set(0, 0, r * 3);
-  const mesh = new THREE.Mesh(
-    geo,
-    new THREE.MeshStandardMaterial({ color: 0x4285f4, metalness: 0.1, roughness: 0.55, side: THREE.DoubleSide })
-  );
-  mesh.rotation.x = -Math.PI / 2;
-  scene.add(mesh);
-  scene.add(new THREE.AmbientLight(0xffffff, 0.65));
-  const k1 = new THREE.DirectionalLight(0xffffff, 0.8);
-  k1.position.set(1, 1, 1);
-  scene.add(k1);
-  const k2 = new THREE.DirectionalLight(0xffffff, 0.35);
-  k2.position.set(-1, -1, -1);
-  scene.add(k2);
-  const draw = () => renderer.render(scene, camera);
-  let drag = null;
-  const cv = renderer.domElement;
-  cv.style.touchAction = 'none';
-  cv.addEventListener('pointerdown', e => {
-    drag = { x: e.clientX, y: e.clientY };
-    cv.setPointerCapture(e.pointerId);
-  });
-  cv.addEventListener('pointermove', e => {
-    if (!drag) return;
-    mesh.rotation.z += (e.clientX - drag.x) * 0.01;
-    mesh.rotation.x += (e.clientY - drag.y) * 0.01;
-    drag = { x: e.clientX, y: e.clientY };
-    draw();
-  });
-  cv.addEventListener('pointerup', () => {
-    drag = null;
-  });
-  cv.addEventListener(
-    'wheel',
-    e => {
-      e.preventDefault();
-      camera.position.z = Math.min(r * 20, Math.max(r * 1.2, camera.position.z * (e.deltaY > 0 ? 1.1 : 0.9)));
-      draw();
-    },
-    { passive: false }
-  );
-  el.appendChild(cv);
-  draw();
-}
-
-function _rdEmbedError(el, kind, err) {
-  el.innerHTML = '';
-  const d = document.createElement('div');
-  d.className = 'mermaid-error';
-  d.textContent = `⚠ ${kind}: ${err && err.message ? err.message : err}`;
-  el.appendChild(d);
-}
-
-function _rdMountEmbeds() {
-  const nodes = Array.from(mo.querySelectorAll('.rd-embed'));
-  const present = new Set();
-  let pending = false;
-  nodes.forEach(node => {
-    const item = _rdEmbedStore[+node.dataset.idx];
-    if (!item) return;
-    const key = item.kind + '\u0000' + item.src;
-    node.dataset.rdKey = key;
-    present.add(key);
-    const live = _rdEmbedLive.get(key);
-    if (live && !live.contains(node)) {
-      node.appendChild(live);
-      if (live._rdMap) live._rdMap.invalidateSize();
-    } else if (!live) {
-      pending = true;
-    }
-  });
-  for (const key of Array.from(_rdEmbedLive.keys())) if (!present.has(key)) _rdEmbedLive.delete(key);
-  clearTimeout(_rdEmbedTimer);
-  if (pending) _rdEmbedTimer = setTimeout(_rdBuildPending, 500);
-}
-
-function _rdBuildPending() {
-  mo.querySelectorAll('.rd-embed').forEach(node => {
-    const key = node.dataset.rdKey;
-    const item = _rdEmbedStore[+node.dataset.idx];
-    if (!key || !item || _rdEmbedLive.has(key) || node.firstChild) return;
-    const box = document.createElement('div');
-    box.className = 'rd-embed-box rd-embed-box-' + item.kind;
-    node.appendChild(box);
-    _rdEmbedLive.set(key, box);
-    const job = item.kind === 'stl' ? _rdBuildStl(box, item.src) : _rdBuildMap(box, item.kind, item.src);
-    job.catch(err => _rdEmbedError(box, item.kind.toUpperCase(), err));
-  });
-}
-
 function _rdPrepareExport(clone) {
-  clone.querySelectorAll('.rd-embed').forEach(node => {
-    const live = _rdEmbedLive.get(node.dataset.rdKey);
-    const cv = live && live.querySelector('canvas');
-    if (cv) {
-      const img = document.createElement('img');
-      img.src = cv.toDataURL('image/png');
-      img.style.cssText = 'max-width:100%;height:auto;display:block;margin:0 auto';
-      node.innerHTML = '';
-      node.appendChild(img);
-    }
-    node.querySelectorAll('.leaflet-control-container').forEach(n => n.remove());
-  });
   clone.querySelectorAll('input[type=checkbox]').forEach(cb => cb.setAttribute('disabled', ''));
   const ids = new Set(Array.from(clone.querySelectorAll('[id]')).map(n => n.id));
   clone.querySelectorAll('a[href^="#"]').forEach(a => {
@@ -500,9 +269,6 @@ function _rdPrepareExport(clone) {
     const slug = 'zmd-' + _rdSlug(decodeURIComponent(h));
     if (ids.has(slug)) a.setAttribute('href', '#' + slug);
   });
-  return clone.querySelector('.leaflet-container')
-    ? `<link rel="stylesheet" href="${RD_LEAFLET_BASE}/leaflet.css">\n`
-    : '';
 }
 
 const RD_CSS = `
@@ -523,12 +289,9 @@ const RD_CSS = `
     .md .footnotes ol{padding-left:var(--s21)}
     .md .rd-fnref a,.md .rd-fnback{border:0!important}
     .md .rd-fnback{margin-left:var(--s5)}
+    .md .rd-fnback-ico{display:inline-block;width:1em;height:1em;max-width:none;vertical-align:-.15em}
     .md .rd-color-chip{display:inline-block;width:.9em;height:.9em;border-radius:50%;margin-right:.4em;vertical-align:-.1em;border:1px solid rgba(0,0,0,.25)}
     .md .rd-frontmatter{margin-bottom:var(--s21)}
-    .md .rd-embed{margin-bottom:var(--s21)}
-    .md .rd-embed-box-geojson,.md .rd-embed-box-topojson{height:400px;border-radius:var(--r8);overflow:hidden;border:1.5px solid var(--bord);position:relative;z-index:0}
-    .md .rd-embed-box-stl{border-radius:var(--r8);overflow:hidden;border:1.5px solid var(--bord);background:var(--surf);line-height:0}
-    .md .rd-embed-box-stl canvas{max-width:100%;display:block;cursor:grab}
     .md details{margin-bottom:var(--s13)}
     .md details>summary{cursor:pointer;font-weight:600}
     .md kbd{font-family:var(--mono);font-size:.85em;padding:2px 6px;border:1px solid var(--bord);border-bottom-width:2px;border-radius:var(--r5);background:var(--surf)}

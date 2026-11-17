@@ -329,28 +329,38 @@
   // ---------- Полосы прокрутки ----------
   // При печати Chromium размечает и рисует полосы прокрутки у блоков с переполнением
   // (например, длинные строки кода): толщина 15 px или заданная через ::-webkit-scrollbar
-  function scrollbarSizes(win, el) {
-    if (!el || !el.getBoundingClientRect) return { h: 0, w: 0 };
-    const cs = win.getComputedStyle(el);
-    const bt = parseFloat(cs.borderTopWidth) || 0, bb = parseFloat(cs.borderBottomWidth) || 0;
-    const bl = parseFloat(cs.borderLeftWidth) || 0, br = parseFloat(cs.borderRightWidth) || 0;
-    const r = el.getBoundingClientRect();
-    // clientWidth/clientHeight округлены до целых: долю пикселя полосой не считаем,
-    // полоса есть только при реальном переполнении (или overflow: scroll)
-    let h = Math.max(0, Math.round((r.height - bt - bb - el.clientHeight) * 64) / 64);
-    let w = Math.max(0, Math.round((r.width - bl - br - el.clientWidth) * 64) / 64);
-    if (h < 1 || !(el.scrollWidth > el.clientWidth || cs.overflowX === 'scroll')) h = 0;
-    if (h) {
-      // clientHeight округлён до целых px, поэтому высота полосы выходит дробной (5,4375 вместо 5):
-      // точная высота — разница высоты блока с полосой и без неё
-      const ov = el.style.getPropertyValue('overflow-x'), pr = el.style.getPropertyPriority('overflow-x');
-      el.style.setProperty('overflow-x', 'hidden', 'important');
-      const exact = r.height - el.getBoundingClientRect().height;
-      if (ov) el.style.setProperty('overflow-x', ov, pr); else el.style.removeProperty('overflow-x');
-      if (exact > 0.5) h = exact;
+  // Толщины полос прокрутки сразу для многих элементов. Раньше для каждого блока шло
+  // «прочитать раскладку → изменить стиль → прочитать снова → вернуть стиль», и каждое чтение
+  // после изменения заставляло браузер заново раскладывать весь документ (layout thrashing).
+  // Теперь: все чтения → все изменения → одно чтение → все возвраты (две-три раскладки вместо сотен)
+  function scrollbarSizesBatch(win, els) {
+    const pre = els.map(el => {
+      if (!el || !el.getBoundingClientRect) return null;
+      const cs = win.getComputedStyle(el);
+      const bt = parseFloat(cs.borderTopWidth) || 0, bb = parseFloat(cs.borderBottomWidth) || 0;
+      const bl = parseFloat(cs.borderLeftWidth) || 0, br = parseFloat(cs.borderRightWidth) || 0;
+      const r = el.getBoundingClientRect();
+      let h = Math.max(0, Math.round((r.height - bt - bb - el.clientHeight) * 64) / 64);
+      let w = Math.max(0, Math.round((r.width - bl - br - el.clientWidth) * 64) / 64);
+      if (h < 1 || !(el.scrollWidth > el.clientWidth || cs.overflowX === 'scroll')) h = 0;
+      if (w < 1 || !(el.scrollHeight > el.clientHeight || cs.overflowY === 'scroll')) w = 0;
+      return { el, h, w, height: r.height };
+    });
+    const exact = pre.filter(p => p && p.h);
+    if (exact.length) {
+      exact.forEach(p => {
+        p.ov = p.el.style.getPropertyValue('overflow-x');
+        p.pr = p.el.style.getPropertyPriority('overflow-x');
+        p.el.style.setProperty('overflow-x', 'hidden', 'important');
+      });
+      exact.forEach(p => { p.after = p.el.getBoundingClientRect().height; });
+      exact.forEach(p => {
+        if (p.ov) p.el.style.setProperty('overflow-x', p.ov, p.pr); else p.el.style.removeProperty('overflow-x');
+        const d = p.height - p.after;
+        if (d > 0.5) p.h = d;
+      });
     }
-    if (w < 1 || !(el.scrollHeight > el.clientHeight || cs.overflowY === 'scroll')) w = 0;
-    return { h, w };
+    return pre.map(p => (p ? { h: p.h, w: p.w } : { h: 0, w: 0 }));
   }
 
   // Правила ::-webkit-scrollbar* из стилей документа, подходящие к элементу
@@ -384,10 +394,13 @@
   function collectScrollbars(win, doc, root) {
     const out = [];
     const clipCache = new Map();
-    root.querySelectorAll('*').forEach(el => {
+    const cand = Array.from(root.querySelectorAll('*')).filter(el => {
       const cs = win.getComputedStyle(el);
-      if (!/(auto|scroll)/.test(cs.overflowX + cs.overflowY) || cs.visibility !== 'visible') return;
-      const bars = scrollbarSizes(win, el);
+      return /(auto|scroll)/.test(cs.overflowX + cs.overflowY) && cs.visibility === 'visible';
+    });
+    const sizes = scrollbarSizesBatch(win, cand);
+    cand.forEach((el, i) => {
+      const bars = sizes[i];
       if (!bars.h && !bars.w) return;
       const r = el.getBoundingClientRect();
       const left = r.left + win.scrollX + el.clientLeft, top = r.top + win.scrollY + el.clientTop;
@@ -517,20 +530,27 @@
     doc.body.appendChild(M);
     // При печати прокручиваемые блоки фрагментируются, а в колонках — нет: выравниваем поведение.
     // Место под полосы прокрутки (при печати они есть) сохраняем внутренними отступами
+    // Сначала только чтения (стили копии и полосы прокрутки оригинала), потом только записи —
+    // иначе каждая запись перед следующим чтением вызывала бы полную перераскладку документа
     const origEls = root.querySelectorAll('*');
+    const targets = [];
     R2.querySelectorAll('*').forEach((el, i) => {
       const cs = win.getComputedStyle(el);
       if (/(auto|scroll|hidden)/.test(cs.overflowX + cs.overflowY)) {
-        const bars = scrollbarSizes(win, origEls[i]);
-        el.style.setProperty('overflow', 'clip', 'important');
-        // Внутри прокручиваемых блоков Chrome при печати соблюдает orphans, но не widows (когда
-        // оба правила сразу выполнить нельзя, строка кода может остаться одна в начале страницы),
-        // а в колонках блок целиком ушёл бы на следующую страницу
-        el.style.setProperty('widows', '1', 'important');
-        if (cs.display === 'block') el.style.setProperty('display', 'flow-root', 'important');
-        if (bars.h) el.style.setProperty('padding-bottom', (parseFloat(cs.paddingBottom) + bars.h) + 'px', 'important');
-        if (bars.w) el.style.setProperty('padding-right', (parseFloat(cs.paddingRight) + bars.w) + 'px', 'important');
+        targets.push({ el, orig: origEls[i], display: cs.display, pb: parseFloat(cs.paddingBottom), pr: parseFloat(cs.paddingRight) });
       }
+    });
+    const sizes = scrollbarSizesBatch(win, targets.map(t => t.orig));
+    targets.forEach((t, k) => {
+      const el = t.el, bars = sizes[k];
+      el.style.setProperty('overflow', 'clip', 'important');
+      // Внутри прокручиваемых блоков Chrome при печати соблюдает orphans, но не widows (когда
+      // оба правила сразу выполнить нельзя, строка кода может остаться одна в начале страницы),
+      // а в колонках блок целиком ушёл бы на следующую страницу
+      el.style.setProperty('widows', '1', 'important');
+      if (t.display === 'block') el.style.setProperty('display', 'flow-root', 'important');
+      if (bars.h) el.style.setProperty('padding-bottom', (t.pb + bars.h) + 'px', 'important');
+      if (bars.w) el.style.setProperty('padding-right', (t.pr + bars.w) + 'px', 'important');
     });
     // Копии изображений загружаются заново (даже из кэша — асинхронно): ждём их размеров
     await Promise.all(Array.from(R2.querySelectorAll('img')).map(img => Promise.race([
@@ -1521,7 +1541,7 @@
       return svgShift.get(root);
     };
     // Холст в документе (скрытый): атрибут lang на нём действует как на тексте страницы
-    const rasterCanvas = doc.createElement('canvas');
+    const rasterCanvas = readbackCanvas(doc);
     rasterCanvas.style.cssText = 'position:absolute;left:-99999px;top:0;visibility:hidden';
     doc.body.appendChild(rasterCanvas);
     // Растровые куски одной строки одного текстового узла рисуются одним изображением: текст CJK
@@ -1913,11 +1933,11 @@
         ctx.restore();
       });
     }
-    const data = canvas.toDataURL('image/png');
+    const data = rasterOf(canvas);
     const pt = toPt(left - padL, baseline - asc, page);
     withClip(pdf, clip, page, () => {
       setOpacity(pdf, st.opacity);
-      pdf.addImage(data, 'PNG', pt.x, pt.y, w * PAGE.k, (asc + desc) * PAGE.k, undefined, 'FAST');
+      pdf.addImage(data, 'RGBA', pt.x, pt.y, w * PAGE.k, (asc + desc) * PAGE.k, undefined, 'FAST');
     });
   }
 
@@ -2087,6 +2107,162 @@
     return { width: SENTINEL, height: SENTINEL, style: {}, ownerDocument: doc, getContext: () => ctx };
   }
 
+  // ---------- Растры без PNG ----------
+  // Раньше каждый растр (тени, градиенты, SVG, фоновые картинки, текст-растр) проходил круг
+  // canvas → toDataURL (PNG-кодирование) → jsPDF декодирует PNG → медленно делит RGBA по пикселям
+  // через DataView → заново фильтрует строки → сжимает на JS. Причём context2d.drawImage вызывал
+  // getImageProperties, который делал всё это ещё раз только ради ширины и высоты.
+  // Теперь берём пиксели напрямую (getImageData), делим каналы одним проходом по массиву,
+  // а сжатие (zlib) выполняет встроенный в браузер CompressionStream — асинхронно, не на JS.
+  function rasterOf(canvas) {
+    const w = Math.max(1, canvas.width), h = Math.max(1, canvas.height);
+    const d = canvas.getContext('2d', { willReadFrequently: true }).getImageData(0, 0, w, h);
+    return { data: d.data, width: w, height: h, __zraster: true };
+  }
+  // Холст, с которого будут читаться пиксели: getImageData быстрее с willReadFrequently
+  // (контекст создаётся в памяти, без копирования из видеопамяти при каждом чтении)
+  function readbackCanvas(doc) {
+    const c = doc.createElement('canvas');
+    c.getContext('2d', { willReadFrequently: true });
+    return c;
+  }
+
+  // Разделение каналов, фильтр строк PNG «Up» и сжатие zlib выполняются в Web Worker —
+  // в отдельном потоке, поэтому основной поток (и интерфейс редактора) ими не занят.
+  // Фильтр «Up» (1 байт типа + разность с предыдущей строкой) — это /Predictor 12 в PDF:
+  // тени и градиенты после него сжимаются в разы лучше
+  const RASTER_WORKER_SRC = `
+    function upRows(src, w, h, ch, pick, off) {
+      const stride = w * ch, out = new Uint8Array((stride + 1) * h);
+      let o = 0;
+      for (let y = 0; y < h; y++) {
+        out[o++] = 2;
+        for (let x = 0; x < w; x++) {
+          const i = (y * w + x) * 4, p = i - w * 4;
+          for (let c = 0; c < ch; c++) {
+            const v = src[i + off + c];
+            out[o++] = y ? (v - src[p + off + c]) & 255 : v;
+          }
+        }
+      }
+      return out;
+    }
+    async function deflate(bytes) {
+      const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate'));
+      return new Uint8Array(await new Response(stream).arrayBuffer());
+    }
+    onmessage = async e => {
+      const { id, buf, w, h } = e.data;
+      const px = new Uint8Array(buf);
+      let opaque = true;
+      for (let i = 3; i < px.length; i += 4) if (px[i] !== 255) { opaque = false; break; }
+      const rgb = await deflate(upRows(px, w, h, 3, 0, 0));
+      const alpha = opaque ? null : await deflate(upRows(px, w, h, 1, 0, 3));
+      postMessage({ id, rgb, alpha }, alpha ? [rgb.buffer, alpha.buffer] : [rgb.buffer]);
+    };
+  `;
+  function startRasterWorker(win) {
+    if (typeof win.Worker !== 'function' || typeof win.CompressionStream !== 'function') return null;
+    try {
+      const url = win.URL.createObjectURL(new win.Blob([RASTER_WORKER_SRC], { type: 'text/javascript' }));
+      const worker = new win.Worker(url);
+      win.URL.revokeObjectURL(url);
+      const waiting = new Map();
+      let seq = 0, failed = false;
+      worker.onmessage = e => {
+        const cb = waiting.get(e.data.id);
+        waiting.delete(e.data.id);
+        if (cb) cb.resolve(e.data);
+      };
+      worker.onerror = err => {
+        failed = true;
+        waiting.forEach(cb => cb.reject(err));
+        waiting.clear();
+      };
+      return {
+        encode(px, w, h) {
+          if (failed) return Promise.reject(new Error('raster worker failed'));
+          const id = ++seq;
+          // Копия пикселей передаётся воркеру без копирования (transfer)
+          const buf = px.slice().buffer;
+          return new Promise((resolve, reject) => {
+            waiting.set(id, { resolve, reject });
+            worker.postMessage({ id, buf, w, h }, [buf]);
+          });
+        },
+        stop() { worker.terminate(); }
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function installFastRaster(pdf, win) {
+    const pending = [];
+    const canDeflate = typeof win.CompressionStream === 'function';
+    const worker = startRasterWorker(win);
+    // Запасной путь, если воркер недоступен (или упал): то же самое в основном потоке —
+    // фильтр строк на JS, сжатие по-прежнему встроенным CompressionStream (асинхронно)
+    async function encodeHere(px, w, h) {
+      const n = w * h, rgb = new Uint8Array(n * 3), a = new Uint8Array(n);
+      let opaque = true;
+      for (let i = 0, j = 0, k = 0; k < n; k++, i += 4) {
+        rgb[j++] = px[i]; rgb[j++] = px[i + 1]; rgb[j++] = px[i + 2];
+        a[k] = px[i + 3];
+        if (px[i + 3] !== 255) opaque = false;
+      }
+      const up = (src, ch) => {
+        const stride = w * ch, out = new Uint8Array((stride + 1) * h);
+        for (let y = 0, o = 0; y < h; y++) {
+          out[o++] = 2;
+          const r = y * stride;
+          for (let i = 0; i < stride; i++) out[o++] = y ? (src[r + i] - src[r - stride + i]) & 255 : src[r + i];
+        }
+        return out;
+      };
+      const deflate = async bytes => new Uint8Array(await new win.Response(
+        new win.Blob([bytes]).stream().pipeThrough(new win.CompressionStream('deflate'))).arrayBuffer());
+      return { rgb: await deflate(up(rgb, 3)), alpha: opaque ? null : await deflate(up(a, 1)) };
+    }
+    const origPNG = pdf.processPNG;
+    // Свой обработчик формата RGBA: addImage вызывает this.processRGBA для объектов {data, width, height}.
+    // Возвращается «заготовка» изображения; данные дописываются, когда они будут сжаты
+    // (jsPDF читает их только в pdf.output)
+    pdf.processRGBA = function (img, index, alias, compression) {
+      const w = img.width, h = img.height;
+      if (!canDeflate) {
+        // Совсем старые браузеры (без CompressionStream): прежний путь через PNG
+        const c = win.document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').putImageData(new win.ImageData(img.data, w, h), 0, 0);
+        const bin = win.atob(c.toDataURL('image/png').split(',')[1]);
+        const bytes = new win.Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return origPNG.call(this, bytes, index, alias, compression || 'FAST');
+      }
+      const res = {
+        alias, index, width: w, height: h, colorSpace: 'DeviceRGB', bitsPerComponent: 8, data: '',
+        filter: 'FlateDecode', predictor: 12, decodeParameters: '/Predictor 12 /Colors 3 /BitsPerComponent 8 /Columns ' + w
+      };
+      const job = worker ? worker.encode(img.data, w, h).catch(() => encodeHere(img.data, w, h)) : encodeHere(img.data, w, h);
+      pending.push(job.then(out => {
+        res.data = bytesToBinary(out.rgb);
+        if (out.alpha) res.sMask = bytesToBinary(out.alpha);
+      }));
+      return res;
+    };
+    // context2d.drawImage спрашивает размеры через getImageProperties — для растров отвечаем сразу
+    const origProps = pdf.getImageProperties;
+    pdf.getImageProperties = function (data) {
+      if (data && data.__zraster) return { width: data.width, height: data.height, fileType: 'RGBA' };
+      return origProps.apply(this, arguments);
+    };
+    // Дожидается сжатия всех растров (вызывается перед pdf.output)
+    return async () => {
+      try { await Promise.all(pending); } finally { if (worker) worker.stop(); }
+    };
+  }
+
   function patchContext(pdf, win, images) {
     const ctx = pdf.context2d;
     // Изображения всегда сжимаем; одинаковые данные встраиваются один раз
@@ -2094,7 +2270,7 @@
     const aliases = new Map();
     let aliasSeq = 0;
     pdf.addImage = function (data, format, x, y, w, h, alias, compression, rotation) {
-      if (!alias && (typeof data === 'string' || data instanceof win.Uint8Array)) {
+      if (!alias && (typeof data === 'string' || data instanceof win.Uint8Array || (data && data.__zraster))) {
         alias = aliases.get(data);
         if (!alias) { alias = 'zimg' + (++aliasSeq); aliases.set(data, alias); }
       }
@@ -2122,7 +2298,7 @@
     let lastWasText = false;
     const patterns = new Map();
     let patSeq = 0;
-    const canvas = win.document.createElement('canvas');
+    const canvas = readbackCanvas(win.document);
 
     // Текст рисует отдельный слой, поэтому здесь его пропускаем (вместе с линиями оформления)
     ctx.fillText = function () { lastWasText = true; };
@@ -2145,7 +2321,7 @@
       // Градиент перерисовывается заново: вдоль оси — с запасом разрешения (резкие границы цветов),
       // поперёк горизонтального/вертикального градиента достаточно одного пикселя
       const g = source.__zgrad;
-      const c = win.document.createElement('canvas');
+      const c = readbackCanvas(win.document);
       const w = source.width, h = source.height;
       if (g) {
         const horiz = Math.abs(g.y1 - g.y0) < 1e-6, vert = Math.abs(g.x1 - g.x0) < 1e-6;
@@ -2164,7 +2340,7 @@
         c.height = Math.max(1, h);
         c.getContext('2d').drawImage(source, 0, 0);
       }
-      return { data: c.toDataURL('image/png'), pw: c.width, ph: c.height, w, h };
+      return { data: rasterOf(c), pw: c.width, ph: c.height, w, h };
     };
 
     // Прозрачность (rgba и globalAlpha) context2d jsPDF не поддерживает: задаём GState
@@ -2223,10 +2399,13 @@
       const dx = (this.shadowOffsetX || 0) * k, dy = (this.shadowOffsetY || 0) * k;
       const blur = (this.shadowBlur || 0) * k;
       const pad = blur * 1.5 + 2;
-      // Разрешение растра тени — 300 dpi, как у Chrome при печати (при меньшем край размытия заметно другой)
-      const S = 300 / 72;
+      // Разрешение растра тени. Раньше всегда 300 dpi: тень большого блока (код, диаграмма) давала
+      // растр в миллионы пикселей, почти весь прозрачный, — его чтение и сжатие были самой дорогой
+      // частью отрисовки. Размытая тень — плавный градиент без резких краёв, поэтому 150 dpi
+      // на глаз не отличаются; для очень больших блоков разрешение снижается ещё (не более ~1,5 Мп)
       const wPt = maxX - minX + pad * 2, hPt = maxY - minY + pad * 2;
-      if (wPt <= 0 || hPt <= 0 || wPt * hPt * S * S > 4e7) return;
+      if (wPt <= 0 || hPt <= 0) return;
+      const S = Math.max(72 / 72, Math.min(150 / 72, Math.sqrt(1.5e6 / (wPt * hPt))));
       canvas.width = Math.ceil(wPt * S);
       canvas.height = Math.ceil(hPt * S);
       const cx = canvas.getContext('2d');
@@ -2265,7 +2444,7 @@
         cx.fill();
         cx.globalCompositeOperation = 'source-over';
       }
-      const data = canvas.toDataURL('image/png');
+      const data = rasterOf(canvas);
       this.save();
       this.setTransform(1, 0, 0, 1, 0, 0);
       origDrawImage.call(this, data, 0, 0, canvas.width, canvas.height, minX - pad + dx, minY - pad + dy, wPt, hPt);
@@ -2301,7 +2480,7 @@
           cx.setTransform(1, 0, 0, 1, 0, 0);
           cx.clearRect(0, 0, cw, ch);
           cx.drawImage(img, sx, sy, sw, sh, 0, 0, cw, ch);
-          return origDrawImage.call(this, canvas.toDataURL('image/png'), 0, 0, cw, ch, dx, dy, dw, dh);
+          return origDrawImage.call(this, rasterOf(canvas), 0, 0, cw, ch, dx, dy, dw, dh);
         }
         const known = src && images.get(src);
         if (known) {
@@ -2316,7 +2495,7 @@
         cx.setTransform(1, 0, 0, 1, 0, 0);
         cx.clearRect(0, 0, w, h);
         cx.drawImage(img, 0, 0);
-        return origDrawImage.call(this, canvas.toDataURL('image/png'), sx, sy, sw, sh, dx, dy, dw, dh);
+        return origDrawImage.call(this, rasterOf(canvas), sx, sy, sw, sh, dx, dy, dw, dh);
       } catch (e) {
         console.warn('[pdf] image skipped', src, e);
       }
@@ -2413,11 +2592,38 @@
         const isPng = bytes[0] === 0x89 && bytes[1] === 0x50;
         const isJpg = bytes[0] === 0xFF && bytes[1] === 0xD8;
         if (!isPng && !isJpg) return;
-        map.set(src, { data: bytes, w: img.naturalWidth, h: img.naturalHeight });
+        let data = bytes;
+        // JPEG встраивается как есть (без перекодирования). PNG декодирует сам браузер (нативно),
+        // а не JS-декодер jsPDF: дальше он идёт тем же быстрым путём, что и остальные растры
+        if (isPng && typeof doc.defaultView.createImageBitmap === 'function') {
+          try {
+            const bmp = await doc.defaultView.createImageBitmap(new doc.defaultView.Blob([bytes], { type: 'image/png' }));
+            const c = readbackCanvas(doc);
+            c.width = bmp.width; c.height = bmp.height;
+            c.getContext('2d').drawImage(bmp, 0, 0);
+            if (bmp.close) bmp.close();
+            data = rasterOf(c);
+          } catch (e) { data = bytes; }
+        }
+        map.set(src, { data, w: img.naturalWidth, h: img.naturalHeight });
         if (img.src !== src) map.set(img.src, map.get(src));
       } catch (e) { /* будет нарисовано через canvas */ }
     }));
     return map;
+  }
+
+  // Что html2canvas может не копировать. Он клонирует ВЕСЬ документ, хотя рисует только копию,
+  // которую jsPDF.html() кладёт в отдельный контейнер:
+  //  - исходный блок документа (root) — его копию уже сделал jsPDF, рисуется именно она;
+  //  - содержимое SVG, которое в onclone всё равно заменяется готовым изображением. Для каждого
+  //    элемента внутри SVG html2canvas переносит в копию все ~350 вычисленных свойств CSS —
+  //    на диаграммах Mermaid это была заметная часть всего экспорта
+  function makeIgnore(root) {
+    return el => {
+      if (el === root) return true;
+      if (!el.closest || el.hasAttribute && el.hasAttribute('data-zpdf-svg')) return false;
+      return !!el.closest('svg[data-zpdf-svg]');
+    };
   }
 
   // Подготовка копии для html2canvas: скрываем всё, что рисует слой текста, и привязываем
@@ -2775,6 +2981,7 @@
     const registry = makeFontRegistry(pdf);
     const pieces = await assignFonts(registry, runs, markerRuns, lang, webFontRanges(doc));
 
+    const rastersReady = installFastRaster(pdf, win);
     hookGradients(win);
     patchContext(pdf, win, images);
     // Все страницы создаются заранее: context2d выводит q/Q (save/restore) на каждую существующую
@@ -2795,6 +3002,7 @@
       autoPaging: 'slice',
       html2canvas: {
         backgroundColor: null, logging: false, useCORS: true, allowTaint: false, onclone: makeOnClone(cloneInfo),
+        ignoreElements: makeIgnore(root),
         canvas: makeH2cCanvas(pdf, doc, pages * PAGE.contentH - 0.01, cloneInfo)
       },
       callback: () => {}
@@ -2815,9 +3023,17 @@
     metrics.dispose();
 
     const title = opts.title || 'document';
-    pdf.setProperties({ title, creator: 'Złoty MD', producer: 'Złoty MD (jsPDF)' });
+    const props = { title, creator: 'Złoty MD', producer: 'Złoty MD (jsPDF)' };
+    // Эмодзи в PDF — изображения Twemoji (CC BY 4.0): лицензия требует указать авторство и там,
+    // где распространяется сам документ, поэтому упоминание добавляется в свойства PDF
+    if (root.querySelector('img.emoji')) {
+      props.subject = 'Emoji graphics: Twemoji, Copyright (c) Twitter, Inc and other contributors, ' +
+        'licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)';
+    }
+    pdf.setProperties(props);
     try { pdf.setLanguage(lang); } catch (e) { /* код языка не из списка jsPDF */ }
     pdf.viewerPreferences({ DisplayDocTitle: true });
+    await rastersReady();
     return { buffer: pdf.output('arraybuffer') };
   }
 
