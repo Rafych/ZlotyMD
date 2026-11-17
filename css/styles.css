@@ -130,6 +130,9 @@ body {
 .hd::after {
   content: '';
   position: absolute;
+  /* Полоса свисает на 3px ниже шапки, поверх панелей; z-index нужен, чтобы её не перекрывало
+     превью (у .pp есть container-type, а он создаёт собственный контекст наложения) */
+  z-index: 1;
   bottom: -3px;
   left: 0;
   right: 0;
@@ -242,6 +245,24 @@ body {
   margin: 0 var(--s5);
 }
 
+/* Тонкие полосы прокрутки по умолчанию — и вертикальные, и горизонтальные (overflow-x у таблиц,
+   формул, диаграмм и превью); у отдельных элементов ниже свои правила */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bord);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--sub);
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 /* Базовые стили кнопок панели инструментов */
 .btn {
   width: 34px;
@@ -346,10 +367,37 @@ body {
 }
 .pp {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   border-left: 1.5px solid var(--bord);
+  container-type: inline-size;
+}
+#pP .pl {
+  min-width: 0;
+  overflow: hidden;
+}
+#pP .pl > span {
+  white-space: nowrap;
+}
+.pv-pop-btn {
+  flex-shrink: 0;
+}
+/* Узкое превью (например, рядом с ИИ-панелью): у кнопки «Открыть» остаётся только значок,
+   а при совсем малой ширине прячется и подпись «Превью» */
+@container (max-width: 320px) {
+  #pP .pv-pop-btn [data-i18n='openWindow'] {
+    display: none;
+  }
+  #pP .pv-pop-btn {
+    padding: 0 var(--s8);
+  }
+}
+@container (max-width: 220px) {
+  #pP .pl > [data-i18n='previewLabel'] {
+    display: none;
+  }
 }
 
 .pl {
@@ -527,6 +575,7 @@ body {
 }
 #ed::-webkit-scrollbar {
   width: 5px;
+  height: 5px;
 }
 #ed::-webkit-scrollbar-thumb {
   background: var(--bord);
@@ -542,6 +591,7 @@ body {
 }
 #pv::-webkit-scrollbar {
   width: 5px;
+  height: 5px;
 }
 #pv::-webkit-scrollbar-thumb {
   background: var(--bord);
@@ -1123,6 +1173,14 @@ body {
   font-family: var(--mono);
   text-align: left;
 }
+.md .mermaid-error svg.zi {
+  display: inline-block;
+  width: 1.25em;
+  height: 1.25em;
+  max-width: none;
+  margin: 0 0.5em 0 0;
+  vertical-align: -0.25em;
+}
 
 .empty {
   display: flex;
@@ -1612,6 +1670,13 @@ body {
   margin: var(--s5) var(--s8);
   background: var(--bord);
 }
+/* Общий размер SVG-значков интерфейса (ZI в app.js); конкретные места уточняют размер */
+svg.zi {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
 img.emoji {
   display: inline-block;
   width: 1em;
@@ -1623,11 +1688,29 @@ img.emoji {
   max-width: none;
   border-radius: 0;
 }
-.lang-opt img.emoji {
+.lang-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 1.25em;
-  height: 1.25em;
-  margin: 0;
-  vertical-align: -0.2em;
+  flex-shrink: 0;
+  visibility: hidden;
+}
+.lang-check svg {
+  width: 14px;
+  height: 14px;
+}
+.lang-opt.active .lang-check {
+  visibility: visible;
+}
+.lang-ico {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.lang-ico svg {
+  width: 15px;
+  height: 15px;
 }
 
 .save-chip {
@@ -2799,6 +2882,16 @@ img.emoji {
   flex-shrink: 0;
   font-size: 12px;
 }
+.ai-chip-icon .zi {
+  width: 15px;
+  height: 15px;
+}
+.ai-chip-icon.pdf {
+  color: var(--gr);
+}
+.ai-chip-icon.txt {
+  color: var(--gb);
+}
 .ai-chip-name {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2811,8 +2904,14 @@ img.emoji {
   cursor: pointer;
   font-size: 13px;
   line-height: 1;
-  padding: 0 2px;
+  padding: 2px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.ai-chip-rm .zi {
+  width: 11px;
+  height: 11px;
 }
 .ai-chip-rm:hover {
   color: var(--gr);
@@ -2835,7 +2934,14 @@ img.emoji {
   transition: opacity 0.15s;
 }
 .ai-insert.vis {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s5);
+}
+.ai-insert .zi {
+  width: 13px;
+  height: 13px;
 }
 .ai-insert:hover {
   opacity: 0.8;
@@ -2847,6 +2953,10 @@ img.emoji {
 }
 .diff-btn {
   flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s5);
   padding: var(--s8);
   border: none;
   background: transparent;
@@ -2868,6 +2978,10 @@ img.emoji {
 }
 .diff-btn.reject:hover {
   background: var(--grt);
+}
+.diff-btn .zi {
+  width: 13px;
+  height: 13px;
 }
 /* Выбор бэкенда и модели ИИ */
 .ai-modelrow {
@@ -2905,6 +3019,10 @@ body.ai-dot-on .ai-dot {
   flex-shrink: 0;
   width: 22px;
   height: 22px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--r5);
   border: 1.5px solid var(--bord);
   background: var(--bg);
@@ -2914,11 +3032,15 @@ body.ai-dot-on .ai-dot {
   cursor: pointer;
   transition: border-color 0.12s, color 0.12s;
 }
+.ai-models-refresh svg {
+  width: 12px;
+  height: 12px;
+}
 .ai-models-refresh:hover {
   border-color: var(--gb);
   color: var(--gb);
 }
-.ai-models-refresh.spin {
+.ai-models-refresh.spin svg {
   animation: ai-models-spin 0.8s linear infinite;
 }
 @keyframes ai-models-spin {
@@ -2945,6 +3067,9 @@ body.ai-dot-on .ai-dot {
   flex-shrink: 0;
   stroke: #7a4f00;
   fill: none;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 #aiKey {
   cursor: text;
@@ -2975,6 +3100,65 @@ body.ai-dot-on .ai-dot {
 .ai-ksave:hover {
   background: var(--gy);
   color: #fff;
+}
+.ai-ksave {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.ai-ksave .zi {
+  width: 10px;
+  height: 10px;
+}
+/* Значки в сообщениях ИИ-панели (предупреждения, «думает…», итог правки) */
+.ai-bubble > .zi,
+.ai-bubble > div > .zi {
+  width: 1.15em;
+  height: 1.15em;
+  vertical-align: -0.22em;
+  margin-right: 0.4em;
+}
+/* Значок кнопки обновления внутри текста («нажмите ↻») */
+.ai-bubble > div > .zi:not(:first-child) {
+  margin: 0 0.15em;
+}
+.ai-bubble > .zi:first-child {
+  color: var(--gb);
+}
+.ai-bubble.zi-check > .zi:first-child {
+  color: var(--gg);
+}
+.ai-bubble.zi-close > .zi:first-child {
+  color: var(--gr);
+}
+.ai-bubble.zi-warn > .zi:first-child,
+.ai-bubble.zi-warn > div > .zi:first-child {
+  color: #b06000;
+}
+.zi-dots circle {
+  animation: zi-dot 1.2s ease-in-out infinite;
+}
+.zi-dots circle:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.zi-dots circle:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes zi-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .zi-dots circle {
+    animation: none;
+    opacity: 0.6;
+  }
 }
 .ai-btn {
   width: 34px;
