@@ -766,6 +766,12 @@ body {
   background: var(--canvas);
   scrollbar-gutter: stable;
 }
+/* Узкая панель превью (например, при открытой панели ИИ): заголовки не крупнее φ^5 % и φ^4 %
+   ширины панели, чтобы H1 не разбивался по одной-две буквы на строку */
+#pv > .md {
+  --fz-h1-fit: min(var(--fz-h1, var(--f42)), max(var(--f21), 11.09cqi));
+  --fz-h2-fit: min(var(--fz-h2, var(--f26)), max(var(--f18), 6.854cqi));
+}
 #pv > .md {
   box-sizing: border-box;
   max-inline-size: calc(var(--measure) + 2 * var(--s55));
@@ -830,7 +836,7 @@ body {
   color: var(--txt);
 }
 .md h1 {
-  font-size: var(--fz-h1, var(--f42));
+  font-size: var(--fz-h1-fit, var(--fz-h1, var(--f42)));
   font-weight: 700;
   letter-spacing: -0.0213em; /* φ^-8 em */
   margin-top: var(--s55);
@@ -856,7 +862,7 @@ body {
   );
 }
 .md h2 {
-  font-size: var(--fz-h2, var(--f26));
+  font-size: var(--fz-h2-fit, var(--fz-h2, var(--f26)));
   font-weight: 700;
   letter-spacing: -0.0132em; /* φ^-9 em */
   margin-top: var(--s42);
@@ -1581,17 +1587,44 @@ body {
     display: none;
   }
 }
-/* Сенсорные экраны: цели касания не меньше φ² rem (≈ 42px) */
-@media (pointer: coarse) {
-  .btn,
-  .about-btn,
-  .ai-btn {
-    width: var(--s42);
-    height: var(--s42);
+/* Узкие экраны: кнопки шапки не помещаются — шапка прокручивается по горизонтали (цели касания
+   остаются φ² rem), правый край растворяется на φ^0.5 rem. Фирменная полоса рисуется фоном шапки,
+   чтобы не уезжать вместе с прокруткой */
+@media (max-width: 29.0344em) {
+  .hd {
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    padding-inline-end: var(--s21);
+    background:
+      linear-gradient(
+          90deg,
+          var(--gb) 0 44.72%,
+          var(--gr) 44.72% 72.36%,
+          var(--gy) 72.36% 89.44%,
+          var(--gg) 89.44%
+        )
+        bottom / 100% var(--s2) no-repeat,
+      var(--bg);
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--s21)), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - var(--s21)), transparent);
   }
-  .lang-btn,
-  .tab {
-    height: var(--s42);
+  .hd::-webkit-scrollbar {
+    display: none;
+  }
+  .hd::after {
+    content: none;
+  }
+  .hd > * {
+    scroll-snap-align: start;
+  }
+  /* Панель инструментов здесь всё равно скрыта (tb-off) — она не должна занимать место */
+  .hd .tb.tb-off {
+    flex: 0 0 0;
+    padding: 0;
+    margin: 0;
   }
 }
 
@@ -1971,12 +2004,6 @@ img.emoji {
   max-width: none;
   border-radius: 0;
 }
-.lang-opt img.emoji {
-  width: 1.25em;
-  height: 1.25em;
-  margin: 0;
-  vertical-align: -0.2em;
-}
 
 .save-chip {
   display: flex;
@@ -2152,7 +2179,7 @@ img.emoji {
 }
 @media (max-width: 22.8254em) {
   .font-row {
-    grid-template-columns: var(--s42) var(--s26) 1fr var(--s42) var(--s16);
+    grid-template-columns: var(--s68) var(--s26) 1fr var(--s42) var(--s16);
     gap: var(--s5);
   }
   .font-preview {
@@ -3846,5 +3873,144 @@ body.ai-dot-on .ai-dot {
   }
   #pv > .md {
     border-color: CanvasText;
+  }
+}
+
+/* ── Значки SVG для подписей, которые меняются при смене языка (textContent).
+      Значок рисуется псевдоэлементом через mask, поэтому перевод текста его не стирает.
+      Размер φ^0.25 em, отступ φ^-2 em ── */
+:root {
+  --i-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'%3E%3Cpath d='M2.8 8.4 6.2 11.8 13.2 4.4'/%3E%3C/svg%3E");
+  --i-close: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'%3E%3Cpath d='M4 4l8 8M12 4l-8 8'/%3E%3C/svg%3E");
+  --i-warn: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'%3E%3Cpath d='M7.1 2.5a1 1 0 0 1 1.8 0l5.6 10a1 1 0 0 1-.9 1.5H2.4a1 1 0 0 1-.9-1.5Z'/%3E%3Cpath d='M8 6.3v3'/%3E%3Ccircle cx='8' cy='11.4' r='.9' fill='%23000' stroke='none'/%3E%3C/svg%3E");
+  --i-insert: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'%3E%3Cpath d='M8 2v7.6M4.8 6.6 8 9.8l3.2-3.2'/%3E%3Cpath d='M2.5 10.5v1.8a1.7 1.7 0 0 0 1.7 1.7h7.6a1.7 1.7 0 0 0 1.7-1.7v-1.8'/%3E%3C/svg%3E");
+  --i-edit: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'%3E%3Cpath d='M10.6 2.6a1.6 1.6 0 0 1 2.3 2.3L5.4 12.4l-3 .7.7-3Z'/%3E%3Cpath d='M9.4 3.8l2.3 2.3'/%3E%3C/svg%3E");
+  --i-sparkle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'%3E%3Cpath d='M7 2.2c.5 3 1.8 4.3 4.8 4.8-3 .5-4.3 1.8-4.8 4.8-.5-3-1.8-4.3-4.8-4.8 3-.5 4.3-1.8 4.8-4.8Z'/%3E%3Cpath d='M12.6 10.6c.2 1.1.7 1.6 1.8 1.8-1.1.2-1.6.7-1.8 1.8-.2-1.1-.7-1.6-1.8-1.8 1.1-.2 1.6-.7 1.8-1.8Z' stroke-width='1.3'/%3E%3C/svg%3E");
+}
+[data-icon]::before,
+.ai-bubble.thinking > div:first-child::before,
+.mermaid-error::before,
+.tikz-error::before,
+.lang-opt.active::after {
+  content: '';
+  display: inline-block;
+  inline-size: 1.1278em;
+  block-size: 1.1278em;
+  margin-inline-end: 0.382em;
+  vertical-align: -0.2093em;
+  flex-shrink: 0;
+  background: currentColor;
+  -webkit-mask: var(--i) center / contain no-repeat;
+  mask: var(--i) center / contain no-repeat;
+}
+[data-icon='']::before {
+  content: none;
+}
+[data-icon='check']::before {
+  --i: var(--i-check);
+}
+[data-icon='close']::before {
+  --i: var(--i-close);
+}
+[data-icon='warn']::before,
+.ai-bubble.warn > div:first-child::before,
+.mermaid-error::before,
+.tikz-error::before {
+  --i: var(--i-warn);
+}
+[data-icon='insert']::before {
+  --i: var(--i-insert);
+}
+[data-icon='edit']::before {
+  --i: var(--i-edit);
+}
+/* Индикатор «думает»: искра ИИ, мягкая пульсация с периодом 1597 мс (Фибоначчи) */
+.ai-bubble.thinking:not(.warn) > div:first-child::before {
+  --i: var(--i-sparkle);
+  color: var(--accent);
+  animation: aiThink 1597ms var(--ease) infinite;
+}
+@keyframes aiThink {
+  0%,
+  100% {
+    opacity: 0.382;
+    scale: 0.854;
+  }
+  50% {
+    opacity: 1;
+    scale: 1;
+  }
+}
+.ai-bubble.warn {
+  color: var(--gy-ink);
+  font-style: normal;
+}
+.ai-bubble.warn > div:first-child::before {
+  color: var(--gy-ink);
+}
+.mermaid-error::before,
+.tikz-error::before {
+  color: var(--gr-ink);
+}
+/* Активный язык: галочка справа (флаги стран убраны — они обозначают страны, а не языки) */
+.lang-opt {
+  align-items: center;
+}
+.lang-opt.active::after {
+  --i: var(--i-check);
+  margin-inline: auto 0;
+}
+.lang-ico {
+  display: inline-flex;
+  color: var(--mut);
+}
+.lang-ico svg,
+.ai-chip-icon svg,
+.ai-models-refresh svg {
+  width: var(--icon-s);
+  height: var(--icon-s);
+}
+.ai-chip-icon {
+  color: var(--mut);
+}
+.ai-chip-rm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--s16);
+  height: var(--s16);
+  border-radius: 50%;
+}
+.ai-chip-rm svg {
+  width: var(--s10);
+  height: var(--s10);
+}
+.ai-chip-rm:hover {
+  background: var(--grt);
+}
+.ai-models-refresh-ico {
+  display: inline-flex;
+}
+/* Превью кеглей в окне «Размер шрифта»: те же значки, что на панели инструментов */
+.font-preview {
+  color: var(--mut);
+}
+.font-preview svg {
+  width: var(--icon);
+  height: var(--icon);
+}
+
+/* Сенсорные экраны: цели касания не меньше φ² rem (≈ 42px). Блок стоит в конце файла,
+   чтобы перекрывать базовые размеры кнопок */
+@media (pointer: coarse) {
+  .btn,
+  .about-btn,
+  .ai-btn {
+    width: var(--s42);
+    height: var(--s42);
+  }
+  .lang-btn,
+  .tab {
+    height: var(--s42);
   }
 }
