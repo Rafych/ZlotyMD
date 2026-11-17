@@ -3,20 +3,14 @@
   Złoty MD — © 2026 Rafych (https://github.com/Rafych) and Hiromichi (https://github.com/hiromichipixel)
   MIT License — https://github.com/Rafych/ZlotyMD/blob/main/LICENSE
 
-  Third-party components used (loaded at runtime from a CDN; none of their files are copied into this file),
-  sorted by license:
+  Third-party components used by Złoty MD (loaded at runtime from a CDN; none of their files are
+  copied into this file), sorted by license:
 
   Apache License 2.0
 
   emmalloc (Emscripten) and Zephyr libc string functions — bundled in the harfbuzzjs WebAssembly build
     Copyright (c) the Emscripten authors; Copyright (c) the Zephyr Project contributors
     Apache License 2.0 — https://www.apache.org/licenses/LICENSE-2.0
-
-  BSD 2-Clause License
-
-  Leaflet v1.9.4 — maps for geojson / topojson blocks; loaded only when a document contains them
-    Copyright (c) 2010-2023, Vladimir Agafonkin; Copyright (c) 2010-2011, CloudMade
-    BSD 2-Clause License — https://github.com/Leaflet/Leaflet/blob/main/LICENSE
 
   BSD 3-Clause License
 
@@ -35,13 +29,8 @@
   TikZJax (@drgrice1/tikzjax v1.0.0-beta24) — loaded only when a document contains TikZ
     Copyright (c) Jim Fowler, Glenn Rice and contributors
     GPL-3.0-or-later — https://github.com/drgrice1/tikzjax
-    It bundles TeX and TeX packages (e.g. PGF/TikZ, pgfplots) under their own licenses.
-
-  ISC License
-
-  topojson-client v3.1.0 — topojson blocks; loaded only when a document contains them
-    Copyright (c) 2012-2019, Michael Bostock
-    ISC License — https://github.com/topojson/topojson-client/blob/master/LICENSE.md
+    It bundles TeX, TeX packages (e.g. PGF/TikZ, pgfplots) and TeX fonts (Computer Modern, BaKoMa)
+    under their own licenses.
 
   MIT License
 
@@ -53,65 +42,66 @@
   html2canvas v1.4.1 — used by jsPDF (html()) for PDF export
     Copyright (c) 2012 Niklas von Hertzen
     MIT License — https://github.com/niklasvh/html2canvas/blob/master/LICENSE
+    The distributed bundle includes tslib (Copyright (c) Microsoft Corporation, 0BSD License).
 
   jsPDF v4.2.1 — used by the editor for PDF export
     Copyright (c) 2010-2025 James Hall (https://github.com/parallax/jsPDF), (c) 2015-2025 yWorks GmbH (https://www.yworks.com/)
     MIT License — https://github.com/parallax/jsPDF/blob/master/LICENSE
+    The distributed bundle includes third-party code (e.g. pako, a JPEG encoder, a Unicode bidi engine)
+    under their own permissive licenses (MIT / Zlib / BSD); see the license comments in the bundle.
 
   KaTeX v0.16.9
     Copyright (c) 2013-2020 Khan Academy and other contributors
     MIT License — https://github.com/KaTeX/KaTeX/blob/main/LICENSE
 
   marked v9.1.6
-    Copyright (c) 2011-2018, Christopher Jeffrey (https://github.com/markedjs/marked)
-    MIT License — https://github.com/markedjs/marked/blob/master/LICENSE
+    Copyright (c) 2018+, MarkedJS (https://github.com/markedjs/); Copyright (c) 2011-2018, Christopher Jeffrey (https://github.com/chjj/)
+    MIT License — https://github.com/markedjs/marked/blob/master/LICENSE.md
+    Its license file also contains the Markdown license: Copyright (c) 2004, John Gruber (BSD-style).
 
   Mermaid v10.6.1
-    Copyright (c) 2014-2023 Knut Sveidqvist and contributors
+    Copyright (c) 2014 - 2022 Knut Sveidqvist
     MIT License — https://github.com/mermaid-js/mermaid/blob/develop/LICENSE
     The distributed bundle includes dependencies (e.g. d3, dagre-d3-es, DOMPurify, dayjs, khroma)
     under their own permissive licenses (MIT / ISC / BSD-3-Clause / Apache-2.0 / MPL-2.0).
 
   svg2pdf.js v2.9.0 — used by the editor for PDF export (SVG diagrams and formulas as vectors)
-    Copyright (c) 2015-2026 yWorks GmbH
+    Copyright (c) 2015-2026 yWorks GmbH; Copyright (c) 2013-2015 Vitaly Puzrin
     MIT License — https://github.com/yWorks/svg2pdf.js/blob/master/LICENSE
-
-  three.js r128 — 3D view for stl blocks; loaded only when a document contains them
-    Copyright (c) 2010-2021 three.js authors
-    MIT License — https://github.com/mrdoob/three.js/blob/dev/LICENSE
 
   Twemoji (@twemoji/api v17.0.3) — replaces emoji in the editor interface and the preview with Twemoji images
     Copyright (c) 2014-2021 Twitter; Copyright (c) 2022-present Jason Sofonia & Justine De Caires
     MIT License — https://github.com/jdecked/twemoji/blob/main/LICENSE
 
-  Open Database License 1.0
-
-  OpenStreetMap map data and tiles — shown in geojson / topojson blocks (no code included)
-    Copyright (c) OpenStreetMap contributors
-    ODbL 1.0 — https://www.openstreetmap.org/copyright
-
   SIL Open Font License 1.1
+  (Google Sans, JetBrains Mono, the KaTeX fonts and the Noto fonts are also embedded, as subsets,
+  into exported PDF files, which the license permits)
 
   Google Sans
-    Copyright (c) Google Inc.
-    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
+    Copyright 2025 The Google Sans Project Authors (https://github.com/googlefonts/googlesans)
+    SIL Open Font License 1.1 — https://github.com/google/fonts/blob/main/ofl/googlesans/OFL.txt
 
-  JetBrains Mono v2020
-    Copyright (c) 2020 JetBrains s.r.o.
+  JetBrains Mono
+    Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono)
     SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
 
-  KaTeX fonts (derived from AMS Fonts / Computer Modern)
-    Copyright (c) 2013-2020 Khan Academy and other contributors
-    SIL Open Font License 1.1 — https://github.com/KaTeX/KaTeX/blob/main/LICENSE
-
-  Noto Sans, Noto Sans JP / KR / SC / TC, Noto Sans Arabic, Noto Sans Hebrew, Noto Sans Math,
-  Noto Sans Symbols 2 — embedded into exported PDF files
-  only for characters the document fonts do not cover
-    Copyright (c) Google LLC
+  KaTeX fonts (based on the MathJax TeX fonts)
+    Copyright (c) 2009-2010, Design Science, Inc. (www.mathjax.org); Copyright (c) 2014-2018 Khan Academy
+    (www.khanacademy.org), with Reserved Font Names KaTeX_AMS, KaTeX_Caligraphic, KaTeX_Fraktur, KaTeX_Main,
+    KaTeX_Math, KaTeX_SansSerif, KaTeX_Script, KaTeX_Size1-4, KaTeX_Typewriter
     SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
 
-  Content delivery / font / map tile services (no code included): cdnjs (Cloudflare), jsDelivr, Google Fonts,
-  OpenStreetMap tile servers.
+  Noto Sans, Noto Sans Arabic, Noto Sans Hebrew, Noto Sans Math, Noto Sans Symbols 2 — embedded into
+  exported PDF files in place of system fonts and for characters the document fonts do not cover
+    Copyright 2022 The Noto Project Authors (https://github.com/notofonts)
+    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
+
+  Noto Sans JP / KR / SC / TC — embedded into exported PDF files for characters the document fonts
+  do not cover (Japanese, Korean and Chinese text)
+    Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
+    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
+
+  Content delivery / font services (no code included): cdnjs (Cloudflare), jsDelivr, Google Fonts.
 
   Optional AI features call external APIs with the user's own key (no code included; each
   provider's terms of service apply): Anthropic API, Google Gemini API.
@@ -346,9 +336,18 @@
         <!-- Панель инструментов редактора (форматирование, вставка элементов) -->
         <div class="tb">
           <div class="tg">
-            <button class="btn b" title="H1" onclick="ins('# ', '')">H1</button>
-            <button class="btn b" title="H2" onclick="ins('## ', '')">H2</button>
-            <button class="btn b" title="H3" onclick="ins('### ', '')">H3</button>
+            <button class="btn b" title="H1" onclick="ins('# ', '')">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3v10M8 3v10M2 8h6"/><path d="M10.6 8.4 12.6 7v6"/></svg>
+            </button>
+            <button class="btn b" title="H2" onclick="ins('## ', '')">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3v10M8 3v10M2 8h6"/><path d="M10.4 8.3a1.6 1.6 0 0 1 3.1.5c0 1.4-3.1 2.4-3.1 4.2h3.3"/></svg>
+            </button>
+            <button class="btn b" title="H3" onclick="ins('### ', '')">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3v10M8 3v10M2 8h6"/><path d="M10.5 7.6c.4-.4.9-.6 1.5-.6.9 0 1.5.6 1.5 1.3 0 .8-.6 1.4-1.5 1.4.9 0 1.7.6 1.7 1.5S13 13 12 13c-.6 0-1.2-.2-1.6-.7"/></svg>
+            </button>
+            <button class="btn b" title="H4" onclick="ins('#### ', '')">
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 3v10M8 3v10M2 8h6"/><path d="M12.9 13V7l-3 4.4h4"/></svg>
+            </button>
           </div>
           <div class="tsep"></div>
           <div class="tg">
@@ -463,21 +462,27 @@
             </button>
             <button
               class="btn y"
+              title="Callout (&gt; [!NOTE])"
+              data-i18n-title="ttAlert"
+              onclick="iAlert()"
+            >
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 2h9a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7.2l-3.2 2.6V12h-.5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/><path d="M8 4.6v3.2"/><circle cx="8" cy="9.8" r=".95" fill="currentColor" stroke="none"/></svg>
+            </button>
+            <button
+              class="btn y"
+              title="Footnote ([^1])"
+              data-i18n-title="ttFootnote"
+              onclick="iFootnote()"
+            >
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6.5h6.2M2 10h8.5M2 13.5h12"/><path d="M11.4 3.4 13 2.2v5"/></svg>
+            </button>
+            <button
+              class="btn y"
               title="Horizontal rule"
               data-i18n-title="ttHr"
               onclick="ins('\n---\n', '')"
             >
-              <svg
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              >
-                <line x1="2" y1="8" x2="14" y2="8" />
-                <circle cx="2" cy="8" r="1.5" fill="currentColor" stroke="none" />
-                <circle cx="14" cy="8" r="1.5" fill="currentColor" stroke="none" />
-              </svg>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 8h13"/><path d="M3.5 3.8h9M3.5 12.2h9" opacity=".382"/></svg>
             </button>
           </div>
           <div class="tsep"></div>
@@ -509,50 +514,7 @@
               data-i18n-title="ttOrdered"
               onclick="ins('1. ', '')"
             >
-              <svg
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              >
-                <line x1="7" y1="5" x2="14" y2="5" />
-                <line x1="7" y1="9" x2="14" y2="9" />
-                <line x1="7" y1="13" x2="14" y2="13" />
-                <text
-                  x="1.5"
-                  y="7"
-                  fill="currentColor"
-                  stroke="none"
-                  font-size="5.5"
-                  font-family="monospace"
-                  font-weight="bold"
-                >
-                  1
-                </text>
-                <text
-                  x="1.5"
-                  y="11"
-                  fill="currentColor"
-                  stroke="none"
-                  font-size="5.5"
-                  font-family="monospace"
-                  font-weight="bold"
-                >
-                  2
-                </text>
-                <text
-                  x="1.5"
-                  y="15"
-                  fill="currentColor"
-                  stroke="none"
-                  font-size="5.5"
-                  font-family="monospace"
-                  font-weight="bold"
-                >
-                  3
-                </text>
-              </svg>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.3 3.3 3.7 2.3v4.8" stroke-width="1.5"/><path d="M2.1 9.8a1.25 1.25 0 0 1 2.4.5c0 .9-2.4 1.9-2.4 3.2h2.6" stroke-width="1.5"/><path d="M7.2 4.7h7.3M7.2 11.5h7.3"/></svg>
             </button>
             <button
               class="btn g"
@@ -560,20 +522,7 @@
               data-i18n-title="ttTask"
               onclick="ins('- [ ] ', '')"
             >
-              <svg
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <rect x="2" y="3" width="6" height="6" rx="1" />
-                <polyline points="3.5 6.5 5 8 7.5 5" />
-                <line x1="10" y1="6" x2="14" y2="6" />
-                <rect x="2" y="11" width="6" height="4" rx="1" stroke-dasharray="1.5 1" />
-                <line x1="10" y1="13" x2="14" y2="13" />
-              </svg>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="2" width="5.2" height="5.2" rx="1.2"/><path d="M2.9 4.7 3.9 5.7 5.5 3.6"/><path d="M9.2 4.6h5.3"/><rect x="1.5" y="8.8" width="5.2" height="5.2" rx="1.2"/><path d="M9.2 11.4h5.3"/></svg>
             </button>
             <button
               class="btn g"
@@ -581,21 +530,7 @@
               data-i18n-title="ttCodeBlock"
               onclick="ins('```\n', '\n```')"
             >
-              <svg
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <rect x="1" y="3" width="14" height="10" rx="2" />
-                <circle cx="3.5" cy="5.5" r=".7" fill="currentColor" stroke="none" />
-                <circle cx="5.5" cy="5.5" r=".7" fill="currentColor" stroke="none" />
-                <circle cx="7.5" cy="5.5" r=".7" fill="currentColor" stroke="none" />
-                <line x1="3" y1="8.5" x2="6" y2="8.5" />
-                <line x1="3" y1="10.5" x2="10" y2="10.5" />
-              </svg>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="1.8"/><path d="M6.2 6 4.2 8l2 2M9.8 6l2 2-2 2"/></svg>
             </button>
           </div>
           <div class="tsep"></div>
@@ -605,28 +540,16 @@
               title="Inline math ($...$)"
               data-i18n-title="ttMathInline"
               onclick="iLatexInline()"
-              style="
-                font-family: var(--mono);
-                font-size: 11px;
-                font-weight: 700;
-                letter-spacing: -0.5px;
-              "
             >
-              $
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.8 9.2h1.9l1.7 4.3L8.6 3h5.6"/><path d="M9.8 7.2l3.2 4M13 7.2l-3.2 4"/></svg>
             </button>
             <button
               class="btn b"
               title="Block math ($$...$$)"
               data-i18n-title="ttMathBlock"
               onclick="iLatexBlock()"
-              style="
-                font-family: var(--mono);
-                font-size: 10px;
-                font-weight: 700;
-                letter-spacing: -0.5px;
-              "
             >
-              $$
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="2"/><path d="M4 8.4h1.1l1.2 2.8 2.3-6h3.4"/></svg>
             </button>
           </div>
           <div class="tsep"></div>
@@ -636,9 +559,8 @@
               title="Diff block (diff / diff_lang)"
               data-i18n-title="ttDiff"
               onclick="iDiff()"
-              style="font-family: var(--mono); font-size: 10px; font-weight: 700"
             >
-              diff
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="1.5" width="10" height="13" rx="1.8"/><path d="M8 4.2v4.2M5.9 6.3h4.2M5.9 11.2h4.2"/></svg>
             </button>
           </div>
           <div class="tsep"></div>
@@ -648,40 +570,35 @@
               title="Mermaid diagram (```mermaid ... ```)"
               data-i18n-title="ttMermaid"
               onclick="iMermaid()"
-              style="
-                font-family: var(--mono);
-                font-size: 10px;
-                font-weight: 700;
-                letter-spacing: -0.3px;
-              "
             >
-              mmd
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="1.8" width="5.4" height="4.2" rx="1.1"/><rect x="9.1" y="10" width="5.4" height="4.2" rx="1.1"/><path d="M4.2 6v3.1a2.9 2.9 0 0 0 2.9 2.9h2"/></svg>
             </button>
             <button
               class="btn g"
               title="TikZ figure (```tikz ... ```)"
               data-i18n-title="ttTikz"
               onclick="iTikz()"
-              style="
-                font-family: var(--mono);
-                font-size: 10px;
-                font-weight: 700;
-                letter-spacing: -0.3px;
-              "
             >
-              tikz
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12.8C5 3.6 11 12.4 13 3.2"/><path d="M3 12.8 6.2 6.6M13 3.2 9.8 9.4" stroke-width="1.1" stroke-dasharray="1.4 1.4"/><circle cx="3" cy="12.8" r="1.3" fill="currentColor" stroke="none"/><circle cx="13" cy="3.2" r="1.3" fill="currentColor" stroke="none"/></svg>
             </button>
           </div>
           <div class="tsep"></div>
           <div class="tg">
             <button
               class="btn b"
+              title="Front matter (--- … ---)"
+              data-i18n-title="ttFrontMatter"
+              onclick="iFrontMatter()"
+            >
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 6.6V3.3a1.8 1.8 0 0 1 1.8-1.8h7.4a1.8 1.8 0 0 1 1.8 1.8v3.3Z" fill="currentColor" fill-opacity=".236"/><rect x="2.5" y="1.5" width="11" height="13" rx="1.8"/><path d="M2.5 6.6h11M5 4.1h3.6M5 9.4h6M5 12h3.6"/></svg>
+            </button>
+            <button
+              class="btn b"
               title="Insert custom table"
               data-i18n-title="ttTable"
               onclick="openTblDialog()"
-              style="font-family: var(--mono); font-size: 10px; font-weight: 700"
             >
-              tbl
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="1.8"/><path d="M1.5 6.4h13M6 6.4v7.1M10.5 6.4v7.1"/></svg>
             </button>
           </div>
         </div>
@@ -793,19 +710,7 @@
           data-i18n-title="settingsBtnTitle"
           onclick="toggleSettings()"
         >
-          <svg
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.7"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <circle cx="8" cy="8" r="2.2" />
-            <path
-              d="M8 1v1.5M8 13.5V15M1 8h1.5M13.5 8H15M2.93 2.93l1.06 1.06M12.01 12.01l1.06 1.06M2.93 13.07l1.06-1.06M12.01 3.99l1.06-1.06"
-            />
-          </svg>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.04 6.36 14.78 6.71 14.78 9.29 13.04 9.64 12.72 10.41 13.71 11.88 11.88 13.71 10.41 12.72 9.64 13.04 9.29 14.78 6.71 14.78 6.36 13.04 5.59 12.72 4.12 13.71 2.29 11.88 3.28 10.41 2.96 9.64 1.22 9.29 1.22 6.71 2.96 6.36 3.28 5.59 2.29 4.12 4.12 2.29 5.59 3.28 6.36 2.96 6.71 1.22 9.29 1.22 9.64 2.96 10.41 3.28 11.88 2.29 13.71 4.12 12.72 5.59Z"/><circle cx="8" cy="8" r="2.1"/></svg>
         </button>
 
         <button
@@ -815,37 +720,7 @@
           data-i18n-title="fontSizeBtnTitle"
           onclick="toggleFontPanel()"
         >
-          <svg
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.7"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <text
-              x="1"
-              y="12"
-              font-size="9"
-              font-weight="700"
-              fill="currentColor"
-              stroke="none"
-              font-family="sans-serif"
-            >
-              A
-            </text>
-            <text
-              x="8"
-              y="14"
-              font-size="7"
-              font-weight="700"
-              fill="currentColor"
-              stroke="none"
-              font-family="sans-serif"
-            >
-              A
-            </text>
-          </svg>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 3.6h7.2M5.1 3.6v9.6M9.6 7.8h4.9M12.05 7.8v5.4"/></svg>
         </button>
 
         <!-- Переключатель языка интерфейса -->
@@ -874,19 +749,19 @@
           </button>
           <div class="lang-drop" id="langDrop">
             <!-- Порядок пунктов: «Авто» всегда первым, далее языки по алфавиту их английских названий (English, French, German, Greek, Italian, Japanese, Polish, Portuguese, Romanian, Russian, Spanish) -->
-            <button class="lang-opt" data-lang="auto" onclick="setLang('auto')"><span>🌐</span><span data-i18n="langAuto">Auto (device language)</span></button>
+            <button class="lang-opt" data-lang="auto" onclick="setLang('auto')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span class="lang-ico" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="8.6" rx="1.6"/><path d="M5.5 14h5M8 11.1V14"/></svg></span><span data-i18n="langAuto">Auto (device language)</span></button>
             <div class="lang-sep" role="separator"></div>
-            <button class="lang-opt" data-lang="en" onclick="setLang('en')"><span>🇬🇧</span><span>English</span></button>
-            <button class="lang-opt" data-lang="fr" onclick="setLang('fr')"><span>🇫🇷</span><span>Français</span></button>
-            <button class="lang-opt" data-lang="de" onclick="setLang('de')"><span>🇩🇪</span><span>Deutsch</span></button>
-            <button class="lang-opt" data-lang="el" onclick="setLang('el')"><span>🇬🇷</span><span>Ελληνικά</span></button>
-            <button class="lang-opt" data-lang="it" onclick="setLang('it')"><span>🇮🇹</span><span>Italiano</span></button>
-            <button class="lang-opt" data-lang="ja" onclick="setLang('ja')"><span>🇯🇵</span><span>日本語</span></button>
-            <button class="lang-opt" data-lang="pl" onclick="setLang('pl')"><span>🇵🇱</span><span>Polski</span></button>
-            <button class="lang-opt" data-lang="pt" onclick="setLang('pt')"><span>🇧🇷</span><span>Português (Brasil)</span></button>
-            <button class="lang-opt" data-lang="ro" onclick="setLang('ro')"><span>🇷🇴</span><span>Română</span></button>
-            <button class="lang-opt" data-lang="ru" onclick="setLang('ru')"><span>🇷🇺</span><span>Русский</span></button>
-            <button class="lang-opt" data-lang="es" onclick="setLang('es')"><span>🇪🇸</span><span>Español</span></button>
+            <button class="lang-opt" data-lang="en" onclick="setLang('en')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>English</span></button>
+            <button class="lang-opt" data-lang="fr" onclick="setLang('fr')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>Français</span></button>
+            <button class="lang-opt" data-lang="de" onclick="setLang('de')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>Deutsch</span></button>
+            <button class="lang-opt" data-lang="el" onclick="setLang('el')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>Ελληνικά</span></button>
+            <button class="lang-opt" data-lang="it" onclick="setLang('it')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>Italiano</span></button>
+            <button class="lang-opt" data-lang="ja" onclick="setLang('ja')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>日本語</span></button>
+            <button class="lang-opt" data-lang="pl" onclick="setLang('pl')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>Polski</span></button>
+            <button class="lang-opt" data-lang="pt" onclick="setLang('pt')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>Português (Brasil)</span></button>
+            <button class="lang-opt" data-lang="ro" onclick="setLang('ro')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>Română</span></button>
+            <button class="lang-opt" data-lang="ru" onclick="setLang('ru')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>Русский</span></button>
+            <button class="lang-opt" data-lang="es" onclick="setLang('es')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>Español</span></button>
           </div>
         </div>
 
@@ -992,13 +867,6 @@
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
-                <span class="about-lib-name">Leaflet <span class="about-lib-ver">v1.9.4</span></span>
-                <span class="about-lib-badge">BSD-2-Clause</span>
-              </div>
-              <span class="about-lib-copy">© 2010–2023 Vladimir Agafonkin, © 2010–2011 CloudMade</span>
-            </li>
-            <li class="about-lib-item">
-              <div class="about-lib-top">
                 <span class="about-lib-name">highlight.js <span class="about-lib-ver">v11.11.1</span></span>
                 <span class="about-lib-badge">BSD-3-Clause</span>
               </div>
@@ -1021,13 +889,6 @@
               <span class="about-lib-copy" data-i18n="aboutLibTikzjaxCopy"
                 >© Jim Fowler, Glenn Rice and contributors</span
               >
-            </li>
-            <li class="about-lib-item">
-              <div class="about-lib-top">
-                <span class="about-lib-name">topojson-client <span class="about-lib-ver">v3.1.0</span></span>
-                <span class="about-lib-badge">ISC</span>
-              </div>
-              <span class="about-lib-copy">© 2012–2019 Michael Bostock</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
@@ -1065,7 +926,7 @@
                 <span class="about-lib-badge">MIT</span>
               </div>
               <span class="about-lib-copy" data-i18n="aboutLibMarkedCopy"
-                >© 2011–2018 Christopher Jeffrey</span
+                >© 2018+ MarkedJS, © 2011–2018 Christopher Jeffrey</span
               >
             </li>
             <li class="about-lib-item">
@@ -1076,7 +937,7 @@
                 <span class="about-lib-badge">MIT</span>
               </div>
               <span class="about-lib-copy" data-i18n="aboutLibMermaidCopy"
-                >© 2014–2023 Knut Sveidqvist and contributors</span
+                >© 2014–2022 Knut Sveidqvist</span
               >
             </li>
             <li class="about-lib-item">
@@ -1084,14 +945,7 @@
                 <span class="about-lib-name">svg2pdf.js <span class="about-lib-ver">v2.9.0</span></span>
                 <span class="about-lib-badge">MIT</span>
               </div>
-              <span class="about-lib-copy">© 2015–2026 yWorks GmbH</span>
-            </li>
-            <li class="about-lib-item">
-              <div class="about-lib-top">
-                <span class="about-lib-name">three.js <span class="about-lib-ver">r128</span></span>
-                <span class="about-lib-badge">MIT</span>
-              </div>
-              <span class="about-lib-copy">© 2010–2021 three.js authors</span>
+              <span class="about-lib-copy">© 2015–2026 yWorks GmbH, © 2013–2015 Vitaly Puzrin</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
@@ -1099,13 +953,6 @@
                 <span class="about-lib-badge">MIT</span>
               </div>
               <span class="about-lib-copy">© 2014–2021 Twitter, © 2022–present Jason Sofonia &amp; Justine De Caires</span>
-            </li>
-            <li class="about-lib-item">
-              <div class="about-lib-top">
-                <span class="about-lib-name">OpenStreetMap</span>
-                <span class="about-lib-badge about-lib-badge-alt">ODbL-1.0</span>
-              </div>
-              <span class="about-lib-copy">© OpenStreetMap contributors</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
@@ -1117,7 +964,7 @@
                 >
               </div>
               <span class="about-lib-copy" data-i18n="aboutLibGoogleSansCopy"
-                >© Google Inc. — SIL Open Font License 1.1</span
+                >© 2025 The Google Sans Project Authors</span
               >
             </li>
             <li class="about-lib-item">
@@ -1128,7 +975,7 @@
                 >
               </div>
               <span class="about-lib-copy" data-i18n="aboutLibJetbrainsCopy"
-                >© 2020 JetBrains s.r.o.</span
+                >© 2020 The JetBrains Mono Project Authors</span
               >
             </li>
             <li class="about-lib-item">
@@ -1136,14 +983,14 @@
                 <span class="about-lib-name">KaTeX Fonts</span>
                 <span class="about-lib-badge about-lib-badge-alt">SIL OFL 1.1</span>
               </div>
-              <span class="about-lib-copy">© 2013–2020 Khan Academy and contributors</span>
+              <span class="about-lib-copy">© 2009–2010 Design Science, Inc., © 2014–2018 Khan Academy</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
-                <span class="about-lib-name">Noto Sans</span>
+                <span class="about-lib-name">Noto Sans / Noto Sans JP, KR, SC, TC</span>
                 <span class="about-lib-badge about-lib-badge-alt">SIL OFL 1.1</span>
               </div>
-              <span class="about-lib-copy">© Google LLC — SIL Open Font License 1.1</span>
+              <span class="about-lib-copy">© 2022 The Noto Project Authors; JP, KR, SC, TC: © 2014–2021 Adobe</span>
             </li>
           </ul>
         </div>
@@ -1576,11 +1423,7 @@
         >
           <div class="ai-ph">
             <div class="ai-ph-title">
-              <svg viewBox="0 0 16 16">
-                <circle cx="8" cy="6" r="3.5" />
-                <path d="M2 13.5c0-2.5 2.7-4 6-4s6 1.5 6 4" />
-                <circle class="ai-dot" cx="12.5" cy="4.5" r="1.5" fill="#a142f4" stroke="none" />
-              </svg>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 2.2c.5 3 1.8 4.3 4.8 4.8-3 .5-4.3 1.8-4.8 4.8-.5-3-1.8-4.3-4.8-4.8 3-.5 4.3-1.8 4.8-4.8Z"/><path d="M12.6 10.6c.2 1.1.7 1.6 1.8 1.8-1.1.2-1.6.7-1.8 1.8-.2-1.1-.7-1.6-1.8-1.8 1.1-.2 1.6-.7 1.8-1.8Z" stroke-width="1.3"/></svg>
               <span data-i18n="aiBtnTitle">AI Assistant</span>
             </div>
             <button
@@ -1619,7 +1462,7 @@
           </div>
           <div class="ai-msgs" id="aiMsgs">
             <div class="ai-bubble a" id="aiWelcomeMsg" data-i18n-html="aiWelcome">
-              👋 Hi! I'm the AI Assistant (Claude) for this Markdown editor.<br /><br />Enter your
+              Hi! I'm the AI Assistant (Claude) for this Markdown editor.<br /><br />Enter your
               Anthropic API key and press "Save", then select text and click a preset, or ask
               anything freely.
             </div>
@@ -1636,7 +1479,7 @@
                 data-i18n-title="aiModelsRefreshTitle"
                 onclick="refreshAiModels(true)"
               >
-                ↻
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.4 6.2A5.6 5.6 0 0 0 3.3 4.6L2.2 5.9M2.6 9.8a5.6 5.6 0 0 0 10.1 1.6l1.1-1.3"/><path d="M2.2 2.6v3.3h3.3M13.8 13.4v-3.3h-3.3"/></svg>
               </button>
             </div>
             <div class="ai-keyrow">
@@ -1651,9 +1494,7 @@
                 placeholder="Enter Anthropic API key…"
                 data-i18n-placeholder="aiKeyPlaceholder"
               />
-              <button class="ai-ksave" id="aiKsaveBtn" onclick="saveApiKey()" data-i18n="aiSaveBtn">
-                Save
-              </button>
+              <button class="ai-ksave" id="aiKsaveBtn" onclick="saveApiKey()"><span data-i18n="aiSaveBtn">Save</span></button>
             </div>
             <div class="ai-presets">
               <button
@@ -2014,11 +1855,11 @@
         </div>
         <div class="diffm-body" id="diffmBody"></div>
         <div class="diff-actions">
-          <button class="diff-btn accept" id="diffmAcceptBtn" data-i18n="aiAcceptBtn">
-            ✓ Accept
+          <button class="diff-btn accept" id="diffmAcceptBtn">
+            <svg class="zi" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg><span data-i18n="aiAcceptBtn">Accept</span>
           </button>
-          <button class="diff-btn reject" id="diffmRejectBtn" data-i18n="aiRejectBtn">
-            ✕ Reject
+          <button class="diff-btn reject" id="diffmRejectBtn">
+            <svg class="zi" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg><span data-i18n="aiRejectBtn">Reject</span>
           </button>
         </div>
       </div>
