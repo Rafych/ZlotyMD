@@ -12,6 +12,12 @@
     Copyright (c) the Emscripten authors; Copyright (c) the Zephyr Project contributors
     Apache License 2.0 — https://www.apache.org/licenses/LICENSE-2.0
 
+  BSD 2-Clause License
+
+  Leaflet v1.9.4 — maps for geojson / topojson blocks; loaded only when a document contains them
+    Copyright (c) 2010-2023, Vladimir Agafonkin; Copyright (c) 2010-2011, CloudMade
+    BSD 2-Clause License — https://github.com/Leaflet/Leaflet/blob/main/LICENSE
+
   BSD 3-Clause License
 
   highlight.js v11.11.1 — syntax highlighting in code blocks
@@ -30,6 +36,12 @@
     Copyright (c) Jim Fowler, Glenn Rice and contributors
     GPL-3.0-or-later — https://github.com/drgrice1/tikzjax
     It bundles TeX and TeX packages (e.g. PGF/TikZ, pgfplots) under their own licenses.
+
+  ISC License
+
+  topojson-client v3.1.0 — topojson blocks; loaded only when a document contains them
+    Copyright (c) 2012-2019, Michael Bostock
+    ISC License — https://github.com/topojson/topojson-client/blob/master/LICENSE.md
 
   MIT License
 
@@ -64,9 +76,19 @@
     Copyright (c) 2015-2026 yWorks GmbH
     MIT License — https://github.com/yWorks/svg2pdf.js/blob/master/LICENSE
 
+  three.js r128 — 3D view for stl blocks; loaded only when a document contains them
+    Copyright (c) 2010-2021 three.js authors
+    MIT License — https://github.com/mrdoob/three.js/blob/dev/LICENSE
+
   Twemoji (@twemoji/api v17.0.3) — replaces emoji in the editor interface and the preview with Twemoji images
     Copyright (c) 2014-2021 Twitter; Copyright (c) 2022-present Jason Sofonia & Justine De Caires
     MIT License — https://github.com/jdecked/twemoji/blob/main/LICENSE
+
+  Open Database License 1.0
+
+  OpenStreetMap map data and tiles — shown in geojson / topojson blocks (no code included)
+    Copyright (c) OpenStreetMap contributors
+    ODbL 1.0 — https://www.openstreetmap.org/copyright
 
   SIL Open Font License 1.1
 
@@ -88,7 +110,8 @@
     Copyright (c) Google LLC
     SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
 
-  Content delivery / font services (no code included): cdnjs (Cloudflare), jsDelivr, Google Fonts.
+  Content delivery / font / map tile services (no code included): cdnjs (Cloudflare), jsDelivr, Google Fonts,
+  OpenStreetMap tile servers.
 
   Optional AI features call external APIs with the user's own key (no code included; each
   provider's terms of service apply): Anthropic API, Google Gemini API.
@@ -97,12 +120,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Złoty MD — a Markdown editor built on the golden ratio</title>
-<meta name="description" content="A Markdown editor with golden-ratio proportions and a Google-inspired color palette.">
+<title>Złoty MD - The Most Beautiful Markdown Editor</title>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#ffffff">
-<meta name="color-scheme" content="light">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Złoty MD">
@@ -113,355 +134,225 @@
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <style>
-  /* Every measure on this page is 1rem × φⁿ (n in steps of ½ or ¼), the same system as the editor. */
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    color-scheme:light;
-    --gb:#4285F4;--gr:#EA4335;--gy:#FBBC04;--gg:#34A853;
-    --accent:#1B64DA;--accent-ink:#1653B6;
-    --canvas:#F0F4F9;--bg:#fff;--surf:#F8FAFD;--surf2:#EEF2F8;--bord:#DDE3EA;
-    --txt:#1F1F1F;--mut:#444746;--sub:#747775;--ink-dark:#1E1F20;--ink-dark-2:#28292A;
-    --s2:.1147rem;--s3:.1856rem;--s5:.3003rem;--s8:.4859rem;--s10:.618rem;--s13:.7862rem;--s16:1rem;--s21:1.272rem;
-    --s26:1.618rem;--s34:2.0582rem;--s42:2.618rem;--s55:3.3302rem;--s68:4.2361rem;--s89:5.3884rem;--s144:8.7185rem;
-    --f10:.7862rem;--f13:.8867rem;--f16:1rem;--f18:1.1278rem;--f21:1.272rem;--f26:1.618rem;--f42:2.618rem;--f68:4.2361rem;--f110:6.8541rem;
-    --lh:1.618;--lh-s:1.272;
-    --page:75.9787rem; /* φ^9 rem */
-    --gutter:clamp(var(--s21),4.236vw,var(--s68));
-    --font:'Google Sans',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;
-    --e1:0 1px var(--s3) rgba(31,31,31,.09),0 var(--s2) var(--s8) rgba(31,31,31,.056);
-    --e3:0 var(--s8) var(--s26) calc(var(--s5) * -1) rgba(31,31,31,.146),0 var(--s21) var(--s55) calc(var(--s13) * -1) rgba(31,31,31,.146);
-    --spring:linear(0,.0273,.0927,.1778,.2704,.3628,.4505,.5309,.6029,.6663,.7211,.7682,.8082,.8419,.8702,.8937,.9132,.9293,.9425,.9534,.9623,.9695,.9754,.9802,1);
-  }
-  html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-behavior:smooth}
-  body{font-family:var(--font);background:var(--bg);color:var(--txt);line-height:var(--lh);-webkit-font-smoothing:antialiased;min-height:100dvh}
-  a{color:inherit}
-  :where(a,button):focus-visible{outline:2px solid var(--accent);outline-offset:var(--s3);border-radius:var(--s5)}
-  ::selection{background:#C9DBF7}
-  .wrap{max-width:var(--page);margin-inline:auto;padding-inline:var(--gutter)}
-
-  /* Bar: height φ^2.5 rem, the √5 four-colour rule underneath (44.72 · 27.64 · 17.08 · 10.56 %) */
-  .bar{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.854);-webkit-backdrop-filter:blur(var(--s8)) saturate(1.618);backdrop-filter:blur(var(--s8)) saturate(1.618)}
-  .bar::after{content:'';position:absolute;left:0;right:0;bottom:0;height:var(--s2);background:linear-gradient(90deg,var(--gb) 0 44.72%,var(--gr) 44.72% 72.36%,var(--gy) 72.36% 89.44%,var(--gg) 89.44%)}
-  .bar .wrap{height:var(--s55);display:flex;align-items:center;gap:var(--s21)}
-  .logo{display:flex;align-items:center;gap:var(--s8);text-decoration:none;font-size:var(--f21);font-weight:700;letter-spacing:-.0213em}
-  .dots{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3);width:var(--s21);height:var(--s21)}
-  .dots i{border-radius:50%}
-  .logo b{font-weight:inherit}
-  .bar nav{margin-left:auto;display:flex;gap:var(--s26);font-size:var(--f13);color:var(--mut)}
-  .bar nav a{text-decoration:none;padding-block:var(--s8);transition:color 144ms}
-  .bar nav a:hover{color:var(--accent)}
-
-  /* Hero: text column : figure column = φ : 1, left-aligned */
-  .hero{display:grid;grid-template-columns:1.618fr 1fr;gap:var(--s68);align-items:center;padding-block:var(--s89) var(--s144)}
-  .eyebrow{font-size:var(--f13);font-weight:500;color:var(--accent-ink);display:inline-flex;align-items:center;gap:var(--s8);margin-bottom:var(--s26)}
-  .eyebrow::before{content:'';width:var(--s26);height:var(--s2);border-radius:999px;background:var(--accent)}
-  h1{font-size:clamp(var(--f42),7.6vw,var(--f110));line-height:1;font-weight:700;letter-spacing:-.0344em;text-wrap:balance}
-  h1 .phi{color:var(--accent)}
-  .lede{margin-top:var(--s34);max-width:29.0344rem;font-size:var(--f21);line-height:var(--lh-s);color:var(--mut);text-wrap:pretty}
-  .cta{margin-top:var(--s42);display:inline-flex;align-items:center;gap:var(--s10);height:var(--s42);padding-inline:var(--s26);border-radius:var(--s16);background:var(--accent);color:#fff;font-size:var(--f16);font-weight:500;text-decoration:none;box-shadow:var(--e1);transition:background 144ms,scale 233ms var(--spring)}
-  .cta svg{width:var(--s16);height:var(--s16);transition:translate 377ms var(--spring)}
-  .cta:hover{background:var(--accent-ink)}
-  .cta:hover svg{translate:var(--s3) 0}
-  .cta:active{scale:.9443}
-  .meta{margin-top:var(--s21);font-size:var(--f13);color:var(--sub)}
-  .meta code{font-family:var(--mono);font-size:.8867em}
-
-  /* Fibonacci tiling 13 × 21 — a golden rectangle drawn with the four Google colours */
-  .tiling{width:100%;max-width:22.8254rem;margin-inline:auto;aspect-ratio:13/21;display:block;overflow:visible}
-  .tiling rect{rx:.0902;transform-box:fill-box;transform-origin:center;animation:tileIn 987ms var(--spring) both;animation-delay:calc(var(--i) * 89ms)}
-  .tiling path{stroke-dasharray:60;stroke-dashoffset:60;animation:draw 2584ms cubic-bezier(.2,0,0,1) 610ms forwards}
-  @keyframes tileIn{from{opacity:0;scale:.618}}
-  @keyframes draw{to{stroke-dashoffset:0}}
-
-  /* Sections */
-  section{padding-block:var(--s89)}
-  .sec-head{display:grid;grid-template-columns:1fr 1.618fr;gap:var(--s55);align-items:end;margin-bottom:var(--s55)}
-  h2{font-size:var(--f42);line-height:var(--lh-s);font-weight:700;letter-spacing:-.0213em;text-wrap:balance}
-  .sec-head p{font-size:var(--f18);color:var(--mut);max-width:36.9322rem;text-wrap:pretty}
-  .band{background:var(--canvas)}
-
-  /* Feature rows: zig-zag φ : 1 and 1 : φ — never three equal columns */
-  .feat{display:grid;grid-template-columns:1fr 1.618fr;gap:var(--s55);align-items:center;padding-block:var(--s42);border-top:1px solid var(--bord)}
-  .feat.flip{grid-template-columns:1.618fr 1fr}
-  .feat.flip .copy{order:2}
-  .copy code{font-family:var(--mono);font-size:.8867em;background:var(--bg);border:1px solid var(--bord);border-radius:var(--s5);padding:.0902em .382em}
-  .copy h3{font-size:var(--f26);line-height:var(--lh-s);font-weight:700;letter-spacing:-.0132em;margin-bottom:var(--s13)}
-  .copy p{font-size:var(--f16);color:var(--mut);max-width:29.0344rem;text-wrap:pretty}
-  .copy .num{display:block;font-family:var(--mono);font-size:var(--f13);color:var(--sub);margin-bottom:var(--s13)}
-  .demo{background:var(--bg);border:1px solid var(--bord);border-radius:var(--s13);box-shadow:var(--e1);overflow:hidden;min-width:0}
-  .demo.pad{padding:var(--s26);overflow-x:auto}
-  .demo .katex-display{margin:0}
-  .demo .katex{font-size:1.272em}
-
-  pre{background:var(--ink-dark);color:#E3E3E3;border-radius:var(--s13);overflow:hidden;position:relative;margin:0}
-  .pre-header{display:flex;align-items:center;gap:var(--s8);padding:var(--s5) var(--s5) var(--s5) var(--s13);background:var(--ink-dark-2);border-bottom:1px solid rgba(255,255,255,.056);min-height:var(--s34)}
-  .pre-body{overflow-x:auto;padding:var(--s21)}
-  .lang-badge{font-family:var(--mono);font-size:var(--f10);font-weight:500;letter-spacing:.0557em;text-transform:uppercase;color:#9AA0A6;user-select:none}
-  pre code{font-family:var(--mono);font-size:var(--f13);line-height:var(--lh);white-space:pre}
-  .hljs-keyword,.hljs-section{color:#8ab4f8}.hljs-built_in,.hljs-variable.language_{color:#78d9ec}.hljs-string{color:#81c995}
-  .hljs-title{color:#aecbfa}.hljs-bullet{color:#fdd663}.hljs-strong{font-weight:700;color:#fcad70}.hljs-emphasis{font-style:italic;color:#f28b82}
-  .cpbtn{margin-left:auto;display:flex;align-items:center;gap:var(--s5);height:var(--s26);padding:0 var(--s10);border-radius:var(--s10);border:none;background:rgba(255,255,255,.056);color:#C4C7C5;font-family:var(--font);font-size:var(--f10);font-weight:500;cursor:pointer;opacity:0;transition:opacity 144ms,background 144ms,color 144ms,scale 233ms var(--spring)}
-  .cpbtn svg{width:var(--s13);height:var(--s13)}
-  pre:hover .cpbtn,.cpbtn:focus-visible{opacity:1}
-  @media (hover:none){.cpbtn{opacity:1}}
-  .cpbtn:hover{background:rgba(255,255,255,.146);color:#fff}
-  .cpbtn:active{scale:.9443}
-  .cpbtn.ok{background:rgba(52,168,83,.236);color:#81c995}
-
-  .mermaid{display:block;text-align:center;padding:var(--s21)}
-  .mermaid svg{max-width:100%;height:auto;font-family:var(--font)!important}
-
-  /* Live preview demo: two panes in the editor's own 61.8 : 38.2 split */
-  .split{display:grid;grid-template-columns:1.618fr 1fr;min-height:13.5rem}
-  .split > div{padding:var(--s21)}
-  .split .src{font-family:var(--mono);font-size:var(--f13);color:var(--mut);white-space:pre-wrap;border-right:1px solid var(--bord)}
-  .split .out{background:var(--canvas)}
-  .split .out .sheet{background:var(--bg);border:1px solid var(--bord);border-radius:var(--s8);padding:var(--s16)}
-  .split .out strong{font-size:var(--f18);display:block;line-height:var(--lh-s);margin-bottom:var(--s5)}
-  .split .out em{color:var(--mut)}
-  .split .out li{margin-left:var(--s21);font-size:var(--f13)}
-  .split .out li::marker{color:var(--gb)}
-  .caret{display:inline-block;width:1px;height:1.1em;background:var(--accent);vertical-align:-.15em;animation:blink 1597ms steps(1) infinite}
-  @keyframes blink{50%{opacity:0}}
-
-  /* The system: a type specimen and the colour proportions */
-  .system{display:grid;grid-template-columns:1.618fr 1fr;gap:var(--s55)}
-  .scale{list-style:none;border-top:1px solid var(--bord)}
-  .scale li{display:grid;grid-template-columns:5.3884rem 1fr;align-items:baseline;gap:var(--s21);padding-block:var(--s13);border-bottom:1px solid var(--bord)}
-  .scale .k sup{font-size:.618em;vertical-align:.618em;line-height:0}
-  .scale .k{font-family:var(--mono);font-size:var(--f13);color:var(--sub);font-variant-numeric:tabular-nums}
-  .scale .v{font-size:min(var(--fs),11.09vw);font-weight:700;line-height:1;letter-spacing:-.0213em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .props{display:flex;flex-direction:column;gap:var(--s34)}
-  .strip{display:grid;grid-template-columns:44.72fr 27.64fr 17.08fr 10.56fr;height:var(--s42);border-radius:var(--s8);overflow:hidden}
-  .strip i:nth-child(1){background:var(--gb)}.strip i:nth-child(2){background:var(--gr)}.strip i:nth-child(3){background:var(--gy)}.strip i:nth-child(4){background:var(--gg)}
-  .strip-legend span{white-space:nowrap}
-  .strip-legend span:last-child{text-align:right}
-  .strip-legend{display:grid;grid-template-columns:44.72fr 27.64fr 17.08fr 10.56fr;font-family:var(--mono);font-size:var(--f10);color:var(--sub);margin-top:var(--s8)}
-  .props h3{font-size:var(--f18);font-weight:700;margin-bottom:var(--s8)}
-  .props p{font-size:var(--f13);color:var(--mut);text-wrap:pretty}
-  .golden-rect{aspect-ratio:1.618/1;border:1px solid var(--bord);border-radius:var(--s8);display:grid;grid-template-columns:1fr .618fr;overflow:hidden}
-  .golden-rect span{display:flex;align-items:flex-end;padding:var(--s10);font-family:var(--mono);font-size:var(--f10);color:var(--sub)}
-  .golden-rect span:first-child{background:var(--bg);border-right:1px solid var(--bord)}
-  .golden-rect span:last-child{background:var(--surf2)}
-
-  .who{display:grid;grid-template-columns:1fr 1.618fr;gap:var(--s55);align-items:start}
-  .who ul{list-style:none;display:flex;flex-wrap:wrap;gap:var(--s8)}
-  .who li{padding:var(--s8) var(--s16);border:1px solid var(--bord);border-radius:999px;font-size:var(--f13);color:var(--mut);background:var(--bg)}
-
-  footer{padding-block:var(--s55);border-top:1px solid var(--bord);font-size:var(--f13);color:var(--sub)}
-  footer .wrap{display:grid;grid-template-columns:1.618fr 1fr;gap:var(--s34)}
-  footer a{color:var(--accent);text-decoration:underline;text-decoration-color:#C9DBF7;text-underline-offset:.236em}
-  footer a:hover{text-decoration-color:currentColor}
-  footer .right{text-align:right}
-
-  /* Scroll-driven reveal (progressive enhancement, Chromium) */
-  @supports (animation-timeline:view()){
-    .reveal{animation:rise linear both;animation-timeline:view();animation-range:entry 0% cover 23.6%}
-    @keyframes rise{from{opacity:0;translate:0 var(--s34)}}
-  }
-
-  @media (max-width:46.9787em){
-    .hero,.sec-head,.feat,.feat.flip,.system,.who,footer .wrap{grid-template-columns:1fr}
-    .feat.flip .copy{order:0}
-    .hero{padding-block:var(--s55) var(--s89);gap:var(--s55)}
-    .tiling{max-width:11.0902rem;margin-inline:var(--s5) 0}
-    .cta{width:100%;justify-content:center}
-    .split{grid-template-columns:1fr}
-    .split .src{border-right:0;border-bottom:1px solid var(--bord)}
-    footer .right{text-align:left}
-    .bar nav a:not(.gh){display:none}
-  }
-  /* Live-preview demo stacks when its column gets narrower than the text needs (φ^8.5 rem) */
-  @media (max-width:59.7576em){
-    .split{grid-template-columns:1fr}
-    .split .src{border-right:0;border-bottom:1px solid var(--bord)}
-  }
-  @media (max-width:29.0344em){
-    .demo .katex{font-size:1em}
-    .scale li{grid-template-columns:3.3302rem 1fr;gap:var(--s13)}
-  }
-  @media (prefers-reduced-motion:reduce){
-    *,*::before,*::after{animation:none!important;transition:none!important}
-    .tiling path{stroke-dashoffset:0}
-  }
-  @media print{.bar,.cpbtn{display:none}}
-</style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    :root{
+      --gb:#4285F4;--gr:#EA4335;--gy:#FBBC04;--gg:#34A853;
+      --gbt:#E8F0FE;--grt:#FCE8E6;--gyt:#FEF7E0;--ggt:#E6F4EA;
+      --bg:#fff;--surf:#F8F9FA;--bord:#DADCE0;
+      --txt:#202124;--mut:#5F6368;--sub:#9AA0A6;
+      --s3:3px;--s5:5px;--s8:8px;--s13:13px;--s21:21px;--s34:34px;--s55:55px;
+      --r5:5px;--r8:8px;--r13:13px;--r21:21px;--r34:34px;
+      --f13:13px;--f21:21px;--f34:34px;
+      --font:'Google Sans',sans-serif;
+      --mono:'JetBrains Mono',monospace;
+      --fz-h1:34px;
+      --fz-h2:21px;
+      --fz-h3:16px;
+      --fz-body:13px;
+      --fz-latex:13px;
+      --fz-mmd:13px;
+      --fz-code:12px;
+    }
+    body{font-family:var(--font);background:var(--bg);color:var(--txt);padding:34px;max-width:860px;margin:0 auto;line-height:1.85}
+    .md h1{font-size:var(--fz-h1,var(--f34));font-weight:800;margin-top:var(--s34);margin-bottom:var(--s13);position:relative;padding-bottom:8px}
+    .md h1::after{content:'';position:absolute;bottom:0;left:0;width:54px;height:3px;background:linear-gradient(90deg,var(--gb),var(--gg));border-radius:99px}
+    .md h2{font-size:var(--fz-h2,var(--f21));font-weight:700;margin-top:var(--s34);margin-bottom:var(--s8);display:flex;align-items:center;gap:var(--s8)}
+    .md h2::before{content:'';display:block;width:5px;height:19px;background:var(--gr);border-radius:99px;flex-shrink:0}
+    .md h3{font-size:var(--fz-h3,16px);font-weight:700;margin-top:var(--s21);margin-bottom:var(--s5)}
+    .md p{font-size:var(--fz-body,var(--f13));line-height:1.85;margin-bottom:var(--s13)}
+    .md .katex{font-size:var(--fz-latex,1.08em)!important}
+    .md .mermaid svg text,.md .mermaid svg .label{font-size:var(--fz-mmd,inherit)!important}
+    .md code{font-family:var(--mono);font-size:var(--fz-code,12px);background:var(--gbt);color:var(--gb);border-radius:var(--r5);padding:2px var(--s5)}
+    .md pre code{font-size:var(--fz-code,12.5px)!important}
+    .md a {color: var(--gb);text-decoration: none;border-bottom: 1.5px solid var(--gbt);}
+    .md a:visited{color:var(--gb)}
+    .md a:hover{border-bottom-color:var(--gb)}
+    .md ul,.md ol{padding-left:var(--s21);margin-bottom:var(--s13)}
+    .md li{font-size:var(--f13);line-height:1.85;margin-bottom:var(--s5)}
+    .md ul li::marker{color:var(--gb);font-weight:700}
+    .md ol li::marker{color:var(--gr);font-weight:700}
+    .md code{font-family:var(--mono);font-size:12px;background:var(--gbt);color:var(--gb);border-radius:var(--r5);padding:2px var(--s5)}
+    .md pre{background:#202124;color:#E8EAED;border-radius:var(--r13);margin-bottom:var(--s21);border-top:3px solid var(--gb);overflow:hidden;position:relative;padding:0}
+    .pre-header{display:flex;align-items:center;gap:8px;padding:5px 8px;background:#2a2d31;border-bottom:1px solid rgba(255,255,255,.07);position:relative;flex-shrink:0;min-height:34px}
+    .pre-header::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gr) 0 33.3%,var(--gy) 33.3% 66.6%,var(--gg) 66.6%);opacity:.7}
+    .pre-body{overflow-x:auto;padding:var(--s21)}
+    .pre-body--diff{padding:var(--s13) 0}
+    .pre-body::-webkit-scrollbar{height:5px}
+    .pre-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:99px}
+    .pre-body::-webkit-scrollbar-track{background:transparent}
+    .lang-badge{padding:2px 8px;border-radius:5px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;background:rgba(255,255,255,.1);color:#9AA0A6;line-height:1.6;pointer-events:none;user-select:none;flex-shrink:0}
+    .md pre code{background:transparent;color:inherit;padding:0;font-size:12.5px;white-space:pre}
+    .md pre .hljs-keyword,.md pre .hljs-selector-tag,.md pre .hljs-doctag,.md pre .hljs-template-tag,.md pre .hljs-meta .hljs-keyword{color:#8ab4f8}
+    .md pre .hljs-built_in,.md pre .hljs-type,.md pre .hljs-title.class_,.md pre .hljs-title.class_.inherited__,.md pre .hljs-variable.language_{color:#78d9ec}
+    .md pre .hljs-string,.md pre .hljs-char.escape_,.md pre .hljs-addition,.md pre .hljs-meta .hljs-string{color:#81c995}
+    .md pre .hljs-number,.md pre .hljs-literal,.md pre .hljs-symbol,.md pre .hljs-bullet,.md pre .hljs-variable.constant_{color:#fdd663}
+    .md pre .hljs-title,.md pre .hljs-title.function_,.md pre .hljs-section{color:#c58af9}
+    .md pre .hljs-attr,.md pre .hljs-attribute,.md pre .hljs-property,.md pre .hljs-selector-attr,.md pre .hljs-selector-class,.md pre .hljs-selector-id,.md pre .hljs-selector-pseudo{color:#fcad70}
+    .md pre .hljs-tag,.md pre .hljs-name,.md pre .hljs-meta,.md pre .hljs-regexp,.md pre .hljs-deletion,.md pre .hljs-link{color:#f28b82}
+    .md pre .hljs-comment,.md pre .hljs-quote{color:#9aa0a6;font-style:italic}
+    .md pre .hljs-emphasis{font-style:italic}
+    .md pre .hljs-strong{font-weight:700}
+    .diff-wrap{display:block;min-width:max-content}
+    .diff-add,.diff-del,.diff-meta,.diff-ctx{display:block;padding:0 var(--s21) 0 calc(var(--s8)*4 + 13px);position:relative;line-height:1.6;white-space:pre;min-width:100%;box-sizing:border-box}
+    .diff-add::before,.diff-del::before,.diff-meta::before,.diff-ctx::before{content:attr(data-mark);position:absolute;left:8px;width:13px;text-align:center;font-weight:700;font-size:11px;line-height:1.6;user-select:none;pointer-events:none;opacity:.9}
+    .diff-add{background:rgba(52,168,83,.13);color:#B4EFCA;border-left:3px solid #34A853}
+    .diff-add::before{color:#34A853}
+    .diff-del{background:rgba(234,67,53,.13);color:#FFADA6;border-left:3px solid #EA4335}
+    .diff-del::before{color:#EA4335}
+    .diff-meta{background:rgba(66,133,244,.1);color:#8AB4F8;border-left:3px solid #4285F4;font-style:italic;opacity:.85}
+    .diff-meta::before{color:#4285F4}
+    .diff-ctx{color:#9AA0A6;border-left:3px solid transparent}
+    .diff-ctx::before{color:#5F6368;opacity:.6}
+    .md .mermaid-wrap{background:var(--bg);border:1.5px solid var(--gb);border-top:3px solid var(--gb);border-radius:var(--r13);padding:var(--s34) var(--s21) var(--s21);margin-bottom:var(--s21);overflow-x:auto;overflow-y:hidden;text-align:center;position:relative;box-shadow:0 2px 12px rgba(66,133,244,.08)}
+    .md .mermaid{display:block;min-width:80px;max-width:100%}
+    .md .mermaid svg{display:block;max-width:100%;height:auto;overflow:hidden;margin:0 auto;font-family:var(--font) !important}
+    .md .mermaid svg text,.md .mermaid svg .label{font-family:var(--font) !important}
+    .md .mermaid svg .edgePath .path{stroke-width:1.5px}
+    .md .tikz-wrap{text-align:center;margin-bottom:var(--s21);overflow-x:auto}
+    .md .tikz-wrap svg{display:inline-block;max-width:100%;height:auto}
+    .md .mermaid-error{background:var(--grt);border:1px solid var(--gr);border-radius:var(--r8);padding:var(--s13) var(--s21);color:var(--gr);font-size:12px;font-family:var(--mono);text-align:left}
+    .md blockquote{border-left:3px solid var(--gy);background:var(--gyt);padding:var(--s13) var(--s21);border-radius:0 var(--r8) var(--r8) 0;margin-bottom:var(--s13);color:var(--mut);font-style:italic}
+    .md table{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13);background:#fff}
+    .md th{background:var(--gbt);color:var(--gb);padding:var(--s8) var(--s13);font-weight:700;text-align:left}
+    .md th:first-child{border-radius:var(--r8) 0 0 0}
+    .md th:last-child{border-radius:0 var(--r8) 0 0}
+    .md td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord);background:#fff}
+    .md tr:last-child td{border-bottom:none}
+    .md tr:hover td{background:var(--surf)}
+    .ztbl{width:100%;border-collapse:separate;border-spacing:0;margin-bottom:var(--s21);font-size:var(--f13);overflow:hidden;border-radius:var(--r8)}
+    .ztbl thead tr th{background:var(--gbt);color:var(--gb);padding:var(--s8) var(--s13);font-weight:700;text-align:left;border-bottom:2px solid var(--gb)}
+    .ztbl tbody tr td{padding:var(--s8) var(--s13);border-bottom:1px solid var(--bord)}
+    .ztbl tbody tr:last-child td{border-bottom:none}
+    .ztbl.stripe tbody tr:nth-child(even) td{background:var(--surf)}
+    .ztbl.border td,.ztbl.border th{border:1px solid var(--bord)}
+    .ztbl tbody tr:hover td{background:rgba(66,133,244,.05)}
+    .ztbl td.bg-b,.ztbl th.bg-b{background:var(--gbt)!important;color:var(--gb)!important}
+    .ztbl td.bg-r,.ztbl th.bg-r{background:var(--grt)!important;color:var(--gr)!important}
+    .ztbl td.bg-y,.ztbl th.bg-y{background:var(--gyt)!important;color:#7A4F00!important}
+    .ztbl td.bg-g,.ztbl th.bg-g{background:var(--ggt)!important;color:var(--gg)!important}
+    .ztbl td.al,.ztbl th.al{text-align:left}
+    .ztbl td.ac,.ztbl th.ac{text-align:center}
+    .ztbl td.ar,.ztbl th.ar{text-align:right}
+    .ztbl td.fw,.ztbl th.fw{font-weight:700}
+    .md hr{border:none;height:1.5px;background:var(--bord);margin:var(--s34) 0}
+    .md strong{font-weight:700}
+    .md img{max-width:100%;border-radius:var(--r13)}
+    .md input[type=checkbox]{accent-color:var(--gg)}
+    .md .katex-display{overflow-x:auto;overflow-y:hidden;padding:var(--s13) 0;margin:var(--s13) 0}
+    .md .katex{font-size:1.08em}
+    .md .katex-display>.katex{
+      background:linear-gradient(135deg,var(--gbt) 0%,#f0f4ff 100%);
+      border:1.5px solid var(--gb);border-left:4px solid var(--gb);
+      border-radius:var(--r8);padding:var(--s21) var(--s34);display:block;overflow-x:auto;
+      box-shadow:0 2px 8px rgba(66,133,244,.08)
+    }
+    .md .katex:not(.katex-display .katex){padding:1px 4px}
+  
+    .cpbtn{margin-left:auto;flex-shrink:0;display:flex;align-items:center;gap:var(--s5);padding:var(--s5) var(--s8);border-radius:var(--r8);border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#9aa0a6;font-family:var(--font);font-size:11px;font-weight:600;cursor:pointer;opacity:0;transition:opacity .15s,background .15s,color .15s,transform .12s;line-height:1;white-space:nowrap}
+    .cpbtn svg{width:13px;height:13px;flex-shrink:0}
+    .md pre:hover .cpbtn,.cpbtn:focus-visible{opacity:1}
+    .cpbtn:hover{background:rgba(255,255,255,.16);color:#fff}
+    .cpbtn:active{transform:scale(.93)}
+    .cpbtn.ok{background:rgba(52,168,83,.25);color:#34a853;border-color:rgba(52,168,83,.4)}
+    @media print{.cpbtn{display:none!important}}
+  </style>
 </head>
 <body>
-<header class="bar">
-  <div class="wrap">
-    <a class="logo" href="./" aria-label="Złoty MD home">
-      <span class="dots" aria-hidden="true"><i style="background:var(--gb)"></i><i style="background:var(--gr)"></i><i style="background:var(--gy)"></i><i style="background:var(--gg)"></i></span>
-      <span><b style="color:var(--gb)">Z</b><b style="color:var(--gr)">ł</b><b style="color:var(--gy)">o</b><b style="color:var(--gg)">t</b><b style="color:var(--gb)">y</b> MD</span>
-    </a>
-    <nav aria-label="Primary">
-      <a href="#features">Features</a>
-      <a href="#design">Design</a>
-      <a class="gh" href="https://github.com/Rafych/ZlotyMD">GitHub</a>
-    </nav>
-  </div>
-</header>
-
-<main>
-  <div class="wrap hero">
-    <div>
-      <p class="eyebrow">Markdown editor · open source</p>
-      <h1>Writing in proportion<span class="phi">.</span></h1>
-      <p class="lede">Złoty MD is a Markdown editor with golden ratio proportions and a Google-style color palette — every size, gap and split is a power of φ.</p>
-      <a class="cta" href="ZlotyMD.html">Open web editor
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-      </a>
-      <p class="meta">Runs in the browser · installable as an app · MIT License</p>
-    </div>
-    <svg class="tiling" viewBox="0 0 13 21" role="img" aria-label="A golden rectangle divided into Fibonacci squares 13, 8, 5, 3, 2, 1, 1 in blue, red, yellow and green, with the golden spiral drawn through them">
-      <rect style="--i:0" x=".06" y=".06" width="12.88" height="12.88" fill="#E3EDFD"/>
-      <rect style="--i:1" x="5.06" y="13.06" width="7.88" height="7.88" fill="#FCE3E0"/>
-      <rect style="--i:2" x=".06" y="16.06" width="4.88" height="4.88" fill="#FEF0C7"/>
-      <rect style="--i:3" x=".06" y="13.06" width="2.88" height="2.88" fill="#DDF0E2"/>
-      <rect style="--i:4" x="3.06" y="13.06" width="1.88" height="1.88" fill="#4285F4"/>
-      <rect style="--i:5" x="4.06" y="15.06" width=".88" height=".88" fill="#EA4335"/>
-      <rect style="--i:6" x="3.06" y="15.06" width=".88" height=".88" fill="#FBBC04"/>
-      <path d="M0 0A13 13 0 0 1 13 13A8 8 0 0 1 5 21A5 5 0 0 1 0 16A3 3 0 0 1 3 13A2 2 0 0 1 5 15A1 1 0 0 1 4 16A1 1 0 0 1 3 15" fill="none" stroke="#1F1F1F" stroke-width=".0902" stroke-linecap="round"/>
-    </svg>
-  </div>
-
-  <section id="features" class="band">
-    <div class="wrap">
-      <div class="sec-head reveal">
-        <h2>Everything a technical document needs</h2>
-        <p>Standard Markdown, LaTeX formulas, Mermaid diagrams and highlighted code, rendered live next to your text.</p>
-      </div>
-
-      <div class="feat reveal">
-        <div class="copy">
-          <span class="num">φ⁰</span>
-          <h3>Markdown</h3>
-          <p>Standard Markdown syntax is supported, with a toolbar for headings, emphasis, links, tables and task lists.</p>
-        </div>
-        <pre><div class="pre-header"><span class="lang-badge">Markdown</span><button class="cpbtn" type="button" data-copy="Copy" data-copied="Copied"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"></rect><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"></path></svg>Copy</button></div><div class="pre-body"><code><span class="hljs-section"># Heading</span>
+<div class="md" id="mo" style="display: block;"><h1>Złoty MD</h1>
+<blockquote>
+<p>A Markdown editor with golden ratio proportions and a Google-style color palette.</p>
+</blockquote>
+<h1><a href="ZlotyMD.html">Open web editor</a></h1>
+<h2>About the project</h2>
+<p><strong>Złoty MD</strong> is a modern web-based Markdown editor that combines writing convenience with the aesthetics of the golden ratio. The interface is inspired by Google's color palette and is designed for comfortable work with technical documentation, notes, and publications.</p>
+<h2>Features</h2>
+<h3><strong>Markdown</strong></h3>
+<p>Standard Markdown syntax is supported:</p>
+<pre><div class="pre-header"><span class="lang-badge">Markdown</span><button class="cpbtn" type="button" data-copy="Copy" data-copied="Copied"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"></rect><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"></path></svg>Copy</button></div><div class="pre-body"><code class="language-markdown" data-hl="markdown"><span class="hljs-section"># Heading</span>
 <span class="hljs-strong">**Bold text**</span>
 <span class="hljs-emphasis">*Italic*</span>
 <span class="hljs-bullet">-</span> List
-<span class="hljs-bullet">-</span> Item</code></div></pre>
-      </div>
-
-      <div class="feat flip reveal">
-        <div class="copy">
-          <span class="num">φ¹</span>
-          <h3>LaTeX</h3>
-          <p>Mathematical formulas, inline with <code>$…$</code> or as display blocks with <code>$$…$$</code>, typeset by KaTeX.</p>
-        </div>
-        <div class="demo pad"><div id="formula" data-tex="\phi = \dfrac{1+\sqrt{5}}{2} = 1 + \cfrac{1}{1 + \cfrac{1}{1 + \cdots}}">φ = (1 + √5) / 2</div></div>
-      </div>
-
-      <div class="feat reveal">
-        <div class="copy">
-          <span class="num">φ²</span>
-          <h3>Mermaid</h3>
-          <p>Create flowcharts, sequence diagrams and more directly inside the document.</p>
-        </div>
-        <div class="demo"><div class="mermaid">flowchart LR
-    A[Start] --> B{Check}
-    B -->|Yes| C[Continue]
-    B -->|No| D[Finish]</div></div>
-      </div>
-
-      <div class="feat flip reveal">
-        <div class="copy">
-          <span class="num">φ³</span>
-          <h3>Code highlighting</h3>
-          <p>Various programming languages are supported, each block labelled with its language and a copy button.</p>
-        </div>
-        <pre><div class="pre-header"><span class="lang-badge">JavaScript</span><button class="cpbtn" type="button" data-copy="Copy" data-copied="Copied"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"></rect><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"></path></svg>Copy</button></div><div class="pre-body"><code><span class="hljs-keyword">const</span> φ = (<span class="hljs-number">1</span> + <span class="hljs-built_in">Math</span>.<span class="hljs-title">sqrt</span>(<span class="hljs-number">5</span>)) / <span class="hljs-number">2</span>;
-<span class="hljs-keyword">function</span> <span class="hljs-title">split</span>(total) {
-  <span class="hljs-keyword">return</span> [total / φ, total / φ ** <span class="hljs-number">2</span>];
-}</code></div></pre>
-      </div>
-
-      <div class="feat reveal">
-        <div class="copy">
-          <span class="num">φ⁴</span>
-          <h3>Live preview</h3>
-          <p>Instant real-time rendering of editing results, in the same 61.8 : 38.2 split the editor uses.</p>
-        </div>
-        <div class="demo split" aria-hidden="true">
-          <div class="src">## Golden notes
-*proportion is a habit*
-
-- edit on the left
-- read on the right<span class="caret"></span></div>
-          <div class="out"><div class="sheet"><strong>Golden notes</strong><em>proportion is a habit</em><ul><li>edit on the left</li><li>read on the right</li></ul></div></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="design">
-    <div class="wrap">
-      <div class="sec-head reveal">
-        <h2>One ratio, all the way down</h2>
-        <p>Interface proportions are based on the golden ratio. The color scheme is inspired by Material Design and Google's palette.</p>
-      </div>
-      <div class="system">
-        <ol class="scale reveal" aria-label="Type scale">
-          <li><span class="k">16·φ<sup>2</sup></span><span class="v" style="--fs:2.618rem">Heading 1</span></li>
-          <li><span class="k">16·φ<sup>1</sup></span><span class="v" style="--fs:1.618rem">Heading 2</span></li>
-          <li><span class="k">16·φ<sup>1/2</sup></span><span class="v" style="--fs:1.272rem">Heading 3</span></li>
-          <li><span class="k">16·φ<sup>0</sup></span><span class="v" style="--fs:1rem;font-weight:400;letter-spacing:0">Body text, line height φ</span></li>
-          <li><span class="k">16·φ<sup>−1/4</sup></span><span class="v" style="--fs:.8867rem;font-weight:400;letter-spacing:0;font-family:var(--mono)">code, interface</span></li>
-        </ol>
-        <div class="props reveal">
-          <div>
-            <h3>Layout</h3>
-            <div class="golden-rect" aria-label="Editor and preview split 61.8 to 38.2"><span>editor 61.8 %</span><span>preview 38.2 %</span></div>
-          </div>
-          <div>
-            <h3>Colour</h3>
-            <div class="strip" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-            <div class="strip-legend"><span>1</span><span>1/φ</span><span>1/φ²</span><span>1/φ³</span></div>
-            <p style="margin-top:var(--s13)">The four Google colours appear in the proportions 1 : 1/φ : 1/φ² : 1/φ³, which add up to √5. Blue is the single accent for actions; red, yellow and green mark state.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="band">
-    <div class="wrap who reveal">
-      <h2>Who is it for?</h2>
-      <ul>
-        <li>Developers</li>
-        <li>Technical writers</li>
-        <li>Students and researchers</li>
-        <li>Documentation authors</li>
-        <li>Markdown users</li>
-      </ul>
-    </div>
-  </section>
-</main>
-
-<footer>
-  <div class="wrap">
-    <p>The project is open source and welcomes community contributions.<br>© 2026 <a href="https://github.com/Rafych">Rafych</a> and <a href="https://github.com/hiromichipixel">Hiromichi</a>. MIT License.</p>
-    <p class="right"><a href="https://github.com/Rafych/ZlotyMD">github.com/Rafych/ZlotyMD</a></p>
-  </div>
-</footer>
-
+<span class="hljs-bullet">-</span> Item
+</code></div></pre>
+<h3><strong>LaTeX</strong></h3>
+<p>The editor supports mathematical formulas via LaTeX.</p>
+<p>Inline formulas:</p>
+<pre><div class="pre-header"><span class="lang-badge">LaTeX</span><button class="cpbtn" type="button" data-copy="Copy" data-copied="Copied"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"></rect><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"></path></svg>Copy</button></div><div class="pre-body"><code class="language-latex" data-hl="latex">E = mc<span class="hljs-built_in">^</span>2
+</code></div></pre>
+<p>Block formulas:</p>
+<pre><div class="pre-header"><span class="lang-badge">LaTeX</span><button class="cpbtn" type="button" data-copy="Copy" data-copied="Copied"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"></rect><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"></path></svg>Copy</button></div><div class="pre-body"><code class="language-latex" data-hl="latex"><span class="hljs-keyword">\int</span><span class="hljs-built_in">_</span>{a}<span class="hljs-built_in">^</span>{b} f(x)<span class="hljs-keyword">\,</span>dx
+</code></div></pre>
+<h3><strong>Mermaid</strong></h3>
+<p>Create diagrams directly inside the document.</p>
+<div class="mermaid-wrap"><div class="mermaid" id="mmd-1794198492922-0-ouk3z" data-src="flowchart TD
+    A[Start] --&gt; B{Check}
+    B --&gt;|Yes| C[Continue]
+    B --&gt;|No| D[Finish]">flowchart TD
+    A[Start] --&gt; B{Check}
+    B --&gt;|Yes| C[Continue]
+    B --&gt;|No| D[Finish]</div></div>
+<h3><strong>Code highlighting</strong></h3>
+<p>Various programming languages are supported.</p>
+<pre><div class="pre-header"><span class="lang-badge">JavaScript</span><button class="cpbtn" type="button" data-copy="Copy" data-copied="Copied"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"></rect><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"></path></svg>Copy</button></div><div class="pre-body"><code class="language-javascript" data-hl="javascript"><span class="hljs-keyword">function</span> <span class="hljs-title function_">hello</span>(<span class="hljs-params"></span>) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">"Hello, world!"</span>);
+}
+</code></div></pre>
+<h3><strong>Live preview</strong></h3>
+<p>Instant real-time rendering of editing results.</p>
+<h2>Design</h2>
+<ul>
+<li>Interface proportions are based on the golden ratio.</li>
+<li>The color scheme is inspired by Material Design and Google's palette.</li>
+<li>Responsive interface for desktop and mobile devices.</li>
+<li>Minimalist and user-friendly workflow.</li>
+</ul>
+<h2>Who is it for?</h2>
+<ul>
+<li>Developers</li>
+<li>Technical writers</li>
+<li>Students and researchers</li>
+<li>Documentation authors</li>
+<li>Markdown users</li>
+</ul>
+<h2>Open source</h2>
+<p>The project is open source and welcomes community contributions.</p>
+<h2>Copyright</h2>
+<p>© 2026 <a href="https://github.com/Rafych">Rafych</a> and <a href="https://github.com/hiromichipixel">Hiromichi</a>. MIT License.<br>GitHub: <a href="https://github.com/Rafych/ZlotyMD">https://github.com/Rafych/ZlotyMD</a></p>
+<hr>
+<p>This page was also created using Złoty MD.</p>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
 <script>
-(function(){
-  var f=document.getElementById('formula');
-  if(f&&typeof katex!=='undefined'){try{katex.render(f.dataset.tex,f,{displayMode:true,throwOnError:false});}catch(e){}}
-})();
 if(typeof mermaid!=='undefined'){
-  mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'base',
-    themeVariables:{fontFamily:'Google Sans, sans-serif',primaryColor:'#E3EDFD',primaryTextColor:'#1F1F1F',primaryBorderColor:'#4285F4',
-    secondaryColor:'#DDF0E2',tertiaryColor:'#FEF0C7',background:'#ffffff',mainBkg:'#E3EDFD',nodeBorder:'#4285F4',lineColor:'#747775',edgeLabelBackground:'#ffffff'},
-    flowchart:{htmlLabels:true,curve:'basis'}});
+  mermaid.initialize({startOnLoad:false,securityLevel:'loose',theme:'base',
+    themeVariables:{primaryColor:'#E8F0FE',primaryTextColor:'#1a1a2e',primaryBorderColor:'#4285F4',
+    secondaryColor:'#E6F4EA',tertiaryColor:'#FEF7E0',background:'#ffffff',
+    mainBkg:'#E8F0FE',nodeBorder:'#4285F4',lineColor:'#5F6368',
+    edgeLabelBackground:'#ffffff',
+    noteBkgColor:'#FEF7E0',noteBorderColor:'#FBBC04'},
+    flowchart:{htmlLabels:true,curve:'basis'},
+    pie:{useMaxWidth:true}});
   (async function(){
     if(document.fonts&&document.fonts.ready){try{await document.fonts.ready;}catch(e){}}
-    try{await mermaid.run({querySelector:'.mermaid',suppressErrors:true});}catch(e){}
+    var nodes=Array.from(document.querySelectorAll('.mermaid'));
+    for(var idx=0;idx<nodes.length;idx++){
+      var node=nodes[idx];
+      node.id='mmd-'+Date.now()+'-'+idx+'-'+Math.random().toString(36).slice(2,7);
+      try{
+        await mermaid.run({nodes:[node],suppressErrors:true});
+        node.querySelectorAll('svg').forEach(function(svg){
+          var vb=svg.getAttribute('viewBox');
+          if(!vb)return;
+          var parts=vb.trim().split(/s+/);
+          var vw=parseFloat(parts[2]),vh=parseFloat(parts[3]);
+          if(vw>0&&vh>0&&!parseFloat(svg.getAttribute('height')||'0')){
+            svg.setAttribute('height',vh);
+            if(!parseFloat(svg.getAttribute('width')||'0'))svg.setAttribute('width',vw);
+          }
+        });
+      }catch(e){}
+    }
   })();
 }
 </script>
