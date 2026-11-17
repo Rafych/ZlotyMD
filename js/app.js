@@ -2115,12 +2115,18 @@ function iLatexBlock() {
   render(ed.value);
 }
 // Вставляет шаблон diff-блока
-function iDiff() {
+async function iDiff() {
   if (_roGuard()) return;
   const t0 = LANGS[currentLang] || LANGS['en'];
-  const lang = prompt(t0.diffPrompt || 'Enter language name (leave blank for plain diff):', '');
-  const fence = lang && lang.trim() ? `diff_${lang.trim()}` : 'diff';
+  // Выделение запоминаем до открытия окна
   const { s, e, t } = gs();
+  const lang = await showPromptModal(
+    t0.diffPrompt || 'Enter language name (leave blank for plain diff):',
+    { placeholder: 'javascript', suggestions: Array.from(new Set(Object.keys(LANG_NAMES))).sort() },
+    { title: t0.ttDiff, ok: t0.dlgInsert }
+  );
+  if (lang === null) return; // «Отмена» — ничего не вставляем
+  const fence = lang.trim() ? `diff_${lang.trim().replace(/\s+/g, '_')}` : 'diff';
   const body = t || t0.diffDefault || '- removed line\n+ added line';
   const r = `\`\`\`${fence}\n${body}\n\`\`\``;
   ed.value = ed.value.slice(0, s) + r + ed.value.slice(e);
@@ -2363,6 +2369,8 @@ const LANGS = {
     loadingLang: 'Loading language…',
     errModalTitle: 'Error',
     errOk: 'OK',
+    dlgInsert: 'Insert',
+    aiResetConfirmBtn: 'Reset',
     dlEmptyTitle: 'Nothing to download',
     dlEmptyMsg: 'The document is empty. Write something before downloading.',
     pvEmptyTitle: 'Cannot preview',
@@ -3107,6 +3115,90 @@ function showErrorModal(message, title) {
     overlay.addEventListener('click', cleanup);
     document.addEventListener('keydown', onKey, true);
   });
+}
+
+// Модальное окно подтверждения или ввода текста (вместо window.confirm / window.prompt).
+// opts: { title, message, ok, cancel, danger, input: { value, placeholder, suggestions } }.
+// Результат: для подтверждения — true/false, для ввода — строка или null (отмена)
+function _openDialog(opts) {
+  return new Promise(resolve => {
+    const overlay = document.getElementById('dlgOverlay');
+    const modal = document.getElementById('dlgModal');
+    const input = document.getElementById('dlgInput');
+    const list = document.getElementById('dlgList');
+    const okBtn = document.getElementById('dlgOkBtn');
+    const cancelBtn = document.getElementById('dlgCancelBtn');
+    const withInput = !!opts.input;
+    const prevFocus = document.activeElement;
+    document.getElementById('dlgTitle').textContent = opts.title || '';
+    document.getElementById('dlgMsg').textContent = opts.message || '';
+    okBtn.textContent = opts.ok || tr('errOk');
+    cancelBtn.textContent = opts.cancel || tr('unsavedCancel');
+    // Опасное действие (удаление, сброс) — красная кнопка, обычное — синяя
+    okBtn.className = 'ai-nav-btn ' + (opts.danger ? 'ai-nav-btn-yes' : 'ai-nav-btn-save');
+    modal.classList.toggle('has-input', withInput);
+    modal.setAttribute('role', withInput ? 'dialog' : 'alertdialog');
+    list.replaceChildren();
+    if (withInput) {
+      input.value = opts.input.value || '';
+      input.placeholder = opts.input.placeholder || '';
+      (opts.input.suggestions || []).forEach(v => {
+        const o = document.createElement('option');
+        o.value = v;
+        list.appendChild(o);
+      });
+    }
+    overlay.classList.add('open');
+    modal.classList.add('open');
+    // Фокус: поле ввода; для опасного подтверждения — «Отмена» (Enter не удалит случайно)
+    if (withInput) {
+      input.focus();
+      input.select();
+    } else (opts.danger ? cancelBtn : okBtn).focus();
+    const done = ok => {
+      overlay.classList.remove('open');
+      modal.classList.remove('open');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      overlay.removeEventListener('click', onCancel);
+      document.removeEventListener('keydown', onKey, true);
+      if (prevFocus && typeof prevFocus.focus === 'function' && document.contains(prevFocus)) {
+        try {
+          prevFocus.focus({ preventScroll: true });
+        } catch (e) {}
+      }
+      resolve(withInput ? (ok ? input.value : null) : ok);
+    };
+    const onOk = () => done(true);
+    const onCancel = () => done(false);
+    const onKey = e => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        done(false);
+      } else if (e.key === 'Enter' && e.target === input && !e.isComposing) {
+        e.preventDefault();
+        e.stopPropagation();
+        done(true);
+      } else if (e.key === 'Tab') {
+        // Фокус не уходит из окна
+        const items = [withInput ? input : null, cancelBtn, okBtn].filter(Boolean);
+        const i = items.indexOf(document.activeElement);
+        e.preventDefault();
+        items[(i + (e.shiftKey ? items.length - 1 : 1)) % items.length].focus();
+      }
+    };
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    overlay.addEventListener('click', onCancel);
+    document.addEventListener('keydown', onKey, true);
+  });
+}
+function showConfirmModal(message, opts) {
+  return _openDialog(Object.assign({ message }, opts));
+}
+function showPromptModal(message, input, opts) {
+  return _openDialog(Object.assign({ message, input: input || {} }, opts));
 }
 
 // Преобразует ошибку загрузки языка в локализованное сообщение и показывает модальное окно
@@ -4833,7 +4925,7 @@ async function onDocDeleteClick(event, id) {
   const t = LANGS[currentLang] || LANGS['en'];
   await loadDocIndex();
   if (docIndex.length <= 1) {
-    alert(t.docsCantDeleteLast || 'You must have at least one document.');
+    await showErrorModal(t.docsCantDeleteLast || 'You must have at least one document.', t.docsDelete);
     return;
   }
   // Документ, который редактируется в другом окне, удалить нельзя
@@ -4841,7 +4933,13 @@ async function onDocDeleteClick(event, id) {
     showErrorModal(tr('docsDeleteLocked'));
     return;
   }
-  if (!confirm(t.docsConfirmDelete || 'Delete this document? This cannot be undone.')) return;
+  const name = (docIndex.find(d => d.id === id) || {}).name || '';
+  const ok = await showConfirmModal(t.docsConfirmDelete || 'Delete this document? This cannot be undone.', {
+    title: name,
+    ok: t.docsDelete,
+    danger: true
+  });
+  if (!ok) return;
   if (!(await confirmAiNav())) return;
   if (id === currentDocId) {
     // Отложенное сохранение не должно вернуть удалённую запись
@@ -5384,7 +5482,11 @@ function _refreshAiChatPanel() {
 // Сбрасывает текущий диалог с ИИ-ассистентом (только для текущего документа)
 async function resetAiConversation() {
   const t = LANGS[currentLang] || LANGS['en'];
-  if (_aiConvHistory.length && !confirm(t.aiResetConfirm)) return;
+  if (
+    _aiConvHistory.length &&
+    !(await showConfirmModal(t.aiResetConfirm, { title: t.aiResetBtnTitle, ok: t.aiResetConfirmBtn, danger: true }))
+  )
+    return;
   _aiConvHistory = [];
   _aiPendingEdits = {};
   // Очищается только переписка: бэкенд и модель этого разговора остаются
