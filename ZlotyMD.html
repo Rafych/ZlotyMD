@@ -138,7 +138,7 @@
     <!-- Декоративный фон в стиле золотого сечения -->
     <div class="doodle" aria-hidden="true">
       <svg
-        style="top: 4%; right: 2%; animation: fA 6765ms ease-in-out infinite"
+        style="top: 4%; right: 2%; animation: fA 6s ease-in-out infinite"
         width="89"
         height="89"
         viewBox="0 0 89 89"
@@ -155,7 +155,7 @@
         />
       </svg>
       <svg
-        style="top: 19%; right: 7%; animation: fB 6765ms ease-in-out infinite"
+        style="top: 19%; right: 7%; animation: fB 8s ease-in-out infinite"
         width="55"
         height="55"
         viewBox="0 0 55 55"
@@ -170,7 +170,7 @@
         />
       </svg>
       <svg
-        style="top: 38%; right: 1%; animation: fC 6765ms ease-in-out infinite 987ms"
+        style="top: 38%; right: 1%; animation: fC 7s ease-in-out infinite 1s"
         width="34"
         height="34"
         viewBox="0 0 34 34"
@@ -199,7 +199,7 @@
         />
       </svg>
       <svg
-        style="top: 62%; right: 4%; animation: fD 10946ms ease-in-out infinite 610ms"
+        style="top: 62%; right: 4%; animation: fD 9s ease-in-out infinite 0.5s"
         width="55"
         height="55"
         viewBox="0 0 55 55"
@@ -215,7 +215,7 @@
         />
       </svg>
       <svg
-        style="top: 82%; right: 2%; animation: fA 6765ms ease-in-out infinite 1597ms"
+        style="top: 82%; right: 2%; animation: fA 6.5s ease-in-out infinite 2s"
         width="34"
         height="34"
         viewBox="0 0 34 34"
@@ -226,7 +226,7 @@
         <circle cx="22" cy="22" r="5" fill="#4285F4" opacity=".18" />
       </svg>
       <svg
-        style="bottom: 4%; left: 1%; animation: fB 6765ms ease-in-out infinite 1597ms"
+        style="bottom: 4%; left: 1%; animation: fB 7s ease-in-out infinite 1.5s"
         width="89"
         height="55"
         viewBox="0 0 89 55"
@@ -241,7 +241,7 @@
         />
       </svg>
       <svg
-        style="top: 28%; left: 0.5%; animation: fC 6765ms ease-in-out infinite"
+        style="top: 28%; left: 0.5%; animation: fC 8.5s ease-in-out infinite"
         width="34"
         height="34"
         viewBox="0 0 34 34"
@@ -250,7 +250,7 @@
         <circle cx="17" cy="17" r="7" fill="#FBBC04" opacity=".12" />
       </svg>
       <svg
-        style="top: 52%; left: 2%; animation: fD 6765ms ease-in-out infinite 2584ms"
+        style="top: 52%; left: 2%; animation: fD 6s ease-in-out infinite 3s"
         width="34"
         height="34"
         viewBox="0 0 34 34"
@@ -267,7 +267,7 @@
         />
       </svg>
       <svg
-        style="top: 7%; left: 4%; animation: fA 10946ms ease-in-out infinite 987ms"
+        style="top: 7%; left: 4%; animation: fA 9s ease-in-out infinite 0.8s"
         width="55"
         height="21"
         viewBox="0 0 55 21"
@@ -278,7 +278,7 @@
         <circle cx="48" cy="10.5" r="5.5" fill="#34A853" opacity=".18" />
       </svg>
       <svg
-        style="top: 73%; right: 9%; animation: fB 6765ms ease-in-out infinite 2584ms"
+        style="top: 73%; right: 9%; animation: fB 7.5s ease-in-out infinite 2.5s"
         width="55"
         height="55"
         viewBox="0 0 55 55"
@@ -618,7 +618,7 @@
               onclick="iLatexInline()"
               style="
                 font-family: var(--mono);
-                font-size: 10px;
+                font-size: 11px;
                 font-weight: 700;
                 letter-spacing: -0.5px;
               "
@@ -708,6 +708,44 @@
             >
               tbl
             </button>
+          </div>
+        </div>
+
+        <!-- Индикатор статуса сохранения документа -->
+        <div class="save-chip" id="saveChip">
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M11 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V5z" />
+            <path d="M11 2v3H5V2" />
+            <rect x="4" y="9" width="8" height="4" rx=".5" />
+          </svg>
+          <span id="saveLabel">—</span>
+        </div>
+
+        <!-- Статистика документа: символы, слова и т.д. -->
+        <div class="stats">
+          <div class="chip">
+            <div class="dot" style="background: var(--gb)"></div>
+            <strong id="cc">0</strong><span data-i18n="chars">chars</span>
+          </div>
+          <div class="chip">
+            <div class="dot" style="background: var(--gg)"></div>
+            <strong id="wc">0</strong><span data-i18n="words">words</span>
+          </div>
+          <div class="chip">
+            <div class="dot" style="background: var(--gr)"></div>
+            <strong id="lc">0</strong><span data-i18n="lines">lines</span>
+          </div>
+          <!-- Число страниц при экспорте в PDF (считается в фоне) -->
+          <div class="chip chip-pdf">
+            <div class="dot" style="background: var(--gy)"></div>
+            <strong id="pc">0</strong><span data-i18n="pdfPages">pages</span>
           </div>
         </div>
 
@@ -918,7 +956,7 @@
       <div class="about-modal" id="aboutModal">
         <div class="about-header">
           <div class="about-logo">
-            <div class="logo-grid" style="width: 26px; height: 26px; gap: 5px">
+            <div class="logo-grid" style="width: 28px; height: 28px; gap: 4px">
               <div class="ld" style="background: var(--gb)"></div>
               <div class="ld" style="background: var(--gr)"></div>
               <div class="ld" style="background: var(--gy)"></div>
@@ -1386,7 +1424,7 @@
       <div
         class="font-modal"
         id="docsModal"
-        style="width: min(466px, calc(100vw - 2 * var(--s21)))"
+        style="width: min(420px, calc(100vw - 2 * var(--s21)))"
       >
         <div class="font-modal-header">
           <span data-i18n="docsPanelTitle">Documents</span>
@@ -1547,7 +1585,7 @@
               title="Reset conversation"
               data-i18n-title="aiResetBtnTitle"
               onclick="resetAiConversation()"
-              style="margin-right: 5px"
+              style="margin-right: 4px"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -1898,48 +1936,6 @@
         </div>
 
       </div>
-
-      <!-- Строка состояния (21px): статус сохранения и статистика документа.
-           Высоты рамок интерфейса образуют ряд золотого сечения: шапка 55 → подписи панелей 34 → строка состояния 21 -->
-      <footer class="sb">
-          <!-- Индикатор статуса сохранения документа -->
-          <div class="save-chip" id="saveChip">
-            <svg
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path d="M11 2H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V5z" />
-              <path d="M11 2v3H5V2" />
-              <rect x="4" y="9" width="8" height="4" rx=".5" />
-            </svg>
-            <span id="saveLabel">—</span>
-          </div>
-
-          <!-- Статистика документа: символы, слова и т.д. -->
-          <div class="stats">
-            <div class="chip">
-              <div class="dot" style="background: var(--gb)"></div>
-              <strong id="cc">0</strong><span data-i18n="chars">chars</span>
-            </div>
-            <div class="chip">
-              <div class="dot" style="background: var(--gg)"></div>
-              <strong id="wc">0</strong><span data-i18n="words">words</span>
-            </div>
-            <div class="chip">
-              <div class="dot" style="background: var(--gr)"></div>
-              <strong id="lc">0</strong><span data-i18n="lines">lines</span>
-            </div>
-            <!-- Число страниц при экспорте в PDF (считается в фоне) -->
-            <div class="chip chip-pdf">
-              <div class="dot" style="background: var(--gy)"></div>
-              <strong id="pc">0</strong><span data-i18n="pdfPages">pages</span>
-            </div>
-          </div>
-      </footer>
     </div>
 
     <!-- Диалог вставки пользовательской таблицы -->
