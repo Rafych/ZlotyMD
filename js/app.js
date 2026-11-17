@@ -18,6 +18,11 @@ let _savedContent = '';
 const _bc = typeof BroadcastChannel === 'function' ? new BroadcastChannel('zmd-docs') : null;
 const _hasLocks = !!(navigator.locks && typeof navigator.locks.request === 'function');
 
+// Значки чипов вложений ИИ (SVG вместо эмодзи 📄/📝 и символа ×)
+const CHIP_PDF_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 1.5H4.3a1.6 1.6 0 0 0-1.6 1.6v9.8a1.6 1.6 0 0 0 1.6 1.6h7.4a1.6 1.6 0 0 0 1.6-1.6V5.3Z"/><path d="M9.5 1.5v3.8h3.8"/><path d="M5.4 11.6V8.4h1a1 1 0 0 1 0 2h-1"/></svg>';
+const CHIP_TEXT_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 1.5H4.3a1.6 1.6 0 0 0-1.6 1.6v9.8a1.6 1.6 0 0 0 1.6 1.6h7.4a1.6 1.6 0 0 0 1.6-1.6V5.3Z"/><path d="M9.5 1.5v3.8h3.8"/><path d="M5.4 8.6h5.2M5.4 11.2h3.6"/></svg>';
+const CHIP_REMOVE_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8"/></svg>';
+
 // Кегли по умолчанию — степени φ от 16px: H1 φ² · H2 φ · H3 √φ · текст 1 · код φ^-0.25 · Mermaid φ^-0.5
 const FONT_DEFAULTS = {
   h1: 42,
@@ -2193,10 +2198,10 @@ const LANGS = {
     aboutBtnTitle: 'Credits & Copyright',
     aiBtnTitle: 'AI Assistant',
     aiWelcome:
-      '👋 Hi! I\'m the AI Assistant (Claude) for this Markdown editor.<br><br>Enter your Anthropic API key and press "Save", then select text and click a preset, or ask anything freely.',
+      'Hi! I\'m the AI Assistant (Claude) for this Markdown editor.<br><br>Enter your Anthropic API key and press "Save", then select text and click a preset, or ask anything freely.',
     aiKeyPlaceholder: 'Enter Anthropic API key…',
     aiSaveBtn: 'Save',
-    aiSavedBtn: 'Saved ✓',
+    aiSavedBtn: 'Saved',
     aiPresetContinue: 'Continue',
     aiPresetSummarize: 'Summarize',
     aiPresetTranslateEn: 'To English',
@@ -2213,24 +2218,24 @@ const LANGS = {
     aiPresetFactcheckPrompt:
       'Fact-check this text and correct any claims that are inaccurate, outdated, or unverifiable. Return the corrected text directly, with no annotations or notes about what changed. If everything checks out, return the text unchanged.',
     aiInputPlaceholder: 'Ask a question or give an instruction…',
-    aiInsertBtn: '⬇ Insert into editor',
-    aiAcceptBtn: '✓ Accept',
-    aiRejectBtn: '✕ Reject',
-    aiEditApplied: '✓ Applied to editor',
-    aiEditDiscarded: '✕ Discarded',
-    aiEditStale: '⚠ Editor changed — could not apply',
-    aiKeyWarning: '⚠ Please enter your {backend} API key and press "Save".',
-    aiThinking: '● Thinking…',
+    aiInsertBtn: 'Insert into editor',
+    aiAcceptBtn: 'Accept',
+    aiRejectBtn: 'Reject',
+    aiEditApplied: 'Applied to editor',
+    aiEditDiscarded: 'Discarded',
+    aiEditStale: 'Editor changed — could not apply',
+    aiKeyWarning: 'Please enter your {backend} API key and press "Save".',
+    aiThinking: 'Thinking…',
     pvPopBtnTitle: 'Open in new window',
     ttTikz: 'TikZ figure (```tikz ... ```)',
-    tikzLoadError: '⚠ TikZ: could not load the TeX engine (an internet connection is needed the first time).',
-    tikzCompileError: '⚠ TikZ: compilation failed. Check the code for errors.',
+    tikzLoadError: 'TikZ: could not load the TeX engine (an internet connection is needed the first time).',
+    tikzCompileError: 'TikZ: compilation failed. Check the code for errors.',
     tikzUnsupportedPkgs: 'Packages not available in the browser TeX: {pkgs}',
     aiModelsRefreshTitle: 'Reload the model list from the API',
-    aiModelsFetchError: '⚠ Could not load the model list: ',
+    aiModelsFetchError: 'Could not load the model list: ',
     aiModelNotFound: 'This model is not available. Press ↻ to reload the model list and pick another one.',
-    aiRefusal: '⚠ The model declined to answer this request.',
-    aiErrorPrefix: '⚠ Error: ',
+    aiRefusal: 'The model declined to answer this request.',
+    aiErrorPrefix: 'Error: ',
     aiSelectedSuffix: ' (selected text: {n} chars)',
     aiEmptyResponse: '(empty response)',
     aiNavWarning: 'The AI is still responding. If you leave now, the response will be lost. Continue?',
@@ -2254,7 +2259,7 @@ const LANGS = {
     aiTruncatedError:
       'Response was cut off (max output length reached) before producing any text. Try a shorter selection, or switch model.',
     aiDiffModalTitle: 'Review edit',
-    aiReviewEditMsg: '✎ Edit proposed',
+    aiReviewEditMsg: 'Edit proposed',
     aiOpenReviewBtn: 'Review',
     aiResetBtnTitle: 'Reset conversation',
     aiOfflineTitle: 'AI features are unavailable offline',
@@ -2263,10 +2268,10 @@ const LANGS = {
       'You are an AI assistant that helps write and edit Markdown documents. Use Markdown syntax appropriately and give helpful answers. Keep responses concise and practical. The user has a deliberate personal notation style, so avoid rewriting it more than necessary — instead improve readability with targeted techniques, such as consolidating math expressions into LaTeX.',
     aiAttachBtnTitle: 'Attach file',
     aiRemoveFileTitle: 'Remove file',
-    aiFileTooLarge: '⚠ File "{name}" is too large (max {max}).',
-    aiFileReadError: '⚠ Could not read file "{name}".',
-    aiUnsupportedFile: '⚠ Unsupported file type: "{name}".',
-    aiTooManyFiles: '⚠ Max {max} files per message.',
+    aiFileTooLarge: 'File "{name}" is too large (max {max}).',
+    aiFileReadError: 'Could not read file "{name}".',
+    aiUnsupportedFile: 'Unsupported file type: "{name}".',
+    aiTooManyFiles: 'Max {max} files per message.',
     aboutAuthor: 'Author',
     aboutAnd: ' and ',
     aboutCopyright: 'Copyright',
@@ -2299,7 +2304,7 @@ const LANGS = {
     defaultImgAlt: 'alt text',
     tblHeaderDefault: 'Header',
     tblCellDefault: 'Cell',
-    mermaidSyntaxError: '⚠ Mermaid: syntax error (diagram syntax error)',
+    mermaidSyntaxError: 'Mermaid: syntax error (diagram syntax error)',
     savedLabel: 'Saved',
     toastSaving: 'Saving…',
     toastSaved: 'Saved',
@@ -2605,7 +2610,7 @@ async function refreshAiModels(force) {
   if (!_aiKey) {
     if (force) {
       const backendName = AI_BACKEND === 'gemini' ? 'Google AI Studio' : 'Anthropic';
-      _aiAddMsg(t.aiKeyWarning.replace('{backend}', backendName), 'thinking');
+      _aiAddMsg(t.aiKeyWarning.replace('{backend}', backendName), 'thinking warn');
     }
     return;
   }
@@ -2631,7 +2636,7 @@ async function refreshAiModels(force) {
       _populateAiSelects();
     }
   } catch (err) {
-    if (force) _aiAddMsg(t.aiModelsFetchError + err.message, 'thinking');
+    if (force) _aiAddMsg(t.aiModelsFetchError + err.message, 'thinking warn');
   } finally {
     _aiModelsLoading = false;
     if (btn) btn.classList.remove('spin');
@@ -3429,8 +3434,8 @@ function applyFontSizesToDOM() {
     document.head.appendChild(styleTag);
   }
   styleTag.textContent = `
-    .md h1{font-size:var(--fz-h1)!important}
-    .md h2{font-size:var(--fz-h2)!important}
+    .md h1{font-size:var(--fz-h1-fit,var(--fz-h1))!important}
+    .md h2{font-size:var(--fz-h2-fit,var(--fz-h2))!important}
     .md h3{font-size:var(--fz-h3)!important}
     .md p,.md li,.md td,.md th,.md blockquote{font-size:var(--fz-body)!important}
     .md .katex{font-size:var(--fz-latex)!important}
@@ -4972,19 +4977,19 @@ async function _addAiAttachment(file) {
   const t = LANGS[currentLang] || LANGS['en'];
   if (!_currentAiModelSupportsAttach()) return;
   if (_aiPendingAttachments.length >= AI_MAX_ATTACHMENTS) {
-    _aiAddMsg(t.aiTooManyFiles.replace('{max}', AI_MAX_ATTACHMENTS), 'thinking');
+    _aiAddMsg(t.aiTooManyFiles.replace('{max}', AI_MAX_ATTACHMENTS), 'thinking warn');
     return;
   }
   const kind = _aiFileKind(file);
   if (!kind) {
-    _aiAddMsg(t.aiUnsupportedFile.replace('{name}', file.name), 'thinking');
+    _aiAddMsg(t.aiUnsupportedFile.replace('{name}', file.name), 'thinking warn');
     return;
   }
   const maxSize = kind === 'text' ? AI_MAX_TEXT_SIZE : AI_MAX_BINARY_SIZE;
   if (file.size > maxSize) {
     _aiAddMsg(
       t.aiFileTooLarge.replace('{name}', file.name).replace('{max}', _aiFormatSize(maxSize)),
-      'thinking'
+      'thinking warn'
     );
     return;
   }
@@ -5009,7 +5014,7 @@ async function _addAiAttachment(file) {
     });
     _renderAiPendingAttachments();
   } catch (_) {
-    _aiAddMsg(t.aiFileReadError.replace('{name}', file.name), 'thinking');
+    _aiAddMsg(t.aiFileReadError.replace('{name}', file.name), 'thinking warn');
   }
 }
 
@@ -5076,7 +5081,7 @@ function _buildAiAttachmentChip(a, removable) {
   } else {
     const icon = document.createElement('span');
     icon.className = 'ai-chip-icon';
-    icon.textContent = a.kind === 'pdf' ? '📄' : '📝';
+    icon.innerHTML = a.kind === 'pdf' ? CHIP_PDF_SVG : CHIP_TEXT_SVG;
     chip.appendChild(icon);
   }
   const nameSpan = document.createElement('span');
@@ -5090,7 +5095,8 @@ function _buildAiAttachmentChip(a, removable) {
     rm.className = 'ai-chip-rm';
     rm.title = t.aiRemoveFileTitle;
     rm.setAttribute('data-i18n-title', 'aiRemoveFileTitle');
-    rm.textContent = '×';
+    rm.setAttribute('aria-label', t.aiRemoveFileTitle);
+    rm.innerHTML = CHIP_REMOVE_SVG;
     rm.onclick = () => removeAiAttachment(a.id);
     chip.appendChild(rm);
   }
@@ -5321,7 +5327,7 @@ function _aiOfferEdit(selS, selE, oldText, newText) {
   const card = document.createElement('div');
   card.className = 'ai-bubble a';
   card.id = 'diffCard_' + id;
-  card.innerHTML = `<span data-i18n="aiReviewEditMsg">${_escDiffHtml(t.aiReviewEditMsg)}</span> <button class="diff-open-btn" data-i18n="aiOpenReviewBtn" onclick="openDiffModal('${id}')">${_escDiffHtml(t.aiOpenReviewBtn)}</button>`;
+  card.innerHTML = `<span data-icon="edit" data-i18n="aiReviewEditMsg">${_escDiffHtml(t.aiReviewEditMsg)}</span> <button class="diff-open-btn" data-i18n="aiOpenReviewBtn" onclick="openDiffModal('${id}')">${_escDiffHtml(t.aiOpenReviewBtn)}</button>`;
   msgs.appendChild(card);
   msgs.scrollTop = msgs.scrollHeight;
 
@@ -5350,7 +5356,9 @@ function closeDiffModal() {
 // key — ключ строки интерфейса (текст карточки меняется вместе с языком)
 function _resolveDiffCard(id, key) {
   const card = document.getElementById('diffCard_' + id);
-  if (card) card.innerHTML = `<span data-i18n="${key}">${_escDiffHtml(tr(key))}</span>`;
+  // Значок состояния — SVG через data-icon (CSS), чтобы смена языка (textContent) его не стирала
+  const icon = { aiEditApplied: 'check', aiEditDiscarded: 'close', aiEditStale: 'warn' }[key] || '';
+  if (card) card.innerHTML = `<span data-icon="${icon}" data-i18n="${key}">${_escDiffHtml(tr(key))}</span>`;
   delete _aiPendingEdits[id];
   if (_aiActiveModalEditId === id) closeDiffModal();
 }
@@ -5396,9 +5404,11 @@ async function saveApiKey() {
   const btn = document.querySelector('#aiPanel .ai-ksave');
   // Временная подпись тоже через data-i18n — при смене языка она сразу переводится
   btn.setAttribute('data-i18n', 'aiSavedBtn');
+  btn.dataset.icon = 'check';
   btn.textContent = tr('aiSavedBtn');
   setTimeout(() => {
     btn.setAttribute('data-i18n', 'aiSaveBtn');
+    delete btn.dataset.icon;
     btn.textContent = tr('aiSaveBtn');
   }, 1500);
 }
@@ -5563,6 +5573,7 @@ function _aiAddInsertableMsg(text, pos) {
   btn.className = 'ai-insert vis';
   btn.style.marginTop = 'var(--s8)';
   btn.setAttribute('data-i18n', 'aiInsertBtn');
+  btn.dataset.icon = 'insert';
   btn.textContent = t.aiInsertBtn;
   btn.onclick = () => {
     if (_roGuard()) return;
@@ -5574,6 +5585,7 @@ function _aiAddInsertableMsg(text, pos) {
     btn.style.opacity = '.5';
     btn.style.cursor = 'default';
     btn.setAttribute('data-i18n', 'aiEditApplied');
+    btn.dataset.icon = 'check';
     btn.textContent = tr('aiEditApplied');
   };
   wrap.appendChild(textDiv);
@@ -5705,7 +5717,7 @@ async function sendAi() {
 
   if (!_aiKey) {
     const backendName = AI_BACKEND === 'gemini' ? 'Google AI Studio' : 'Anthropic';
-    _aiAddMsg(t.aiKeyWarning.replace('{backend}', backendName), 'thinking');
+    _aiAddMsg(t.aiKeyWarning.replace('{backend}', backendName), 'thinking warn');
     return;
   }
 
@@ -5751,7 +5763,7 @@ async function sendAi() {
   } catch (err) {
     thinking.remove();
     if (err.name !== 'AbortError') {
-      _aiAddMsg(t.aiErrorPrefix + err.message, 'thinking');
+      _aiAddMsg(t.aiErrorPrefix + err.message, 'thinking warn');
       if (err instanceof TypeError) _probeNetwork();
     }
   } finally {

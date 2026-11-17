@@ -115,7 +115,7 @@ function _rdFootnoteSection() {
       const total = _rdFn.counts[id] || 1;
       let backs = '';
       for (let k = 1; k <= total; k++) {
-        backs += ` <a class="rd-fnback" href="#zmd-fnref-${_rdEsc(id)}${k > 1 ? '-' + k : ''}">↩${k > 1 ? '<sup>' + k + '</sup>' : ''}</a>`;
+        backs += ` <a class="rd-fnback" aria-label="Back to reference" href="#zmd-fnref-${_rdEsc(id)}${k > 1 ? '-' + k : ''}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="rd-fnback-ico" width="1em" height="1em"><path d="M6 4 2.6 7.4 6 10.8"/><path d="M2.6 7.4h7.6a3.3 3.3 0 0 1 0 6.6H8.4"/></svg>${k > 1 ? '<sup>' + k + '</sup>' : ''}</a>`;
       }
       return `<li id="zmd-fn-${_rdEsc(id)}">${html}${backs}</li>`;
     })
@@ -305,6 +305,7 @@ const RD_CSS = `
     .md .footnotes ol{padding-left:var(--s21)}
     .md .rd-fnref a,.md .rd-fnback{border:0!important}
     .md .rd-fnback{margin-left:var(--s5)}
+    .md .rd-fnback-ico{display:inline-block;width:1em;height:1em;vertical-align:-.146em}
     .md .rd-color-chip{display:inline-block;width:.9em;height:.9em;border-radius:50%;margin-right:.4em;vertical-align:-.1em;border:1px solid rgba(0,0,0,.25)}
     .md .rd-frontmatter{margin-bottom:var(--s21)}
     .md details{margin-bottom:var(--s13)}
