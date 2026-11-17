@@ -4,95 +4,162 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  webkit-print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Глобальные переменные. Вся геометрия интерфейса построена на золотом сечении φ ≈ 1,618:
-   - отступы, скругления, тени, толщины — числа Фибоначчи (1, 2, 3, 5, 8, 13, 21, 34, 55, 89 …),
-     отношение соседних ≈ φ;
-   - размеры элементов и шрифтов — две «нити» с шагом φ: числа Фибоначчи (8, 13, 21, 34, 55)
-     и их удвоения (10, 16, 26, 42, 68), так что между соседними размерами шаг √φ, через один — φ;
-   - межстрочный интервал текста — φ (13px × φ = 21px), заголовков — √φ;
-   - длительности анимаций — числа Фибоначчи в миллисекундах (89, 144, 233, 377 …);
-   - прозрачности — степени 1/φ (0,618; 0,382; 0,236; 0,146; 0,09);
-   - редактор и превью делят ширину в пропорции 61,8 : 38,2, панель ИИ занимает до 38,2 % окна;
-   - высоты рамок: шапка 55 → подписи панелей 34 → строка состояния 21.
+   Złoty MD — дизайн-система «Golden Sheet».
+   Единственная мера интерфейса — φ = 1,6180339887. Каждый размер выводится как
+   1rem × φⁿ, где n — целое, половинное или четвертное число:
+     • шаг φ        — соседние уровни иерархии (раскладка, крупные отступы);
+     • шаг √φ       — промежуточные ступени (отступы компонентов, радиусы);
+     • шаг ⁴√φ      — тонкая типографика интерфейса.
+   Пиксельные значения в комментариях — при корневом кегле 16px.
+   - Шкала отступов:  φ^-4.5 … φ^8   (1,8 · 3 · 4,8 · 7,8 · 12,6 · 20,4 · 32,9 · 53,3 · 86,2 …)
+   - Шкала кеглей:    φ^-0.5 … φ^3   (12,6 · 14,2 · 16 · 20,4 · 25,9 · 32,9 · 41,9 · 67,8)
+   - Межстрочный интервал текста — φ, заголовков — √φ, плотного интерфейса — ⁴√φ·φ^0,5;
+   - Длительности — числа Фибоначчи (мс), т. е. ≈ φⁿ;
+   - Прозрачности и доли смешивания цветов — степени 1/φ (61,8 · 38,2 · 23,6 · 14,6 · 9 · 5,6 %);
+   - Раскладка: редактор : превью = φ : 1 (61,8 : 38,2), шапка : подпись панели : строка
+     состояния = φ² : φ : 1, ширина колонки текста = φ^7,5 em.
    ───────────────────────────────────────────────────────────────────────────── */
 :root {
-  --phi: 1.618034;
-  --phi-i: 0.618034;
+  color-scheme: light;
 
-  /* Палитра Google */
+  --phi: 1.6180339887;
+  --phi-i: 0.6180339887;
+
+  /* ── Палитра Google. Сигнальные цвета: синий — единственный акцент интерфейса,
+        красный / жёлтый / зелёный — только для состояний (ошибка, внимание, успех) и
+        фирменной «золотой» полосы. Насыщенность акцента < 80 %. ── */
   --gb: #4285f4;
   --gr: #ea4335;
   --gy: #fbbc04;
   --gg: #34a853;
-  --gbd: #1a73e8;
-  --gbt: #e8f0fe;
-  --grt: #fce8e6;
-  --gyt: #fef7e0;
-  --ggt: #e6f4ea;
-  /* Нейтральные цвета (поверхности Google Material) */
-  --bg: #fff;
+  --accent: #1b64da;
+  --accent-ink: #1653b6;
+  --on-accent: #ffffff;
+  --gbd: var(--accent-ink);
+  /* Тинты выводятся из базового цвета через color-mix — доли = 1/φ⁵ (9 %) и 1/φ⁴ (14,6 %) */
+  --gbt: color-mix(in oklab, var(--gb) 9%, #fff);
+  --grt: color-mix(in oklab, var(--gr) 9%, #fff);
+  --gyt: color-mix(in oklab, var(--gy) 14.6%, #fff);
+  --ggt: color-mix(in oklab, var(--gg) 9%, #fff);
+  --accent-tint: color-mix(in oklab, var(--accent) 9%, #fff);
+  --accent-wash: color-mix(in oklab, var(--accent) 5.6%, #fff);
+  /* Тёмные варианты для текста на светлых тинтах (контраст ≥ 4,5:1) */
+  --gr-ink: #b3261e;
+  --gy-ink: #7a5300;
+  --gg-ink: #146c2e;
+
+  /* ── Нейтрали Material 3 (одна холодная шкала, без чистого чёрного) ── */
+  --canvas: #f0f4f9;
+  --bg: #ffffff;
   --surf: #f8fafd;
-  --surf2: #f0f4f9;
-  --bord: #dadce0;
+  --surf2: #eef2f8;
+  --bord: #dde3ea;
+  --bord-strong: #c4c7c5;
   --txt: #1f1f1f;
   --mut: #444746;
-  --sub: #80868b;
+  --sub: #747775;
+  --ink-dark: #1e1f20;
+  --ink-dark-2: #28292a;
 
-  /* Отступы — числа Фибоначчи */
-  --s1: 1px;
-  --s2: 2px;
-  --s3: 3px;
-  --s5: 5px;
-  --s8: 8px;
-  --s13: 13px;
-  --s21: 21px;
-  --s34: 34px;
-  --s55: 55px;
-  --s89: 89px;
-  /* Скругления */
-  --r3: 3px;
-  --r5: 5px;
-  --r8: 8px;
-  --r13: 13px;
-  --r21: 21px;
-  --r34: 34px;
-  /* Кегли: 8 · 10 · 13 · 16 · 21 · 26 · 34 · 42 · 55 */
-  --f8: 8px;
-  --f10: 10px;
-  --f13: 13px;
-  --f16: 16px;
-  --f21: 21px;
-  --f26: 26px;
-  --f34: 34px;
-  --f42: 42px;
-  --f55: 55px;
-  /* Межстрочные интервалы */
-  --lh: 1.618;
-  --lh-s: 1.272;
-  /* Высоты рамок интерфейса */
-  --hh: 55px;
-  --ph: 34px;
-  --sh: 21px;
-  /* Ширина панели ИИ: 377px (Фибоначчи), но не больше 38,2 % окна */
-  --ai: min(377px, 38.2vw);
-  /* Время и кривая движения (Material) */
+  /* ── Шкала отступов (имена — ближайшие числа Фибоначчи) ── */
+  --s1: 1px; /* волосяная линия */
+  --s2: 0.1147rem; /* φ^-4.5 */
+  --s3: 0.1856rem; /* φ^-3.5 */
+  --s5: 0.3003rem; /* φ^-2.5 */
+  --s6: 0.382rem; /* φ^-2 */
+  --s8: 0.4859rem; /* φ^-1.5 */
+  --s10: 0.618rem; /* φ^-1 */
+  --s13: 0.7862rem; /* φ^-0.5 */
+  --s16: 1rem; /* φ^0 */
+  --s21: 1.272rem; /* φ^0.5 */
+  --s26: 1.618rem; /* φ^1 */
+  --s34: 2.0582rem; /* φ^1.5 */
+  --s42: 2.618rem; /* φ^2 */
+  --s55: 3.3302rem; /* φ^2.5 */
+  --s68: 4.2361rem; /* φ^3 */
+  --s89: 5.3884rem; /* φ^3.5 */
+  --s144: 8.7185rem; /* φ^4.5 */
+  --s178: 11.0902rem; /* φ^5 */
+  --s233: 14.1069rem; /* φ^5.5 */
+  --s288: 17.9443rem; /* φ^6 */
+  --s377: 22.8254rem; /* φ^6.5 */
+  --s466: 29.0344rem; /* φ^7 */
+  --s610: 36.9322rem; /* φ^7.5 */
+  --s754: 46.9787rem; /* φ^8 */
+
+  /* ── Радиусы: радиус = высота элемента / φ² ── */
+  --r2: var(--s2);
+  --r3: var(--s3);
+  --r5: var(--s5);
+  --r8: var(--s8);
+  --r13: var(--s13);
+  --r21: var(--s21);
+  --r26: var(--s26);
+  --r34: var(--s34);
+  --pill: 999px;
+
+  /* ── Кегли (шаг ⁴√φ ≈ 1,128) ── */
+  --f8: 0.618rem; /* φ^-1   · 9,9 */
+  --f10: 0.7862rem; /* φ^-0.5 · 12,6 — подписи, значки */
+  --f13: 0.8867rem; /* φ^-0.25 · 14,2 — текст интерфейса */
+  --f16: 1rem; /* φ^0    · 16 — основной текст */
+  --f18: 1.1278rem; /* φ^0.25 · 18 */
+  --f21: 1.272rem; /* φ^0.5  · 20,4 */
+  --f26: 1.618rem; /* φ^1    · 25,9 */
+  --f34: 2.0582rem; /* φ^1.5  · 32,9 */
+  --f42: 2.618rem; /* φ^2    · 41,9 */
+  --f55: 3.3302rem; /* φ^2.5  · 53,3 */
+  --f68: 4.2361rem; /* φ^3    · 67,8 */
+
+  /* ── Межстрочные интервалы ── */
+  --lh: 1.618; /* φ   — текст */
+  --lh-s: 1.272; /* √φ  — заголовки, плотный интерфейс */
+
+  /* ── Каркас: шапка : подпись панели : строка состояния = φ² : φ : 1 ── */
+  --hh: var(--s55); /* 53,3 */
+  --ph: var(--s34); /* 32,9 */
+  --sh: var(--s21); /* 20,4 */
+  --ctl: var(--s34); /* высота элементов управления */
+  --ctl-s: var(--s26); /* компактные элементы */
+  --icon: var(--s16);
+  --icon-s: var(--s13);
+  --rz-w: var(--s8); /* ширина «ручки» разделителя */
+  /* Панель ИИ: φ^6.5 rem, но не больше доли 1/φ² окна (38,2 %) */
+  --ai: min(var(--s377), 38.2vw);
+  /* Колонка текста превью: φ^7.5 em */
+  --measure: 36.9322em;
+
+  /* ── Движение: Фибоначчи-длительности и пружины (linear(), жёсткость 100, демпфирование 20) ── */
   --d89: 89ms;
   --d144: 144ms;
   --d233: 233ms;
   --d377: 377ms;
+  --d610: 610ms;
   --ease: cubic-bezier(0.2, 0, 0, 1);
-  /* Тени (смещения и размытия — Фибоначчи, прозрачности — степени 1/φ) */
-  --e1: 0 1px 2px rgba(60, 64, 67, 0.236), 0 1px 3px 1px rgba(60, 64, 67, 0.146);
-  --e2: 0 2px 5px rgba(60, 64, 67, 0.236), 0 5px 13px 2px rgba(60, 64, 67, 0.146);
-  --e3: 0 5px 13px rgba(60, 64, 67, 0.236), 0 13px 34px 5px rgba(60, 64, 67, 0.146);
+  --spring: linear(
+    0, 0.0273, 0.0927, 0.1778, 0.2704, 0.3628, 0.4505, 0.5309, 0.6029, 0.6663, 0.7211, 0.7682,
+    0.8082, 0.8419, 0.8702, 0.8937, 0.9132, 0.9293, 0.9425, 0.9534, 0.9623, 0.9695, 0.9754, 0.9802, 1
+  );
+  --spring-pop: linear(
+    0, 0.0477, 0.1647, 0.3172, 0.4798, 0.6346, 0.7704, 0.8813, 0.9658, 1.0251, 1.0623, 1.0816,
+    1.0871, 1.0829, 1.0728, 1.0595, 1.0454, 1.0319, 1.02, 1.0104, 1.003, 0.9978, 0.9946, 0.9929, 1
+  );
 
-  --font: 'Google Sans', sans-serif;
-  --mono: 'JetBrains Mono', monospace;
+  /* ── Тени: смещения и размытия — шкала φ, прозрачности — 1/φⁿ, оттенок — цвет текста ── */
+  --shadow-tint: 31 31 31;
+  --e1: 0 var(--s1) var(--s3) rgb(var(--shadow-tint) / 0.09), 0 var(--s2) var(--s8) rgb(var(--shadow-tint) / 0.056);
+  --e2: 0 var(--s3) var(--s13) calc(-1 * var(--s2)) rgb(var(--shadow-tint) / 0.146), 0 var(--s8) var(--s26) calc(-1 * var(--s5)) rgb(var(--shadow-tint) / 0.09);
+  --e3: 0 var(--s8) var(--s26) calc(-1 * var(--s5)) rgb(var(--shadow-tint) / 0.146), 0 var(--s21) var(--s55) calc(-1 * var(--s13)) rgb(var(--shadow-tint) / 0.146);
+  --scrim: rgb(31 31 31 / 0.236);
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+
+  --font: 'Google Sans', 'Google Sans Text', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
 /* Базовые стили страницы */
@@ -102,57 +169,71 @@ body {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   font-family: var(--font);
-  background: var(--bg);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--canvas);
   color: var(--txt);
   overflow: hidden;
+  interpolate-size: allow-keywords;
+}
+::selection {
+  background: color-mix(in oklab, var(--accent) 23.6%, #fff);
+}
+/* Единое кольцо фокуса: акцент, отступ φ^-4.5 rem */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: var(--s2);
 }
 
-/* Декоративный фон (doodle) в стиле золотого сечения */
+/* Декоративный фон прежней версии больше не используется: тишина вокруг текста */
 .doodle {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
-}
-.doodle svg {
-  position: absolute;
+  display: none;
 }
 
+/* Плавающие формы — пустое состояние превью. Амплитуды — шкала φ */
 @keyframes fA {
   0%,
   100% {
-    transform: translateY(0) rotate(0deg);
+    translate: 0 0;
+    rotate: 0deg;
   }
   50% {
-    transform: translateY(-13px) rotate(8deg);
+    translate: 0 calc(var(--s8) * -1);
+    rotate: 8deg;
   }
 }
 @keyframes fB {
   0%,
   100% {
-    transform: translateY(0) rotate(0deg);
+    translate: 0 0;
+    rotate: 0deg;
   }
   50% {
-    transform: translateY(8px) rotate(-10deg);
+    translate: 0 var(--s5);
+    rotate: -13deg;
   }
 }
 @keyframes fC {
   0%,
   100% {
-    transform: translateY(0) rotate(0deg);
+    translate: 0 0;
+    rotate: 0deg;
   }
   50% {
-    transform: translateY(-8px) rotate(15deg);
+    translate: 0 calc(var(--s5) * -1);
+    rotate: 21deg;
   }
 }
 @keyframes fD {
   0%,
   100% {
-    transform: translateY(0) rotate(0deg);
+    translate: 0 0;
+    rotate: 0deg;
   }
   50% {
-    transform: translateY(13px) rotate(-6deg);
+    translate: 0 var(--s8);
+    rotate: -8deg;
   }
 }
 
@@ -166,11 +247,11 @@ body {
   z-index: 1;
 }
 
-/* Верхняя панель (шапка) с логотипом и кнопками инструментов */
+/* ── Шапка: высота φ^2.5 rem. Снизу — фирменная полоса Google: четыре сегмента
+      в пропорции 1 : 1/φ : 1/φ² : 1/φ³ (сумма = √5, доли 44,72 · 27,64 · 17,08 · 10,56 %) ── */
 .hd {
   height: var(--hh);
   background: var(--bg);
-  border-bottom: 1px solid var(--bord);
   display: flex;
   align-items: center;
   padding: 0 var(--s21);
@@ -178,26 +259,24 @@ body {
   flex-shrink: 0;
   position: relative;
 }
-/* Полоса заходит на 3px ниже шапки — поверх панелей. z-index нужен, потому что панель
-   превью позиционирована (position: relative, контейнер для iframe) и иначе рисуется поверх полосы */
 .hd::after {
   content: '';
   position: absolute;
   z-index: 2;
-  bottom: -3px;
+  bottom: calc(var(--s2) * -1);
   left: 0;
   right: 0;
-  height: 3px;
+  height: var(--s2);
   background: linear-gradient(
     90deg,
-    var(--gb) 0 25%,
-    var(--gr) 25% 50%,
-    var(--gy) 50% 75%,
-    var(--gg) 75%
+    var(--gb) 0 44.72%,
+    var(--gr) 44.72% 72.36%,
+    var(--gy) 72.36% 89.44%,
+    var(--gg) 89.44%
   );
 }
 
-/* Логотип и анимация названия приложения */
+/* Логотип */
 .logo {
   display: flex;
   align-items: center;
@@ -208,18 +287,22 @@ body {
 .logo-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3px;
-  width: 21px;
-  height: 21px;
+  gap: var(--s3);
+  width: var(--s21);
+  height: var(--s21);
 }
 .ld {
   border-radius: 50%;
 }
 .logo-name {
   font-size: var(--f21);
-  font-weight: 800;
-  letter-spacing: -0.8px;
+  font-weight: 700;
+  letter-spacing: -0.0213em; /* φ^-8 em */
+  line-height: 1;
   display: flex;
+}
+.logo-name b {
+  font-weight: inherit;
 }
 .logo-name b:nth-child(1) {
   color: var(--gb);
@@ -236,72 +319,64 @@ body {
 .logo-name b:nth-child(5) {
   color: var(--gb);
 }
-.logo-name b:nth-child(6) {
-  color: var(--mut);
-}
-.logo-name b:nth-child(7) {
-  color: var(--mut);
-}
+.logo-name b:nth-child(6),
+.logo-name b:nth-child(7),
 .logo-name b:nth-child(8) {
   color: var(--txt);
 }
 
 .hsep {
   width: 1px;
-  height: 34px;
+  height: var(--s21);
   background: var(--bord);
   flex-shrink: 0;
 }
 
-/* Панель инструментов редактора (toolbar) */
+/* ── Панель инструментов: группы на «подложке» высотой φ^1.5 rem ── */
 .tb {
   display: flex;
   align-items: center;
-  gap: var(--s3);
+  gap: var(--s5);
   flex: 1;
   flex-wrap: nowrap;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
   min-width: 0;
-  /* Небольшой запас по краям, чтобы рамка фокуса не обрезалась прокруткой;
-     отрицательный margin сохраняет раскладку */
-  padding: 3px;
-  margin: -3px;
+  /* Запас по краям, чтобы кольцо фокуса не обрезалось прокруткой */
+  padding: var(--s3);
+  margin: calc(var(--s3) * -1);
 }
 .tb::-webkit-scrollbar {
   display: none;
 }
-/* Не помещается даже первая группа кнопок: панель скрыта (место в шапке сохраняется,
-   поэтому её ширину можно измерять и снова показать панель, когда места станет больше) */
 .tb.tb-off {
   visibility: hidden;
   pointer-events: none;
 }
-/* Тесная шапка: сначала убирается статистика, чтобы панели инструментов хватило места */
 .hd.hd-nostats .stats {
   display: none;
 }
 .tg {
   display: flex;
   align-items: center;
-  gap: var(--s3);
-  flex-shrink: 0; /* группы кнопок не сжимаются при горизонтальной прокрутке */
+  gap: var(--s2);
+  flex-shrink: 0;
 }
 .tsep {
   flex-shrink: 0;
   width: 1px;
-  height: 21px;
+  height: var(--s13);
   background: var(--bord);
-  margin: 0 var(--s5);
+  margin: 0 var(--s3);
 }
 
-/* Базовые стили кнопок панели инструментов */
+/* Кнопки панели инструментов: φ^1.5 rem, радиус = сторона / φ² */
 .btn {
-  width: 34px;
-  height: 34px;
+  width: var(--ctl);
+  height: var(--ctl);
   border: none;
-  border-radius: var(--r8);
+  border-radius: var(--r13);
   background: transparent;
   cursor: pointer;
   display: flex;
@@ -310,38 +385,42 @@ body {
   color: var(--mut);
   font-family: var(--font);
   font-size: var(--f13);
-  font-weight: 700;
+  font-weight: 500;
+  letter-spacing: 0.0132em;
   transition:
-    background 144ms,
-    color 144ms,
-    transform 89ms;
+    background var(--d144) var(--ease),
+    color var(--d144) var(--ease),
+    scale var(--d233) var(--spring);
   flex-shrink: 0;
 }
 .btn:active {
-  transform: scale(0.95);
+  scale: 0.9443; /* 1 − φ^-6 */
 }
 .btn svg {
-  width: 16px;
-  height: 16px;
+  width: var(--icon);
+  height: var(--icon);
+}
+/* Цвет группы — только у значка: подсказка, к какой группе относится действие */
+.b:hover,
+.r:hover,
+.y:hover,
+.g:hover {
+  background: var(--surf2);
 }
 .b:hover {
-  background: var(--gbt);
-  color: var(--gb);
+  color: var(--accent);
 }
 .r:hover {
-  background: var(--grt);
-  color: var(--gr);
+  color: var(--gr-ink);
 }
 .y:hover {
-  background: var(--gyt);
-  color: #9a6000;
+  color: var(--gy-ink);
 }
 .g:hover {
-  background: var(--ggt);
-  color: var(--gg);
+  color: var(--gg-ink);
 }
 
-/* Строка состояния под панелями: статус сохранения слева, статистика документа справа */
+/* ── Строка состояния: высота φ^0.5 rem (шапка : подпись : строка = φ² : φ : 1) ── */
 .sb {
   height: var(--sh);
   flex-shrink: 0;
@@ -350,9 +429,10 @@ body {
   gap: var(--s13);
   padding: 0 var(--s21);
   border-top: 1px solid var(--bord);
-  background: var(--surf);
+  background: var(--bg);
   font-size: var(--f10);
-  color: var(--mut);
+  line-height: 1;
+  color: var(--sub);
   white-space: nowrap;
   overflow: hidden;
   position: relative;
@@ -369,156 +449,155 @@ body {
   align-items: center;
   gap: var(--s5);
   font-size: var(--f10);
-  color: var(--mut);
+  color: var(--sub);
   white-space: nowrap;
 }
 .chip strong {
-  font-weight: 700;
+  font-weight: 500;
   color: var(--txt);
+  font-variant-numeric: tabular-nums;
 }
-/* Число страниц PDF пересчитывается — значение приглушено */
 .chip.busy strong {
   opacity: 0.382;
-  transition: opacity 144ms;
+  transition: opacity var(--d144);
 }
-/* На очень узких экранах в строке состояния остаются только слова и строки */
-@media (max-width: 466px) {
+@media (max-width: 29.0344em) {
   .stats .chip:first-child,
   .chip-pdf {
     display: none;
   }
 }
 .dot {
-  width: 5px;
-  height: 5px;
+  width: var(--s5);
+  height: var(--s5);
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-/* Раскладка панелей редактор/превью (split-view) */
+/* ── Раскладка: редактор : превью = φ : 1 ── */
 .panes {
   display: flex;
   flex: 1;
   overflow: hidden;
   min-height: 0;
-  /* Доля редактора в ширине, оставшейся без панели ИИ (её меняет разделитель) */
-  --ep-r: 0.618;
+  --ep-r: 0.618034;
   --ai-w: 0px;
 }
 .panes:has(> .ai-panel.open) {
   --ai-w: var(--ai);
 }
-/* Редактор и превью делят место, оставшееся после панели ИИ, в одной и той же пропорции —
-   раньше доля редактора считалась от всей ширины, и при открытой панели ИИ превью сжималось
-   до узкой полоски. Редактор может сжиматься, а у превью есть гарантированная ширина,
-   поэтому панели не выталкивают друг друга за край окна */
 .ep {
-  flex: 0 1 calc((100% - var(--ai-w) - 5px) * var(--ep-r));
-  min-width: 178px;
+  flex: 0 1 calc((100% - var(--ai-w)) * var(--ep-r));
+  min-width: var(--s178);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: var(--bg);
 }
 .pp {
   position: relative;
-  flex: 1 0 178px;
+  flex: 1 0 var(--s178);
   min-width: 0;
   container-type: inline-size;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: var(--canvas);
 }
 
+/* Подписи панелей: φ^1.5 rem */
 .pl {
-  height: 34px;
+  height: var(--ph);
   padding: 0 var(--s21);
   border-bottom: 1px solid var(--bord);
-  background: var(--surf);
+  background: var(--bg);
   display: flex;
   align-items: center;
   gap: var(--s8);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--f10);
+  font-weight: 500;
   color: var(--mut);
   flex-shrink: 0;
   min-width: 0;
   overflow: hidden;
   white-space: nowrap;
 }
-/* Подпись панели в узкой шапке обрезается многоточием, а не выталкивает кнопку за край */
+.pp > .pl {
+  background: var(--surf);
+}
 .pl > span:not(.badge) {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-/* Значки режима редактора (Markdown/LaTeX/HTML) */
+/* Значки режима: «пилюля», кегль φ^-0.5 rem */
 .badge {
-  padding: 2px var(--s8);
-  border-radius: var(--r34);
-  font-size: 10px;
-  font-weight: 700;
+  padding: var(--s2) var(--s8);
+  border-radius: var(--pill);
+  font-size: var(--f10);
+  font-weight: 500;
+  line-height: var(--lh-s);
+  letter-spacing: 0.0344em; /* φ^-7 em */
   flex-shrink: 0;
 }
 .badge.bl {
-  background: var(--gbt);
-  color: var(--gb);
+  background: var(--accent-tint);
+  color: var(--accent-ink);
 }
 .badge.gn {
   background: var(--ggt);
-  color: var(--gg);
+  color: var(--gg-ink);
 }
 .badge.tx {
   background: var(--grt);
-  color: var(--gr);
+  color: var(--gr-ink);
 }
 
-/* Кнопка открытия превью в отдельном окне */
+/* Кнопка «Открыть в окне»: высота φ rem, радиус φ^-1 rem (= высота / φ²) */
 .pv-pop-btn {
   display: flex;
   align-items: center;
   gap: var(--s5);
-  padding: 0 var(--s13);
-  height: 26px;
-  border-radius: var(--r8);
+  padding: 0 var(--s10);
+  height: var(--ctl-s);
+  border-radius: var(--s10);
   border: 1px solid var(--bord);
   background: var(--bg);
   font-family: var(--font);
-  font-size: 10px;
-  font-weight: 700;
+  font-size: var(--f10);
+  font-weight: 500;
   color: var(--mut);
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
   transition:
-    border-color 144ms,
-    color 144ms,
-    background 144ms,
-    transform 144ms;
+    border-color var(--d144) var(--ease),
+    color var(--d144) var(--ease),
+    background var(--d144) var(--ease),
+    scale var(--d233) var(--spring);
 }
 .pv-pop-btn svg {
-  width: 13px;
-  height: 13px;
+  width: var(--icon-s);
+  height: var(--icon-s);
   flex-shrink: 0;
 }
 .pv-pop-btn:hover {
-  border-color: var(--gg);
-  color: var(--gg);
-  background: var(--ggt);
-  transform: translateY(-1px);
+  border-color: color-mix(in oklab, var(--accent) 38.2%, #fff);
+  color: var(--accent);
+  background: var(--accent-wash);
 }
-/* Режим «HTML-рендеринг»: документ показывается в изолированном iframe поверх обычного превью.
-   Обычное превью остаётся под ним (раскладка и прокрутка нужны приложению), но невидимо, а
-   contain: paint не даёт его содержимому (например, position: fixed) выйти за пределы панели */
+.pv-pop-btn:active {
+  scale: 0.9443;
+}
+/* Режим «HTML-рендеринг»: документ показывается в изолированном iframe поверх обычного превью */
 .pv-frame {
   position: absolute;
   left: 0;
   right: 0;
-  top: 34px;
+  top: var(--ph);
   bottom: 0;
   width: 100%;
-  height: calc(100% - 34px);
+  height: calc(100% - var(--ph));
   border: 0;
   background: var(--bg);
   z-index: 1;
@@ -527,7 +606,6 @@ body {
   visibility: hidden;
   contain: paint;
 }
-/* Пока тянут разделитель, iframe не должен перехватывать движение мыши */
 .rz.on ~ .pp .pv-frame {
   pointer-events: none;
 }
@@ -540,8 +618,8 @@ body {
     contain: none !important;
   }
 }
-/* Узкая панель превью (например, при открытой панели ИИ): у кнопки остаётся только значок */
-@container (max-width: 288px) {
+/* Узкая панель превью: у кнопки остаётся только значок, «лист» теряет поля */
+@container (max-width: 17.9443rem) {
   .pl {
     padding: 0 var(--s13);
   }
@@ -552,26 +630,37 @@ body {
     display: none;
   }
 }
-.pv-pop-btn:active {
-  transform: scale(0.95);
-}
 
-/* Разделитель для изменения ширины панелей (resizer) */
+/* Разделитель панелей: зона захвата φ^-1.5 rem (не занимает места — отрицательные поля),
+   видимая линия — волосяная */
 .rz {
-  width: 5px;
-  /* Видна только линия в 1px по центру, захватывать можно всю ширину */
-  background: linear-gradient(var(--bord), var(--bord)) center / 1px 100% no-repeat;
+  width: var(--rz-w);
+  margin-inline: calc(var(--rz-w) / -2);
+  position: relative;
+  z-index: 3;
+  background: transparent;
   cursor: col-resize;
   flex-shrink: 0;
-  transition: background-size var(--d144) var(--ease);
 }
-.rz:hover,
-.rz.on {
-  background-image: linear-gradient(var(--gb), var(--gb));
-  background-size: 3px 100%;
+.rz::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin-inline: auto;
+  width: 1px;
+  background: var(--bord);
+  transition:
+    width var(--d233) var(--spring),
+    background var(--d144) var(--ease);
+}
+.rz:hover::before,
+.rz.on::before {
+  width: var(--s3);
+  border-radius: var(--pill);
+  background: var(--accent);
 }
 
-/* Стили текстового поля редактора */
+/* ── Редактор: моноширинный текст в колонке φ^8 rem, поля — φ^1.5 rem ── */
 #ed {
   cursor: text;
   flex: 1;
@@ -580,33 +669,36 @@ body {
   outline: none;
   font-family: var(--mono);
   font-size: var(--f13);
-  line-height: 1.618;
+  line-height: var(--lh);
   color: var(--txt);
+  caret-color: var(--accent);
   background: var(--bg);
-  padding: var(--s34);
+  padding-block: var(--s34) var(--s55);
+  padding-inline: max(var(--s34), calc((100% - var(--s754)) / 2));
   overflow-y: auto;
   tab-size: 2;
+  font-variant-ligatures: contextual;
 }
-/* Полоса «только просмотр»: документ редактируется в другом окне */
+/* Полоса «только просмотр» */
 .ro-bar {
   display: none;
   align-items: center;
   gap: var(--s8);
   padding: var(--s5) var(--s21);
-  min-height: 34px;
-  border-bottom: 1px solid var(--bord);
+  min-height: var(--ph);
+  border-bottom: 1px solid color-mix(in oklab, var(--gy) 38.2%, #fff);
   background: var(--gyt);
-  color: #b06000;
-  font-size: 13px;
-  line-height: 1.272;
+  color: var(--gy-ink);
+  font-size: var(--f13);
+  line-height: var(--lh-s);
   flex-shrink: 0;
 }
 .doc-ro .ro-bar {
   display: flex;
 }
 .ro-bar svg {
-  width: 13px;
-  height: 13px;
+  width: var(--icon-s);
+  height: var(--icon-s);
   flex-shrink: 0;
 }
 .ro-bar-text {
@@ -614,40 +706,38 @@ body {
   min-width: 0;
 }
 .ro-bar-btn {
-  height: 26px;
+  height: var(--ctl-s);
   padding: 0 var(--s13);
-  border-radius: var(--r8);
-  border: 1px solid var(--gy);
+  border-radius: var(--s10);
+  border: 1px solid color-mix(in oklab, var(--gy) 61.8%, #fff);
   background: var(--bg);
   font-family: var(--font);
-  font-size: 10px;
-  font-weight: 700;
-  color: #b06000;
+  font-size: var(--f10);
+  font-weight: 500;
+  color: var(--gy-ink);
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
   transition:
-    background 144ms,
-    transform 144ms;
+    background var(--d144) var(--ease),
+    scale var(--d233) var(--spring);
 }
 .ro-bar-btn:hover {
   background: var(--gy);
-  color: #202124;
-  transform: translateY(-1px);
+  color: var(--txt);
 }
 .ro-bar-btn:active {
-  transform: scale(0.95);
+  scale: 0.9443;
 }
-/* Короткая подсветка, когда правка в режиме просмотра отклонена */
 .ro-bar.ro-flash {
-  animation: roFlash 610ms ease;
+  animation: roFlash var(--d610) var(--ease);
 }
 @keyframes roFlash {
   0%,
   100% {
     background: var(--gyt);
   }
-  40% {
+  38.2% {
     background: var(--gy);
   }
 }
@@ -659,166 +749,234 @@ body {
   color: var(--sub);
 }
 #ed::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: var(--s8);
+  height: var(--s8);
 }
 #ed::-webkit-scrollbar-thumb {
-  background: var(--bord);
-  border-radius: 99px;
+  background: var(--bord) padding-box;
+  border: var(--s2) solid transparent;
+  border-radius: var(--pill);
 }
 
-/* Стили панели предпросмотра */
+/* ── Превью: «лист» на холсте. Колонка текста — φ^7.5 em, поля листа — φ^2.5 rem ── */
 #pv {
   flex: 1;
   overflow-y: auto;
-  padding: var(--s34);
-  background: var(--bg);
+  padding: var(--s34) var(--s21) var(--s55);
+  background: var(--canvas);
+  scrollbar-gutter: stable;
 }
-/* Высота задаётся и для горизонтальной полосы: без неё Chrome рисует стандартную, толстую */
+#pv > .md {
+  box-sizing: border-box;
+  max-inline-size: calc(var(--measure) + 2 * var(--s55));
+  margin-inline: auto;
+  padding: var(--s55);
+  background: var(--bg);
+  border: 1px solid var(--bord);
+  border-radius: var(--r13);
+  box-shadow: var(--e1);
+}
+@container (max-width: 36.9322rem) {
+  #pv {
+    padding: var(--s13) var(--s8) var(--s34);
+  }
+  #pv > .md {
+    padding: var(--s26) var(--s21);
+    border-radius: var(--r8);
+  }
+}
 #pv::-webkit-scrollbar,
 .md .katex-display::-webkit-scrollbar,
 .md .katex-display > .katex::-webkit-scrollbar,
 .md .mermaid-wrap::-webkit-scrollbar,
 .md .tikz-wrap::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: var(--s8);
+  height: var(--s8);
 }
 #pv::-webkit-scrollbar-thumb,
 .md .katex-display::-webkit-scrollbar-thumb,
 .md .katex-display > .katex::-webkit-scrollbar-thumb,
 .md .mermaid-wrap::-webkit-scrollbar-thumb,
 .md .tikz-wrap::-webkit-scrollbar-thumb {
-  background: var(--bord);
-  border-radius: 99px;
+  background: var(--bord-strong) padding-box;
+  border: var(--s2) solid transparent;
+  border-radius: var(--pill);
 }
 #ed::-webkit-scrollbar-corner,
 #pv::-webkit-scrollbar-corner {
   background: transparent;
 }
 
-/* Типографика отрендеренного Markdown (.md): заголовки, списки, ссылки */
+/* ── Типографика документа (.md). Те же правила — в buildPreviewHTML (app.js) для HTML и PDF.
+      Кегли: H1 φ² · H2 φ · H3 √φ · текст 1 (rem); интерлиньяж текста φ, заголовков √φ ── */
 .md {
   font-family: var(--font);
-  font-size: var(--f13);
-  line-height: 1.618;
+  font-size: var(--fz-body, var(--f16));
+  line-height: var(--lh);
+  color: var(--txt);
+  overflow-wrap: break-word;
+}
+.md > :first-child {
+  margin-top: 0;
+}
+.md h1,
+.md h2,
+.md h3,
+.md h4,
+.md h5,
+.md h6 {
+  line-height: var(--lh-s);
+  text-wrap: balance;
+  color: var(--txt);
 }
 .md h1 {
-  font-size: var(--f34);
-  font-weight: 800;
-  margin-top: var(--s34);
-  margin-bottom: var(--s13);
+  font-size: var(--fz-h1, var(--f42));
+  font-weight: 700;
+  letter-spacing: -0.0213em; /* φ^-8 em */
+  margin-top: var(--s55);
+  margin-bottom: var(--s21);
   position: relative;
-  padding-bottom: var(--s8);
+  padding-bottom: 0.382em; /* φ^-2 em */
 }
+/* Фирменная полоса: ширина φ em, толщина φ^-6 em, сегменты 1 : 1/φ : 1/φ² : 1/φ³ */
 .md h1::after {
   content: '';
   position: absolute;
   bottom: 0;
   left: 0;
-  width: 55px;
-  height: 3px;
-  background: linear-gradient(90deg, var(--gb), var(--gg));
-  border-radius: 99px;
+  width: 1.618em;
+  height: max(2px, 0.0557em);
+  border-radius: var(--pill);
+  background: linear-gradient(
+    90deg,
+    var(--gb) 0 44.72%,
+    var(--gr) 44.72% 72.36%,
+    var(--gy) 72.36% 89.44%,
+    var(--gg) 89.44%
+  );
 }
 .md h2 {
-  font-size: var(--f21);
+  font-size: var(--fz-h2, var(--f26));
+  font-weight: 700;
+  letter-spacing: -0.0132em; /* φ^-9 em */
+  margin-top: var(--s42);
+  margin-bottom: var(--s13);
+}
+/* Маркер раздела: φ^-4 em × φ^-0.5 em, отступ φ^-1.5 em */
+.md h2::before {
+  content: '';
+  display: inline-block;
+  inline-size: 0.1459em;
+  block-size: 0.7862em;
+  margin-inline-end: 0.4859em;
+  vertical-align: -0.0902em;
+  border-radius: var(--pill);
+  background: var(--gr);
+}
+.md h3 {
+  font-size: var(--fz-h3, var(--f21));
   font-weight: 700;
   margin-top: var(--s34);
   margin-bottom: var(--s8);
-  display: flex;
-  align-items: center;
-  gap: var(--s8);
 }
-.md h2::before {
-  content: '';
-  display: block;
-  width: 5px;
-  height: 21px;
-  background: var(--gr);
-  border-radius: 99px;
-  flex-shrink: 0;
+.md h4 {
+  font-size: var(--f18);
+  font-weight: 700;
+  margin-top: var(--s26);
+  margin-bottom: var(--s5);
 }
-.md h3 {
-  font-size: 16px;
+.md h5,
+.md h6 {
+  font-size: var(--f16);
   font-weight: 700;
   margin-top: var(--s21);
   margin-bottom: var(--s5);
 }
+.md h6 {
+  color: var(--mut);
+}
 .md p {
-  font-size: var(--f13);
-  line-height: 1.618;
-  margin-bottom: var(--s13);
+  font-size: var(--fz-body, var(--f16));
+  line-height: var(--lh);
+  margin-bottom: var(--s21);
+  text-wrap: pretty;
 }
 .md a {
   cursor: pointer;
-  color: var(--gb);
-  text-decoration: none;
-  border-bottom: 1px solid var(--gbt);
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.236em; /* φ^-3 em */
+  text-decoration-color: color-mix(in oklab, var(--accent) 38.2%, transparent);
+  transition: text-decoration-color var(--d144) var(--ease);
 }
 .md a:visited {
-  color: var(--gb);
+  color: var(--accent);
 }
 .md a:hover {
-  border-bottom-color: var(--gb);
+  text-decoration-color: currentColor;
 }
 .md ul,
 .md ol {
-  padding-left: var(--s21);
-  margin-bottom: var(--s13);
+  padding-left: var(--s26);
+  margin-bottom: var(--s21);
 }
 .md li {
-  font-size: var(--f13);
-  line-height: 1.618;
+  font-size: var(--fz-body, var(--f16));
+  line-height: var(--lh);
   margin-bottom: var(--s5);
+  padding-left: var(--s3);
+}
+.md li > ul,
+.md li > ol {
+  margin-top: var(--s5);
+  margin-bottom: 0;
 }
 .md ul li::marker {
   color: var(--gb);
-  font-weight: 700;
 }
 .md ol li::marker {
   color: var(--gr);
   font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
-/* Стили встроенного и блочного кода */
+/* Код в строке */
 .md code {
   font-family: var(--mono);
-  font-size: 13px;
-  background: var(--gbt);
-  color: var(--gb);
+  font-size: 0.8867em; /* φ^-0.25 em */
+  background: var(--accent-wash);
+  color: var(--accent-ink);
+  border: 1px solid color-mix(in oklab, var(--accent) 14.6%, #fff);
   border-radius: var(--r5);
-  padding: 2px var(--s5);
+  padding: 0.0902em 0.382em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
+/* Блок кода: тёмный лист, радиус φ^-0.5 rem */
 .md pre {
-  background: #202124;
-  color: #e8eaed;
+  background: var(--ink-dark);
+  color: #e3e3e3;
   border-radius: var(--r13);
-  margin-bottom: var(--s21);
-  border-top: 3px solid var(--gb);
+  margin-bottom: var(--s26);
+  border: 1px solid var(--ink-dark);
   overflow: hidden;
   position: relative;
   padding: 0;
+  box-shadow: var(--e1);
 }
-/* Заголовок блока кода с названием языка */
 .pre-header {
   display: flex;
   align-items: center;
   gap: var(--s8);
-  padding: var(--s5) var(--s8);
-  background: #2a2d31;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  padding: var(--s5) var(--s5) var(--s5) var(--s13);
+  background: var(--ink-dark-2);
+  border-bottom: 1px solid rgb(255 255 255 / 0.056);
   position: relative;
   flex-shrink: 0;
-  min-height: 34px;
+  min-height: var(--s34);
 }
 .pre-header::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--gr) 0 33.3%, var(--gy) 33.3% 66.6%, var(--gg) 66.6%);
-  opacity: 0.618;
+  content: none;
 }
 .pre-body {
   cursor: text;
@@ -829,11 +987,12 @@ body {
   padding: var(--s13) 0;
 }
 .pre-body::-webkit-scrollbar {
-  height: 5px;
+  height: var(--s8);
 }
 .pre-body::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 99px;
+  background: rgb(255 255 255 / 0.146) padding-box;
+  border: var(--s2) solid transparent;
+  border-radius: var(--pill);
 }
 .pre-body::-webkit-scrollbar-track {
   background: transparent;
@@ -842,11 +1001,14 @@ body {
   background: transparent;
   color: inherit;
   padding: 0;
-  font-size: 13px;
+  border: 0;
+  border-radius: 0;
+  font-size: var(--fz-code, var(--f13));
+  line-height: var(--lh);
   white-space: pre;
 }
 
-/* Подсветка синтаксиса (классы highlight.js) — палитра Google для тёмного фона блока кода.
+/* Подсветка синтаксиса — палитра Google для тёмного фона.
    Те же цвета — в buildPreviewHTML (app.js) для HTML и PDF */
 .md pre .hljs-keyword,
 .md pre .hljs-selector-tag,
@@ -878,7 +1040,7 @@ body {
 .md pre .hljs-title,
 .md pre .hljs-title.function_,
 .md pre .hljs-section {
-  color: #c58af9;
+  color: #aecbfa;
 }
 .md pre .hljs-attr,
 .md pre .hljs-attribute,
@@ -909,24 +1071,25 @@ body {
   font-weight: 700;
 }
 
-/* Значок языка программирования в блоке кода */
+/* Значок языка в заголовке блока кода */
 .lang-badge {
-  padding: 2px var(--s8);
-  border-radius: var(--r5);
+  padding: 0;
+  border-radius: 0;
   font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  background: rgba(255, 255, 255, 0.1);
+  font-size: var(--f10);
+  font-weight: 500;
+  letter-spacing: 0.0557em; /* φ^-6 em */
+  text-transform: uppercase;
+  background: transparent;
   color: #9aa0a6;
-  line-height: 1.618;
+  line-height: var(--lh);
   pointer-events: none;
   -webkit-user-select: none;
   user-select: none;
   flex-shrink: 0;
 }
 
-/* Стили для diff-блоков (добавлено/удалено/контекст) */
+/* diff-блоки */
 .diff-wrap {
   display: block;
   min-width: max-content;
@@ -936,12 +1099,10 @@ body {
 .diff-meta,
 .diff-ctx {
   display: block;
-  padding: 0 var(--s21) 0 calc(var(--s8) * 4 + 13px);
+  padding: 0 var(--s21) 0 calc(var(--s8) * 2 + var(--s13) + var(--s5));
   position: relative;
-  line-height: 1.618;
-  /* Строка без текста (например, «-» или пустая строка контекста) иначе схлопывается до нуля,
-     а абсолютно позиционированный маркер вылезает за блок и вызывает полосу прокрутки */
-  min-height: 1.6em;
+  line-height: var(--lh);
+  min-height: 1.618em;
   white-space: pre;
   min-width: 100%;
   box-sizing: border-box;
@@ -953,121 +1114,136 @@ body {
   content: attr(data-mark);
   position: absolute;
   left: var(--s8);
-  width: 13px;
+  width: var(--s13);
   text-align: center;
   font-weight: 700;
-  font-size: 10px;
-  line-height: 1.618;
+  font-size: var(--f10);
+  line-height: var(--lh);
   -webkit-user-select: none;
   user-select: none;
   pointer-events: none;
   opacity: 0.786;
 }
 .diff-add {
-  background: rgba(52, 168, 83, 0.13);
+  background: rgb(52 168 83 / 0.146);
   color: #b4efca;
-  border-left: 3px solid #34a853;
+  border-left: var(--s3) solid var(--gg);
 }
 .diff-add::before {
-  color: #34a853;
+  color: var(--gg);
 }
 .diff-del {
-  background: rgba(234, 67, 53, 0.13);
+  background: rgb(234 67 53 / 0.146);
   color: #ffada6;
-  border-left: 3px solid #ea4335;
+  border-left: var(--s3) solid var(--gr);
 }
 .diff-del::before {
-  color: #ea4335;
+  color: var(--gr);
 }
 .diff-meta {
-  background: rgba(66, 133, 244, 0.1);
+  background: rgb(66 133 244 / 0.09);
   color: #8ab4f8;
-  border-left: 3px solid #4285f4;
+  border-left: var(--s3) solid var(--gb);
   font-style: italic;
   opacity: 0.786;
 }
 .diff-meta::before {
-  color: #4285f4;
+  color: var(--gb);
 }
 .diff-ctx {
   color: #9aa0a6;
-  border-left: 3px solid transparent;
+  border-left: var(--s3) solid transparent;
 }
 .diff-ctx::before {
   color: #5f6368;
   opacity: 0.618;
 }
 
-/* Кнопка копирования содержимого блока кода */
+/* Кнопка копирования кода */
 .cpbtn {
   margin-left: auto;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: var(--s5);
-  padding: var(--s5) var(--s8);
-  border-radius: var(--r8);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.08);
-  color: #9aa0a6;
+  height: var(--ctl-s);
+  padding: 0 var(--s10);
+  border-radius: var(--s10);
+  border: none;
+  background: rgb(255 255 255 / 0.056);
+  color: #c4c7c5;
   font-family: var(--font);
-  font-size: 10px;
-  font-weight: 600;
+  font-size: var(--f10);
+  font-weight: 500;
   cursor: pointer;
   opacity: 0;
   transition:
-    opacity 144ms,
-    background 144ms,
-    color 144ms,
-    transform 144ms;
+    opacity var(--d144) var(--ease),
+    background var(--d144) var(--ease),
+    color var(--d144) var(--ease),
+    scale var(--d233) var(--spring);
   line-height: 1;
   white-space: nowrap;
 }
 .cpbtn svg {
-  width: 13px;
-  height: 13px;
+  width: var(--icon-s);
+  height: var(--icon-s);
   flex-shrink: 0;
 }
-.md pre:hover .cpbtn {
+.md pre:hover .cpbtn,
+.cpbtn:focus-visible {
   opacity: 1;
 }
 .cpbtn:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: rgb(255 255 255 / 0.146);
   color: #fff;
 }
 .cpbtn:active {
-  transform: scale(0.93);
+  scale: 0.9443;
 }
 .cpbtn.ok {
-  background: rgba(52, 168, 83, 0.25);
-  color: #34a853;
-  border-color: rgba(52, 168, 83, 0.4);
+  background: rgb(52 168 83 / 0.236);
+  color: #81c995;
+}
+@media (hover: none) {
+  .cpbtn {
+    opacity: 1;
+  }
 }
 
-/* Стили цитат (blockquote) */
+/* Цитата: жёлтая «заметка» Google, прямой шрифт для удобства чтения */
 .md blockquote {
-  border-left: 3px solid var(--gy);
+  border-left: var(--s3) solid var(--gy);
   background: var(--gyt);
   padding: var(--s13) var(--s21);
   border-radius: 0 var(--r8) var(--r8) 0;
-  margin-bottom: var(--s13);
+  margin-bottom: var(--s21);
   color: var(--mut);
-  font-style: italic;
 }
-/* Стили обычных Markdown-таблиц */
+.md blockquote > :last-child {
+  margin-bottom: 0;
+}
+
+/* Таблицы Markdown */
 .md table {
   width: 100%;
-  border-collapse: collapse;
-  margin-bottom: var(--s21);
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-bottom: var(--s26);
   font-size: var(--f13);
-  background: #fff;
+  font-variant-numeric: tabular-nums;
+  background: var(--bg);
+  border: 1px solid var(--bord);
+  border-radius: var(--r8);
+  overflow: hidden;
 }
 .md th {
-  background: var(--gbt);
-  color: var(--gb);
+  background: var(--surf);
+  color: var(--txt);
   padding: var(--s8) var(--s13);
   font-weight: 700;
   text-align: left;
+  border-bottom: 1px solid var(--bord);
 }
 .md th:first-child {
   border-radius: var(--r8) 0 0 0;
@@ -1078,28 +1254,31 @@ body {
 .md td {
   padding: var(--s8) var(--s13);
   border-bottom: 1px solid var(--bord);
-  background: #fff;
+  background: var(--bg);
+  transition: background var(--d89) var(--ease);
 }
 .md tr:last-child td {
   border-bottom: none;
 }
-/* Стили расширенных таблиц Złoty MD (:::table) с поддержкой цвета и объединения ячеек */
+/* Расширенные таблицы Złoty MD (:::table) */
 .ztbl {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  margin-bottom: var(--s21);
+  margin-bottom: var(--s26);
   font-size: var(--f13);
+  font-variant-numeric: tabular-nums;
   overflow: hidden;
   border-radius: var(--r8);
+  border: 1px solid var(--bord);
 }
 .ztbl thead tr th {
-  background: var(--gbt);
-  color: var(--gb);
+  background: var(--surf);
+  color: var(--txt);
   padding: var(--s8) var(--s13);
   font-weight: 700;
   text-align: left;
-  border-bottom: 2px solid var(--gb);
+  border-bottom: 1px solid var(--bord-strong);
 }
 .ztbl tbody tr td {
   padding: var(--s8) var(--s13);
@@ -1116,27 +1295,27 @@ body {
   border: 1px solid var(--bord);
 }
 .ztbl tbody tr:hover td {
-  background: rgba(66, 133, 244, 0.05);
+  background: var(--accent-wash);
 }
 .ztbl td.bg-b,
 .ztbl th.bg-b {
   background: var(--gbt) !important;
-  color: var(--gb) !important;
+  color: var(--accent-ink) !important;
 }
 .ztbl td.bg-r,
 .ztbl th.bg-r {
   background: var(--grt) !important;
-  color: var(--gr) !important;
+  color: var(--gr-ink) !important;
 }
 .ztbl td.bg-y,
 .ztbl th.bg-y {
   background: var(--gyt) !important;
-  color: #7a4f00 !important;
+  color: var(--gy-ink) !important;
 }
 .ztbl td.bg-g,
 .ztbl th.bg-g {
   background: var(--ggt) !important;
-  color: var(--gg) !important;
+  color: var(--gg-ink) !important;
 }
 .ztbl td.al,
 .ztbl th.al {
@@ -1155,80 +1334,77 @@ body {
   font-weight: 700;
 }
 .md tr:hover td {
-  background: var(--surf);
+  background: var(--accent-wash);
 }
 .md hr {
   border: none;
-  height: 2px;
+  height: 1px;
   background: var(--bord);
-  margin: var(--s34) 0;
+  margin: var(--s42) 0;
 }
 .md strong {
   font-weight: 700;
 }
 .md img {
   max-width: 100%;
-  border-radius: var(--r13);
+  border-radius: var(--r8);
 }
 .md .md-figure {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: var(--s21) 0;
+  margin: var(--s26) 0;
 }
 .md .md-figure img {
   margin: 0;
 }
 .md .md-figure figcaption {
   margin-top: var(--s8);
-  font-size: 13px;
-  color: var(--mut);
+  font-size: var(--f13);
+  color: var(--sub);
   text-align: center;
+  text-wrap: balance;
 }
 .md input[type='checkbox'] {
   cursor: pointer;
-  accent-color: var(--gg);
+  accent-color: var(--accent);
 }
+/* Формулы: нейтральная подложка вместо синей рамки */
 .md .katex-display {
   overflow-x: auto;
   overflow-y: hidden;
-  padding: var(--s13) 0;
-  margin: var(--s13) 0;
+  padding: var(--s5) 0;
+  margin: var(--s13) 0 var(--s21);
 }
 .md .katex {
   font-size: 1em;
 }
 .md .katex-display > .katex {
-  background: linear-gradient(135deg, var(--gbt) 0%, #f0f4ff 100%);
-  border: 1px solid var(--gb);
-  border-left: 5px solid var(--gb);
-  border-radius: var(--r8);
+  background: var(--surf);
+  border: 1px solid var(--bord);
+  border-radius: var(--r13);
   padding: var(--s21) var(--s34);
   display: block;
   overflow-x: auto;
-  box-shadow: 0 2px 8px rgba(66, 133, 244, 0.08);
 }
 .md .katex:not(.katex-display .katex) {
-  padding: 1px 5px;
+  padding: 0 var(--s2);
 }
 
 .md .mermaid-wrap {
   background: var(--bg);
-  border: 1px solid var(--gb);
-  border-top: 3px solid var(--gb);
+  border: 1px solid var(--bord);
   border-radius: var(--r13);
   padding: var(--s34) var(--s21) var(--s21);
-  margin-bottom: var(--s21);
+  margin-bottom: var(--s26);
   overflow-x: auto;
   overflow-y: hidden;
   text-align: center;
   position: relative;
-  box-shadow: 0 2px 13px rgba(66, 133, 244, 0.08);
 }
-
 .md .mermaid {
   display: block;
-  min-width: 89px;
+  min-width: var(--s89);
   max-width: 100%;
 }
 .md .mermaid svg {
@@ -1246,12 +1422,12 @@ body {
 .md .mermaid svg .edgePath .path {
   stroke-width: 1.5px;
 }
-/* Рисунки TikZ (SVG от TikZJax) */
+/* Рисунки TikZ */
 .md .tikz-wrap {
   text-align: center;
-  margin-bottom: var(--s21);
+  margin-bottom: var(--s26);
   overflow-x: auto;
-  min-height: 26px;
+  min-height: var(--s26);
 }
 .md .tikz-wrap svg {
   display: inline-block;
@@ -1263,15 +1439,16 @@ body {
 }
 .md .mermaid-error {
   background: var(--grt);
-  border: 1px solid var(--gr);
+  border: 1px solid color-mix(in oklab, var(--gr) 38.2%, #fff);
   border-radius: var(--r8);
   padding: var(--s13) var(--s21);
-  color: var(--gr);
-  font-size: 13px;
+  color: var(--gr-ink);
+  font-size: var(--f13);
   font-family: var(--mono);
   text-align: left;
 }
 
+/* Пустое состояние превью: четыре точки Google, размеры φ^0.5 rem */
 .empty {
   display: flex;
   flex-direction: column;
@@ -1285,66 +1462,78 @@ body {
 }
 .ec-row {
   display: flex;
-  gap: var(--s5);
+  gap: var(--s8);
+  margin-bottom: var(--s8);
 }
 .ec {
-  width: 21px;
-  height: 21px;
+  width: var(--s21);
+  height: var(--s21);
   border-radius: 50%;
 }
 .ec:nth-child(1) {
   animation: fA 2584ms ease-in-out infinite;
 }
 .ec:nth-child(2) {
-  animation: fB 2584ms ease-in-out infinite 377ms;
+  animation: fB 2584ms ease-in-out infinite var(--d377);
 }
 .ec:nth-child(3) {
   animation: fC 2584ms ease-in-out infinite 987ms;
 }
 .ec:nth-child(4) {
-  animation: fD 2584ms ease-in-out infinite 987ms;
+  animation: fD 2584ms ease-in-out infinite 1597ms;
 }
 .empty h3 {
   font-size: var(--f21);
   font-weight: 700;
   color: var(--txt);
+  letter-spacing: -0.0132em;
 }
 .empty p {
   font-size: var(--f13);
-  max-width: 233px;
-  line-height: 1.618;
+  max-width: var(--s233);
+  line-height: var(--lh);
+  color: var(--sub);
+  text-wrap: balance;
 }
 
+/* Вкладки «Редактор / Превью» на узких экранах */
 .tabbar {
   display: none;
   border-bottom: 1px solid var(--bord);
   background: var(--bg);
   flex-shrink: 0;
+  padding: var(--s5) var(--s13);
 }
 .tabrow {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s3);
+  padding: var(--s3);
+  background: var(--surf2);
+  border-radius: var(--pill);
 }
 .tab {
-  flex: 1;
-  padding: var(--s13);
+  height: var(--ctl);
   border: none;
+  border-radius: var(--pill);
   background: transparent;
   font-family: var(--font);
   font-size: var(--f13);
-  font-weight: 600;
+  font-weight: 500;
   color: var(--mut);
   cursor: pointer;
-  border-bottom: 3px solid transparent;
   transition:
-    color 233ms,
-    border-color 233ms;
+    color var(--d233) var(--ease),
+    background var(--d233) var(--ease),
+    box-shadow var(--d233) var(--ease);
 }
 .tab.on {
-  color: var(--gb);
-  border-bottom-color: var(--gb);
+  color: var(--accent-ink);
+  background: var(--bg);
+  box-shadow: var(--e1);
 }
 
-@media (max-width: 754px) {
+@media (max-width: 46.9787em) {
   .tabbar {
     display: block;
   }
@@ -1381,10 +1570,10 @@ body {
     padding: var(--s21);
   }
   #pv {
-    padding: var(--s21);
+    padding: var(--s13) var(--s8) var(--s34);
   }
 }
-@media (max-width: 466px) {
+@media (max-width: 29.0344em) {
   .tg:nth-child(n + 7) {
     display: none;
   }
@@ -1392,34 +1581,47 @@ body {
     display: none;
   }
 }
+/* Сенсорные экраны: цели касания не меньше φ² rem (≈ 42px) */
+@media (pointer: coarse) {
+  .btn,
+  .about-btn,
+  .ai-btn {
+    width: var(--s42);
+    height: var(--s42);
+  }
+  .lang-btn,
+  .tab {
+    height: var(--s42);
+  }
+}
 
 .about-btn {
-  width: 34px;
-  height: 34px;
+  width: var(--s34);
+  height: var(--s34);
   border: none;
-  border-radius: 50%;
+  border-radius: var(--r13);
   background: transparent;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--sub);
+  color: var(--mut);
   flex-shrink: 0;
   transition:
-    background 144ms,
-    color 144ms,
-    transform 89ms;
+    background var(--d144),
+    color var(--d144),
+    transform var(--d89);
 }
 .about-btn:hover {
-  background: var(--gbt);
-  color: var(--gb);
+  background: var(--surf2);
+  color: var(--accent);
 }
 .about-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.9443);
 }
 .about-btn svg {
-  width: 16px;
-  height: 16px;
+  width: var(--s16);
+  height: var(--s16);
 }
 /* Кнопка «Сохранить» недоступна в режиме только для чтения */
 .about-btn:disabled {
@@ -1434,9 +1636,9 @@ body {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(32, 33, 36, 0.35);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
+  background: var(--scrim);
+  -webkit-backdrop-filter: blur(var(--s2));
+  backdrop-filter: blur(var(--s2));
   z-index: 100;
 }
 .about-overlay.open {
@@ -1445,16 +1647,16 @@ body {
 .about-modal {
   display: none;
   position: fixed;
-  top: calc(var(--hh) + 8px);
+  top: calc(var(--hh) + var(--s8));
   right: var(--s21);
-  width: min(377px, calc(100vw - 2 * var(--s21)));
-  max-height: calc(100vh - var(--hh) - 21px);
-  max-height: calc(100dvh - var(--hh) - 21px);
+  width: min(var(--s377), calc(100vw - 2 * var(--s21)));
+  max-height: calc(100vh - var(--hh) - var(--s21));
+  max-height: calc(100dvh - var(--hh) - var(--s21));
   flex-direction: column;
   background: var(--bg);
   border: 1px solid var(--bord);
   border-radius: var(--r21);
-  box-shadow: 0 8px 34px rgba(32, 33, 36, 0.18);
+  box-shadow: var(--e3);
   z-index: 101;
   overflow: hidden;
 }
@@ -1474,7 +1676,7 @@ body {
 @keyframes centerSlideDown {
   from {
     opacity: 0;
-    transform: translate(-50%, calc(-50% - 8px));
+    transform: translate(-50%, calc(-50% - var(--s8)));
   }
   to {
     opacity: 1;
@@ -1484,7 +1686,7 @@ body {
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(calc(var(--s8) * -1));
   }
   to {
     opacity: 1;
@@ -1492,10 +1694,10 @@ body {
   }
 }
 .about-overlay.open {
-  animation: fadeIn 144ms ease;
+  animation: fadeIn var(--d144) ease;
 }
 .about-modal.open {
-  animation: slideDown 233ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: slideDown var(--d233) var(--spring-pop);
 }
 
 .about-header {
@@ -1513,12 +1715,12 @@ body {
 }
 .about-app-name {
   font-size: var(--f21);
-  font-weight: 800;
-  letter-spacing: -0.8px;
+  font-weight: 700;
+  letter-spacing: -0.0213em;
 }
 .about-close {
-  width: 26px;
-  height: 26px;
+  width: var(--s26);
+  height: var(--s26);
   border: none;
   border-radius: var(--r8);
   background: transparent;
@@ -1528,16 +1730,16 @@ body {
   justify-content: center;
   color: var(--sub);
   transition:
-    background 144ms,
-    color 144ms;
+    background var(--d144),
+    color var(--d144);
 }
 .about-close:hover {
-  background: var(--grt);
-  color: var(--gr);
+  background: var(--surf2);
+  color: var(--txt);
 }
 .about-close svg {
-  width: 13px;
-  height: 13px;
+  width: var(--s13);
+  height: var(--s13);
 }
 
 .about-body {
@@ -1555,9 +1757,9 @@ body {
   border-bottom: 1px solid var(--surf);
 }
 .about-label {
-  font-size: 10px;
+  font-size: var(--f10);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.0902em;
   text-transform: uppercase;
   color: var(--sub);
 }
@@ -1568,7 +1770,7 @@ body {
 }
 .about-value a {
   cursor: pointer;
-  color: var(--gb);
+  color: var(--accent);
   text-decoration: none;
 }
 .about-value a:hover {
@@ -1576,11 +1778,11 @@ body {
 }
 .about-ver {
   display: inline-block;
-  padding: 2px var(--s8);
+  padding: var(--s2) var(--s8);
   border-radius: var(--r34);
-  background: var(--gbt);
-  color: var(--gb);
-  font-size: 10px;
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-size: var(--f10);
   font-weight: 700;
 }
 .about-divider {
@@ -1589,7 +1791,7 @@ body {
   margin: var(--s13) 0;
 }
 .about-desc {
-  font-size: 13px;
+  font-size: var(--f13);
   color: var(--mut);
   line-height: 1.618;
 }
@@ -1604,7 +1806,7 @@ body {
   gap: var(--s5);
   overflow-y: auto;
   min-height: 0;
-  max-height: 178px;
+  max-height: var(--s178);
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -1624,33 +1826,33 @@ body {
   gap: var(--s8);
 }
 .about-lib-name {
-  font-size: 13px;
+  font-size: var(--f13);
   font-weight: 700;
   color: var(--txt);
 }
 .about-lib-ver {
   font-weight: 500;
   color: var(--mut);
-  font-size: 10px;
+  font-size: var(--f10);
 }
 .about-lib-badge {
   flex-shrink: 0;
-  padding: 2px var(--s8);
+  padding: var(--s2) var(--s8);
   border-radius: var(--r34);
   background: var(--ggt);
-  color: var(--gg);
-  font-size: 10px;
+  color: var(--gg-ink);
+  font-size: var(--f10);
   font-weight: 700;
   white-space: nowrap;
 }
 .about-lib-badge-alt {
-  background: var(--gbt);
-  color: var(--gb);
+  background: var(--accent-tint);
+  color: var(--accent);
 }
 .about-lib-copy {
   display: block;
-  margin-top: 2px;
-  font-size: 10px;
+  margin-top: var(--s2);
+  font-size: var(--f10);
   color: var(--mut);
   line-height: 1.618;
 }
@@ -1660,7 +1862,7 @@ body {
   flex-shrink: 0;
 }
 .lang-btn {
-  height: 34px;
+  height: var(--s34);
   padding: 0 var(--s8);
   border: none;
   border-radius: var(--r8);
@@ -1668,27 +1870,26 @@ body {
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--s5);
   color: var(--mut);
   font-family: var(--font);
-  font-size: 10px;
+  font-size: var(--f10);
   font-weight: 700;
   transition:
-    background 144ms,
-    color 144ms,
-    transform 89ms;
+    background var(--d144),
+    color var(--d144),
+    transform var(--d89);
 }
 .lang-btn:hover {
-  background: var(--gbt);
-  color: var(--gb);
-  transform: translateY(-2px);
+  background: var(--surf2);
+  color: var(--accent);
 }
 .lang-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.9443);
 }
 .lang-btn svg {
-  width: 16px;
-  height: 16px;
+  width: var(--s16);
+  height: var(--s16);
   flex-shrink: 0;
 }
 .lang-drop {
@@ -1699,14 +1900,14 @@ body {
   background: var(--bg);
   border: 1px solid var(--bord);
   border-radius: var(--r13);
-  box-shadow: 0 8px 21px rgba(32, 33, 36, 0.15);
+  box-shadow: var(--e2);
   z-index: 500;
-  min-width: 144px;
+  min-width: var(--s144);
   padding: var(--s5);
 }
 .lang-drop.open {
   display: block;
-  animation: slideDown 144ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: slideDown var(--d144) var(--spring-pop);
 }
 /* Пять и более языков: список прокручивается по вертикали (высоту задаёт fitLangDrop в app.js) */
 /* Полоса прокрутки — как у модальных окон (.font-modal, .doc-list): без scrollbar-width,
@@ -1715,10 +1916,10 @@ body {
   overflow-y: auto;
   overscroll-behavior: contain;
   /* Полоса (4px) занимает часть правого отступа: ширина пунктов и поля — как без прокрутки */
-  padding-right: calc(var(--s5) - 5px);
+  padding-right: 0;
 }
 .lang-drop.scroll::-webkit-scrollbar {
-  width: 5px;
+  width: var(--s5);
 }
 .lang-drop.scroll::-webkit-scrollbar-thumb {
   background: var(--bord);
@@ -1743,16 +1944,16 @@ body {
   text-align: left;
   gap: var(--s8);
   transition:
-    background 89ms,
-    color 89ms;
+    background var(--d89),
+    color var(--d89);
 }
 .lang-opt:hover {
-  background: var(--gbt);
-  color: var(--gb);
+  background: var(--surf2);
+  color: var(--txt);
 }
 .lang-opt.active {
-  color: var(--gb);
-  background: var(--gbt);
+  color: var(--accent-ink);
+  background: var(--accent-tint);
 }
 .lang-sep {
   height: 1px;
@@ -1781,41 +1982,41 @@ img.emoji {
   display: flex;
   align-items: center;
   gap: var(--s5);
-  height: 16px;
+  height: var(--s16);
   padding: 0 var(--s8);
   border-radius: var(--r34);
-  background: var(--surf);
-  border: 1px solid var(--bord);
-  font-size: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  font-size: var(--f10);
   color: var(--mut);
   white-space: nowrap;
   cursor: default;
   transition:
-    border-color 233ms,
-    color 233ms,
-    background 233ms;
+    border-color var(--d233),
+    color var(--d233),
+    background var(--d233);
 }
 .save-chip svg {
-  width: 13px;
-  height: 13px;
+  width: var(--s13);
+  height: var(--s13);
   flex-shrink: 0;
-  transition: stroke 233ms;
+  transition: stroke var(--d233);
 }
 .save-chip.saved {
-  border-color: var(--gg);
-  color: var(--gg);
+  border-color: transparent;
+  color: var(--gg-ink);
   background: var(--ggt);
 }
 .save-chip.saved svg {
-  stroke: var(--gg);
+  stroke: var(--gg-ink);
 }
 .save-chip.unsaved {
   border-color: var(--bord);
   color: var(--sub);
 }
 .save-chip.error {
-  border-color: var(--gr);
-  color: var(--gr);
+  border-color: transparent;
+  color: var(--gr-ink);
   background: var(--grt);
 }
 .save-chip.error svg {
@@ -1823,12 +2024,12 @@ img.emoji {
 }
 /* Документ открыт для редактирования в другом окне */
 .save-chip.readonly {
-  border-color: var(--gy);
-  color: #b06000;
+  border-color: transparent;
+  color: var(--gy-ink);
   background: var(--gyt);
 }
 .save-chip.readonly svg {
-  stroke: #b06000;
+  stroke: var(--gy-ink);
 }
 
 /* Индикатор загрузки: плашка снизу по центру со спиннером */
@@ -1836,23 +2037,23 @@ img.emoji {
   position: fixed;
   bottom: var(--s21);
   left: 50%;
-  transform: translateX(-50%) translateY(89px);
+  transform: translateX(-50%) translateY(var(--s89));
   display: flex;
   align-items: center;
   gap: var(--s8);
   padding: var(--s8) var(--s21);
   border-radius: var(--r34);
-  background: #202124;
+  background: var(--ink-dark);
   color: #e8eaed;
   font-size: var(--f13);
   font-weight: 600;
-  box-shadow: 0 5px 21px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--e3);
   z-index: 310;
   opacity: 0;
   pointer-events: none;
   transition:
-    transform 377ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 377ms;
+    transform var(--d377) var(--spring-pop),
+    opacity var(--d377);
 }
 .busy-indicator.show {
   transform: translateX(-50%) translateY(0);
@@ -1860,12 +2061,12 @@ img.emoji {
 }
 .busy-spinner {
   cursor: progress;
-  width: 13px;
-  height: 13px;
+  width: var(--s13);
+  height: var(--s13);
   flex-shrink: 0;
   border-radius: 50%;
-  border: 2px solid rgba(232, 234, 237, 0.25);
-  border-top-color: var(--gb);
+  border: var(--s2) solid rgb(232 234 237 / 0.236);
+  border-top-color: var(--accent);
   animation: busy-spin 987ms linear infinite;
 }
 @keyframes busy-spin {
@@ -1875,7 +2076,7 @@ img.emoji {
 }
 @media (prefers-reduced-motion: reduce) {
   .busy-indicator {
-    transition: opacity 233ms;
+    transition: opacity var(--d233);
   }
 }
 
@@ -1883,32 +2084,32 @@ img.emoji {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(32, 33, 36, 0.35);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
+  background: var(--scrim);
+  -webkit-backdrop-filter: blur(var(--s2));
+  backdrop-filter: blur(var(--s2));
   z-index: 100;
 }
 .font-overlay.open {
   display: block;
-  animation: fadeIn 144ms ease;
+  animation: fadeIn var(--d144) ease;
 }
 .font-modal {
   display: none;
   position: fixed;
-  top: calc(var(--hh) + 8px);
+  top: calc(var(--hh) + var(--s8));
   right: var(--s21);
-  width: min(377px, calc(100vw - 2 * var(--s21)));
-  max-height: calc(100vh - 89px);
-  max-height: calc(100dvh - 89px);
+  width: min(var(--s377), calc(100vw - 2 * var(--s21)));
+  max-height: calc(100vh - var(--s89));
+  max-height: calc(100dvh - var(--s89));
   overflow-y: auto;
   background: var(--bg);
   border: 1px solid var(--bord);
   border-radius: var(--r21);
-  box-shadow: 0 8px 34px rgba(32, 33, 36, 0.18);
+  box-shadow: var(--e3);
   z-index: 101;
 }
 .font-modal::-webkit-scrollbar {
-  width: 5px;
+  width: var(--s5);
 }
 .font-modal::-webkit-scrollbar-thumb {
   background: var(--bord);
@@ -1922,7 +2123,7 @@ img.emoji {
 }
 .font-modal.open {
   display: block;
-  animation: slideDown 233ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: slideDown var(--d233) var(--spring-pop);
 }
 .font-modal-header {
   display: flex;
@@ -1932,7 +2133,7 @@ img.emoji {
   border-bottom: 1px solid var(--bord);
   font-size: var(--f13);
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.0902em;
   color: var(--txt);
   position: sticky;
   top: 0;
@@ -1944,31 +2145,31 @@ img.emoji {
 }
 .font-row {
   display: grid;
-  grid-template-columns: 55px 34px 1fr 42px 21px;
+  grid-template-columns: var(--s68) var(--s34) 1fr var(--s42) var(--s21);
   align-items: center;
   gap: var(--s8);
   margin-bottom: var(--s13);
 }
-@media (max-width: 377px) {
+@media (max-width: 22.8254em) {
   .font-row {
-    grid-template-columns: 42px 26px 1fr 42px 16px;
+    grid-template-columns: var(--s42) var(--s26) 1fr var(--s42) var(--s16);
     gap: var(--s5);
   }
   .font-preview {
-    width: 26px;
-    height: 21px;
-    font-size: 10px;
+    width: var(--s26);
+    height: var(--s21);
+    font-size: var(--f10);
   }
   .font-num {
-    width: 42px;
-    font-size: 10px;
+    width: var(--s42);
+    font-size: var(--f10);
   }
   .font-label {
-    font-size: 10px;
+    font-size: var(--f10);
   }
 }
 
-@media (max-width: 466px) {
+@media (max-width: 29.0344em) {
   .about-modal,
   .font-modal,
   .dl-modal {
@@ -1978,15 +2179,15 @@ img.emoji {
   }
 }
 .font-label {
-  font-size: 10px;
+  font-size: var(--f10);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.0902em;
   text-transform: uppercase;
   color: var(--sub);
 }
 .font-preview {
-  width: 34px;
-  height: 26px;
+  width: var(--s34);
+  height: var(--s26);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1996,59 +2197,59 @@ img.emoji {
   color: var(--txt);
   overflow: hidden;
   border: 1px solid var(--bord);
-  transition: font-size 144ms;
+  transition: font-size var(--d144);
 }
 .font-slider {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 5px;
+  height: var(--s5);
   border-radius: 99px;
   background: var(--bord);
   outline: none;
   cursor: pointer;
-  accent-color: var(--gb);
+  accent-color: var(--accent);
 }
 .font-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: var(--s16);
+  height: var(--s16);
   border-radius: 50%;
-  background: var(--gb);
+  background: var(--accent);
   cursor: pointer;
-  box-shadow: 0 1px 5px rgba(66, 133, 244, 0.3);
+  box-shadow: var(--e1);
 }
 .font-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: var(--s16);
+  height: var(--s16);
   border: none;
   border-radius: 50%;
-  background: var(--gb);
+  background: var(--accent);
   cursor: pointer;
-  box-shadow: 0 1px 5px rgba(66, 133, 244, 0.3);
+  box-shadow: var(--e1);
 }
 .font-num {
   cursor: text;
-  width: 42px;
-  height: 26px;
+  width: var(--s42);
+  height: var(--s26);
   border: 1px solid var(--bord);
   border-radius: var(--r5);
   background: var(--bg);
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: var(--f10);
   font-weight: 600;
   color: var(--txt);
   text-align: center;
   outline: none;
-  padding: 0 5px;
-  transition: border-color 144ms;
+  padding: 0 var(--s5);
+  transition: border-color var(--d144);
 }
 .font-num:focus {
-  border-color: var(--gb);
+  border-color: var(--accent);
 }
 .font-unit {
-  font-size: 10px;
+  font-size: var(--f10);
   color: var(--sub);
   font-weight: 600;
 }
@@ -2059,20 +2260,20 @@ img.emoji {
 }
 .font-reset-btn {
   flex: 1;
-  height: 34px;
-  border-radius: var(--r8);
+  height: var(--s34);
+  border-radius: var(--s10);
   font-family: var(--font);
-  font-size: 13px;
+  font-size: var(--f13);
   font-weight: 700;
   cursor: pointer;
   border: 1px solid var(--bord);
   background: var(--bg);
   color: var(--mut);
   transition:
-    background 144ms,
-    color 144ms,
-    border-color 144ms,
-    transform 89ms;
+    background var(--d144),
+    color var(--d144),
+    border-color var(--d144),
+    transform var(--d89);
 }
 .font-reset-btn:hover {
   border-color: var(--gr);
@@ -2080,13 +2281,13 @@ img.emoji {
   background: var(--grt);
 }
 .font-reset-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.9443);
 }
 
 .settings-section-title {
-  font-size: 10px;
+  font-size: var(--f10);
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.0902em;
   text-transform: uppercase;
   color: var(--sub);
   margin-bottom: var(--s13);
@@ -2111,42 +2312,42 @@ img.emoji {
   font-size: var(--f13);
   font-weight: 700;
   color: var(--txt);
-  margin-bottom: 3px;
+  margin-bottom: var(--s3);
 }
 .settings-row-desc {
-  font-size: 10px;
+  font-size: var(--f10);
   color: var(--mut);
   line-height: 1.618;
 }
 .settings-toggle {
   flex-shrink: 0;
-  width: 42px;
-  height: 21px;
+  width: var(--s42);
+  height: var(--s21);
   border-radius: 99px;
   background: var(--bord);
   border: none;
   cursor: pointer;
   position: relative;
-  transition: background 233ms;
+  transition: background var(--d233);
   padding: 0;
-  margin-top: 2px;
+  margin-top: var(--s2);
 }
 .settings-toggle[aria-checked='true'] {
-  background: var(--gg);
+  background: var(--accent);
 }
 .settings-toggle-knob {
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 16px;
-  height: 16px;
+  top: var(--s3);
+  left: var(--s3);
+  width: var(--s16);
+  height: var(--s16);
   border-radius: 50%;
   background: #fff;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
-  transition: transform 233ms;
+  box-shadow: var(--e1);
+  transition: transform var(--d233);
 }
 .settings-toggle[aria-checked='true'] .settings-toggle-knob {
-  transform: translateX(21px);
+  transform: translateX(var(--s21));
 }
 .settings-preview-box {
   background: var(--surf);
@@ -2162,26 +2363,26 @@ img.emoji {
 }
 /* Предпросмотр применяемых настроек HTML-рендеринга */
 .settings-preview-label {
-  font-size: 10px;
+  font-size: var(--f10);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.0902em;
   text-transform: uppercase;
   color: var(--sub);
   margin-bottom: var(--s8);
 }
 .settings-preview-output {
-  font-size: 13px;
+  font-size: var(--f13);
   line-height: 1.618;
   color: var(--txt);
   background: var(--bg);
   border-radius: var(--r5);
   padding: var(--s8) var(--s13);
   border: 1px solid var(--bord);
-  min-height: 42px;
+  min-height: var(--s42);
 }
 .settings-preview-output p {
   margin-bottom: 0 !important;
-  font-size: 13px !important;
+  font-size: var(--f13) !important;
 }
 
 /* Кнопка создания нового документа */
@@ -2191,7 +2392,7 @@ img.emoji {
   align-items: center;
   justify-content: center;
   gap: var(--s8);
-  height: 42px;
+  height: var(--s42);
   border-radius: var(--r8);
   border: 1px dashed var(--bord);
   background: var(--surf);
@@ -2202,22 +2403,22 @@ img.emoji {
   cursor: pointer;
   margin-bottom: var(--s13);
   transition:
-    border-color 144ms,
-    color 144ms,
-    background 144ms,
-    transform 89ms;
+    border-color var(--d144),
+    color var(--d144),
+    background var(--d144),
+    transform var(--d89);
 }
 .new-doc-btn:hover {
-  border-color: var(--gb);
-  color: var(--gb);
-  background: var(--gbt);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-wash);
 }
 .new-doc-btn:active {
-  transform: scale(0.98);
+  transform: scale(0.9443);
 }
 .new-doc-btn svg {
-  width: 16px;
-  height: 16px;
+  width: var(--s16);
+  height: var(--s16);
   flex-shrink: 0;
 }
 /* Список сохранённых документов (панель управления документами) */
@@ -2225,11 +2426,11 @@ img.emoji {
   display: flex;
   flex-direction: column;
   gap: var(--s8);
-  max-height: 50vh;
+  max-height: 61.8vh;
   overflow-y: auto;
 }
 .doc-list::-webkit-scrollbar {
-  width: 5px;
+  width: var(--s5);
 }
 .doc-list::-webkit-scrollbar-thumb {
   background: var(--bord);
@@ -2245,16 +2446,17 @@ img.emoji {
   background: var(--bg);
   cursor: pointer;
   transition:
-    border-color 144ms,
-    background 144ms;
+    border-color var(--d144),
+    background var(--d144);
 }
 .doc-item:hover {
-  border-color: var(--gb);
-  background: var(--gbt);
+  border-color: color-mix(in oklab, var(--accent) 38.2%, #fff);
+  background: var(--accent-wash);
 }
 .doc-item.active {
-  border-color: var(--gg);
-  background: var(--ggt);
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  box-shadow: inset var(--s3) 0 0 var(--accent);
 }
 .doc-item-main {
   flex: 1;
@@ -2273,16 +2475,16 @@ img.emoji {
   outline: none;
   width: 100%;
   font-family: var(--font);
-  padding: 2px 0;
+  padding: var(--s2) 0;
   cursor: text;
 }
 .doc-item-name:focus {
-  border-bottom-color: var(--gb);
+  border-bottom-color: var(--accent);
 }
 .doc-item-meta {
-  font-size: 10px;
+  font-size: var(--f10);
   color: var(--sub);
-  margin-top: 2px;
+  margin-top: var(--s2);
 }
 .doc-item-actions {
   display: flex;
@@ -2290,8 +2492,8 @@ img.emoji {
   flex-shrink: 0;
 }
 .doc-item-btn {
-  width: 26px;
-  height: 26px;
+  width: var(--s26);
+  height: var(--s26);
   border: none;
   border-radius: var(--r5);
   background: transparent;
@@ -2301,20 +2503,20 @@ img.emoji {
   align-items: center;
   justify-content: center;
   transition:
-    background 144ms,
-    color 144ms,
-    transform 89ms;
+    background var(--d144),
+    color var(--d144),
+    transform var(--d89);
   flex-shrink: 0;
 }
 .doc-item-btn:hover {
-  transform: scale(1.08);
+  transform: none;
 }
 .doc-item-btn.del:hover {
   background: var(--grt);
   color: var(--gr);
 }
 .doc-item-empty {
-  font-size: 13px;
+  font-size: var(--f13);
   color: var(--sub);
   text-align: center;
   padding: var(--s21) 0;
@@ -2325,36 +2527,36 @@ img.emoji {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(32, 33, 36, 0.35);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
+  background: var(--scrim);
+  -webkit-backdrop-filter: blur(var(--s2));
+  backdrop-filter: blur(var(--s2));
   z-index: 200;
 }
 .dl-overlay.open {
   display: block;
-  animation: fadeIn 144ms ease;
+  animation: fadeIn var(--d144) ease;
 }
 .dl-modal {
   display: none;
   position: fixed;
-  top: calc(var(--hh) + 8px);
+  top: calc(var(--hh) + var(--s8));
   right: var(--s21);
-  width: min(288px, calc(100vw - 2 * var(--s21)));
+  width: min(var(--s288), calc(100vw - 2 * var(--s21)));
   background: var(--bg);
   border: 1px solid var(--bord);
   border-radius: var(--r21);
-  box-shadow: 0 8px 34px rgba(32, 33, 36, 0.18);
+  box-shadow: var(--e3);
   z-index: 201;
   padding: var(--s13) var(--s13) var(--s13);
 }
 .dl-modal.open {
   display: block;
-  animation: slideDown 233ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: slideDown var(--d233) var(--spring-pop);
 }
 .dl-title {
-  font-size: 10px;
+  font-size: var(--f10);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.0902em;
   text-transform: uppercase;
   color: var(--sub);
   padding: 0 var(--s5) var(--s8);
@@ -2370,7 +2572,7 @@ img.emoji {
 .dl-opt {
   position: relative;
   flex: 1 1 calc(50% - var(--s8));
-  min-width: 110px;
+  min-width: var(--s89);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2382,15 +2584,15 @@ img.emoji {
   cursor: pointer;
   font-family: var(--font);
   transition:
-    border-color 144ms,
-    background 144ms,
-    transform 144ms;
+    border-color var(--d144),
+    background var(--d144),
+    transform var(--d144);
 }
 .dl-opt svg {
-  width: 26px;
-  height: 26px;
+  width: var(--s26);
+  height: var(--s26);
   color: var(--mut);
-  transition: color 144ms;
+  transition: color var(--d144);
   flex-shrink: 0;
 }
 .dl-opt-label {
@@ -2399,18 +2601,18 @@ img.emoji {
   color: var(--txt);
 }
 .dl-opt-desc {
-  font-size: 10px;
+  font-size: var(--f10);
   color: var(--sub);
   text-align: center;
   line-height: 1.272;
 }
 .dl-opt-check {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  width: 16px;
-  height: 16px;
-  border-radius: 5px;
+  top: var(--s5);
+  right: var(--s5);
+  width: var(--s16);
+  height: var(--s16);
+  border-radius: var(--s5);
   border: 1px solid var(--bord);
   background: var(--bg);
   display: flex;
@@ -2418,25 +2620,25 @@ img.emoji {
   justify-content: center;
   color: #fff;
   transition:
-    background 144ms,
-    border-color 144ms;
+    background var(--d144),
+    border-color var(--d144);
 }
 .dl-opt-check svg {
-  width: 13px;
-  height: 13px;
+  width: var(--s13);
+  height: var(--s13);
   opacity: 0;
-  transition: opacity 89ms;
+  transition: opacity var(--d89);
 }
 .dl-opt.selected .dl-opt-check svg {
   opacity: 1;
 }
 #dlOptHtml:hover {
-  border-color: var(--gb);
-  background: var(--gbt);
+  border-color: var(--accent);
+  background: var(--accent-tint);
 }
 #dlOptHtml:hover svg,
 #dlOptHtml:hover .dl-opt-label {
-  color: var(--gb);
+  color: var(--accent);
 }
 #dlOptPdf:hover {
   border-color: var(--gr);
@@ -2444,15 +2646,15 @@ img.emoji {
 }
 #dlOptPdf:hover svg,
 #dlOptPdf:hover .dl-opt-label {
-  color: var(--gr);
+  color: var(--gr-ink);
 }
 #dlOptZmd:hover {
-  border-color: var(--gy);
+  border-color: var(--gy-ink);
   background: var(--gyt);
 }
 #dlOptZmd:hover svg,
 #dlOptZmd:hover .dl-opt-label {
-  color: var(--gy);
+  color: var(--gy-ink);
 }
 #dlOptMd:hover {
   border-color: var(--gg);
@@ -2460,22 +2662,22 @@ img.emoji {
 }
 #dlOptMd:hover svg,
 #dlOptMd:hover .dl-opt-label {
-  color: var(--gg);
+  color: var(--gg-ink);
 }
 .dl-opt:active {
-  transform: scale(0.95);
+  transform: scale(0.9443);
 }
 #dlOptHtml.selected {
-  border-color: var(--gb);
-  background: var(--gbt);
+  border-color: var(--accent);
+  background: var(--accent-tint);
 }
 #dlOptHtml.selected svg,
 #dlOptHtml.selected .dl-opt-label {
-  color: var(--gb);
+  color: var(--accent);
 }
 #dlOptHtml.selected .dl-opt-check {
-  background: var(--gb);
-  border-color: var(--gb);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 #dlOptPdf.selected {
   border-color: var(--gr);
@@ -2483,23 +2685,23 @@ img.emoji {
 }
 #dlOptPdf.selected svg,
 #dlOptPdf.selected .dl-opt-label {
-  color: var(--gr);
+  color: var(--gr-ink);
 }
 #dlOptPdf.selected .dl-opt-check {
   background: var(--gr);
   border-color: var(--gr);
 }
 #dlOptZmd.selected {
-  border-color: var(--gy);
+  border-color: var(--gy-ink);
   background: var(--gyt);
 }
 #dlOptZmd.selected svg,
 #dlOptZmd.selected .dl-opt-label {
-  color: var(--gy);
+  color: var(--gy-ink);
 }
 #dlOptZmd.selected .dl-opt-check {
   background: var(--gy);
-  border-color: var(--gy);
+  border-color: var(--gy-ink);
 }
 #dlOptMd.selected {
   border-color: var(--gg);
@@ -2507,7 +2709,7 @@ img.emoji {
 }
 #dlOptMd.selected svg,
 #dlOptMd.selected .dl-opt-label {
-  color: var(--gg);
+  color: var(--gg-ink);
 }
 #dlOptMd.selected .dl-opt-check {
   background: var(--gg);
@@ -2523,33 +2725,33 @@ img.emoji {
   border-top: 1px solid var(--bord);
 }
 .dl-hint {
-  font-size: 10px;
+  font-size: var(--f10);
   color: var(--sub);
   flex: 1;
   line-height: 1.272;
 }
 .dl-confirm-btn {
   flex-shrink: 0;
-  height: 34px;
+  height: var(--s34);
   padding: 0 var(--s13);
-  border-radius: var(--r8);
+  border-radius: var(--s10);
   border: none;
-  background: var(--gb);
+  background: var(--accent);
   font-family: var(--font);
-  font-size: 13px;
+  font-size: var(--f13);
   font-weight: 700;
   color: #fff;
   cursor: pointer;
   transition:
-    background 144ms,
-    transform 89ms,
-    opacity 144ms;
+    background var(--d144),
+    transform var(--d89),
+    opacity var(--d144);
 }
 .dl-confirm-btn:hover:not(:disabled) {
-  background: #1a73e8;
+  background: var(--accent-ink);
 }
 .dl-confirm-btn:active:not(:disabled) {
-  transform: scale(0.96);
+  transform: scale(0.9443);
 }
 .dl-confirm-btn:disabled {
   opacity: 0.382;
@@ -2565,8 +2767,8 @@ img.emoji {
   flex-direction: column;
   background: var(--bg);
   transition:
-    width 233ms cubic-bezier(0.4, 0, 0.2, 1),
-    border-left-width 233ms;
+    width var(--d233) var(--spring),
+    border-left-width var(--d233);
   border-left: 0px solid var(--bord);
 }
 .ai-panel.open {
@@ -2588,17 +2790,17 @@ img.emoji {
   flex: 1;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--s5);
 }
 .ai-ph svg {
-  width: 13px;
-  height: 13px;
+  width: var(--s13);
+  height: var(--s13);
   flex-shrink: 0;
-  stroke: var(--gb);
+  stroke: var(--accent);
 }
 .ai-close {
-  width: 21px;
-  height: 21px;
+  width: var(--s21);
+  height: var(--s21);
   border: none;
   border-radius: var(--r5);
   background: transparent;
@@ -2608,16 +2810,16 @@ img.emoji {
   align-items: center;
   justify-content: center;
   transition:
-    background 144ms,
-    color 144ms;
+    background var(--d144),
+    color var(--d144);
 }
 .ai-close:hover {
-  background: var(--grt);
-  color: var(--gr);
+  background: var(--surf2);
+  color: var(--txt);
 }
 .ai-close svg {
-  width: 13px;
-  height: 13px;
+  width: var(--s13);
+  height: var(--s13);
   stroke: currentColor;
 }
 /* Область сообщений чата ИИ-ассистента */
@@ -2630,7 +2832,7 @@ img.emoji {
   gap: var(--s8);
 }
 .ai-msgs::-webkit-scrollbar {
-  width: 5px;
+  width: var(--s5);
 }
 .ai-msgs::-webkit-scrollbar-thumb {
   background: var(--bord);
@@ -2640,21 +2842,22 @@ img.emoji {
 .ai-bubble {
   cursor: text;
   padding: var(--s8) var(--s13);
-  border-radius: var(--r8);
-  font-size: 13px;
+  border-radius: var(--r13);
+  font-size: var(--f13);
   line-height: 1.618;
-  max-width: 95%;
+  max-width: 85.41%; /* 1 − φ^-4 */
   word-break: break-word;
 }
 .ai-bubble.u {
-  background: var(--gbt);
-  color: var(--gb);
+  background: var(--accent-tint);
+  color: var(--accent-ink);
   align-self: flex-end;
-  border-radius: var(--r8) var(--r8) var(--r5) var(--r8);
+  border-radius: var(--r13) var(--r13) var(--r3) var(--r13);
 }
 .ai-bubble.a {
   background: var(--surf);
   border: 1px solid var(--bord);
+  border-radius: var(--r13) var(--r13) var(--r13) var(--r3);
   align-self: flex-start;
   white-space: pre-wrap;
 }
@@ -2680,27 +2883,27 @@ img.emoji {
   gap: var(--s5);
 }
 .ai-preset {
-  padding: 3px var(--s8);
+  padding: var(--s3) var(--s8);
   border-radius: var(--r34);
   border: 1px solid var(--bord);
   background: var(--bg);
   font-family: var(--font);
-  font-size: 10px;
+  font-size: var(--f10);
   font-weight: 700;
   color: var(--mut);
   cursor: pointer;
   transition:
-    border-color 144ms,
-    color 144ms,
-    background 144ms,
-    transform 89ms;
+    border-color var(--d144),
+    color var(--d144),
+    background var(--d144),
+    transform var(--d89);
   white-space: nowrap;
 }
 .ai-preset:hover {
-  border-color: var(--gb);
-  color: var(--gb);
-  background: var(--gbt);
-  transform: translateY(-1px);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-tint);
+  transform: none;
 }
 .ai-irow {
   display: flex;
@@ -2714,27 +2917,27 @@ img.emoji {
   border: 1px solid var(--bord);
   background: var(--bg);
   font-family: var(--font);
-  font-size: 13px;
+  font-size: var(--f13);
   color: var(--txt);
   outline: none;
   resize: none;
   line-height: 1.618;
-  min-height: 34px;
-  max-height: 89px;
-  transition: border-color 144ms;
+  min-height: var(--s34);
+  max-height: var(--s89);
+  transition: border-color var(--d144);
 }
 .ai-tin:focus {
-  border-color: var(--gb);
+  border-color: var(--accent);
 }
 .ai-tin::placeholder {
   color: var(--sub);
 }
 .ai-send {
-  width: 34px;
-  height: 34px;
+  width: var(--s34);
+  height: var(--s34);
   border: none;
   border-radius: var(--r8);
-  background: var(--gb);
+  background: var(--accent);
   color: #fff;
   cursor: pointer;
   flex-shrink: 0;
@@ -2742,15 +2945,14 @@ img.emoji {
   align-items: center;
   justify-content: center;
   transition:
-    opacity 144ms,
-    transform 89ms;
+    opacity var(--d144),
+    transform var(--d89);
 }
 .ai-send:hover {
-  opacity: 0.786;
-  transform: translateY(-1px);
+  background: var(--accent-ink);
 }
 .ai-send:active {
-  transform: scale(0.93);
+  transform: scale(0.9443);
 }
 .ai-send:disabled {
   opacity: 0.382;
@@ -2758,8 +2960,8 @@ img.emoji {
   transform: none;
 }
 .ai-send svg {
-  width: 16px;
-  height: 16px;
+  width: var(--s16);
+  height: var(--s16);
   stroke: #fff;
   fill: none;
   stroke-width: 2;
@@ -2777,14 +2979,14 @@ img.emoji {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(32, 33, 36, 0.45);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
+  background: var(--scrim);
+  -webkit-backdrop-filter: blur(var(--s2));
+  backdrop-filter: blur(var(--s2));
   z-index: 500;
 }
 .ai-nav-overlay.open {
   display: block;
-  animation: fadeIn 144ms ease;
+  animation: fadeIn var(--d144) ease;
 }
 .ai-nav-modal {
   display: none;
@@ -2792,20 +2994,20 @@ img.emoji {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(377px, calc(100vw - 2 * var(--s21)));
+  width: min(var(--s377), calc(100vw - 2 * var(--s21)));
   background: var(--bg);
   border: 1px solid var(--bord);
   border-radius: var(--r21);
-  box-shadow: 0 8px 34px rgba(32, 33, 36, 0.25);
+  box-shadow: var(--e3);
   z-index: 501;
   padding: var(--s21);
 }
 .ai-nav-modal.open {
   display: block;
-  animation: centerSlideDown 233ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: centerSlideDown var(--d233) var(--spring-pop);
 }
 .ai-nav-msg {
-  font-size: 13px;
+  font-size: var(--f13);
   line-height: 1.618;
   color: var(--txt);
   margin-bottom: var(--s21);
@@ -2818,22 +3020,24 @@ img.emoji {
 }
 .ai-nav-btn {
   border: none;
-  border-radius: var(--r8);
+  border-radius: var(--s10);
+  min-height: var(--ctl);
+  font-family: var(--font);
   padding: var(--s8) var(--s13);
-  font-size: 13px;
+  font-size: var(--f13);
   font-weight: 600;
   cursor: pointer;
 }
 .ai-nav-btn-no {
-  background: var(--bord);
+  background: var(--surf2);
   color: var(--txt);
 }
 .ai-nav-btn-yes {
-  background: var(--gr);
+  background: var(--gr-ink);
   color: #fff;
 }
 .ai-nav-btn-save {
-  background: var(--gb);
+  background: var(--accent);
   color: #fff;
 }
 
@@ -2845,15 +3049,15 @@ img.emoji {
   z-index: 901;
 }
 .err-title {
-  font-size: 16px;
+  font-size: var(--f16);
   font-weight: 700;
-  color: var(--gr);
+  color: var(--gr-ink);
   margin-bottom: var(--s8);
 }
 
 .ai-attach {
-  width: 34px;
-  height: 34px;
+  width: var(--s34);
+  height: var(--s34);
   border: 1px solid var(--bord);
   border-radius: var(--r8);
   background: var(--bg);
@@ -2864,19 +3068,19 @@ img.emoji {
   align-items: center;
   justify-content: center;
   transition:
-    border-color 144ms,
-    color 144ms,
-    background 144ms,
-    transform 89ms;
+    border-color var(--d144),
+    color var(--d144),
+    background var(--d144),
+    transform var(--d89);
 }
 .ai-attach:hover {
-  border-color: var(--gb);
-  color: var(--gb);
-  background: var(--gbt);
-  transform: translateY(-1px);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-tint);
+  transform: none;
 }
 .ai-attach:active {
-  transform: scale(0.93);
+  transform: scale(0.9443);
 }
 .ai-attach:disabled,
 .ai-attach.ai-attach-disabled {
@@ -2893,8 +3097,8 @@ img.emoji {
   transform: none;
 }
 .ai-attach svg {
-  width: 16px;
-  height: 16px;
+  width: var(--s16);
+  height: var(--s16);
   stroke: currentColor;
   fill: none;
   stroke-width: 1.8;
@@ -2902,8 +3106,8 @@ img.emoji {
   stroke-linejoin: round;
 }
 .ai-panel.ai-dragover .ai-irow {
-  outline: 2px dashed var(--gb);
-  outline-offset: 2px;
+  outline: var(--s2) dashed var(--gb);
+  outline-offset: var(--s2);
   border-radius: var(--r8);
 }
 /* Чипы прикреплённых файлов (в поле ввода и в пузырях сообщений) */
@@ -2915,33 +3119,33 @@ img.emoji {
 .ai-chip {
   display: flex;
   align-items: center;
-  gap: 5px;
-  max-width: 144px;
-  padding: 3px var(--s5) 3px 3px;
+  gap: var(--s5);
+  max-width: var(--s144);
+  padding: var(--s3) var(--s5) var(--s3) var(--s3);
   border: 1px solid var(--bord);
   border-radius: var(--r34);
   background: var(--surf);
-  font-size: 10px;
+  font-size: var(--f10);
   color: var(--mut);
 }
 .ai-bubble .ai-chip {
   background: var(--bg);
 }
 .ai-chip-thumb {
-  width: 21px;
-  height: 21px;
+  width: var(--s21);
+  height: var(--s21);
   border-radius: var(--r5);
   object-fit: cover;
   flex-shrink: 0;
 }
 .ai-chip-icon {
-  width: 21px;
-  height: 21px;
+  width: var(--s21);
+  height: var(--s21);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 13px;
+  font-size: var(--f13);
 }
 .ai-chip-name {
   overflow: hidden;
@@ -2953,9 +3157,9 @@ img.emoji {
   background: transparent;
   color: var(--sub);
   cursor: pointer;
-  font-size: 13px;
+  font-size: var(--f13);
   line-height: 1;
-  padding: 0 2px;
+  padding: 0 var(--s2);
   flex-shrink: 0;
 }
 .ai-chip-rm:hover {
@@ -2971,12 +3175,12 @@ img.emoji {
   border: 1px solid var(--gg);
   border-radius: var(--r8);
   background: var(--ggt);
-  color: var(--gg);
+  color: var(--gg-ink);
   font-family: var(--font);
-  font-size: 10px;
+  font-size: var(--f10);
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 144ms;
+  transition: opacity var(--d144);
 }
 .ai-insert.vis {
   display: block;
@@ -2995,19 +3199,19 @@ img.emoji {
   border: none;
   background: transparent;
   font-family: var(--font);
-  font-size: 10px;
+  font-size: var(--f10);
   font-weight: 700;
   cursor: pointer;
-  transition: background 144ms;
+  transition: background var(--d144);
 }
 .diff-btn.accept {
-  color: var(--gg);
+  color: var(--gg-ink);
 }
 .diff-btn.accept:hover {
   background: var(--ggt);
 }
 .diff-btn.reject {
-  color: var(--gr);
+  color: var(--gr-ink);
   border-left: 1px solid var(--bord);
 }
 .diff-btn.reject:hover {
@@ -3022,20 +3226,20 @@ img.emoji {
 .ai-modelrow select {
   flex: 1;
   min-width: 0;
-  padding: 3px var(--s5);
+  padding: var(--s3) var(--s5);
   border-radius: var(--r5);
   border: 1px solid var(--bord);
   background: var(--bg);
   font-family: var(--font);
-  font-size: 10px;
+  font-size: var(--f10);
   font-weight: 700;
   color: var(--txt);
   cursor: pointer;
   outline: none;
-  transition: border-color 144ms;
+  transition: border-color var(--d144);
 }
 .ai-modelrow select:focus {
-  border-color: var(--gb);
+  border-color: var(--accent);
 }
 /* Кнопка обновления списка моделей из API */
 /* Фиолетовая точка над головой на значке ИИ (включается в настройках) */
@@ -3051,20 +3255,20 @@ body.ai-dot-on .ai-dot {
   align-items: center;
   justify-content: center;
   padding: 0;
-  width: 21px;
-  height: 21px;
+  width: var(--s21);
+  height: var(--s21);
   border-radius: var(--r5);
   border: 1px solid var(--bord);
   background: var(--bg);
   color: var(--mut);
-  font-size: 13px;
+  font-size: var(--f13);
   line-height: 1;
   cursor: pointer;
-  transition: border-color 144ms, color 144ms;
+  transition: border-color var(--d144), color var(--d144);
 }
 .ai-models-refresh:hover {
-  border-color: var(--gb);
-  color: var(--gb);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 /* Вращается только значок, рамка кнопки остаётся на месте */
 .ai-models-refresh-ico {
@@ -3089,15 +3293,15 @@ body.ai-dot-on .ai-dot {
   background: var(--gyt);
   border: 1px solid var(--gy);
   border-radius: var(--r8);
-  font-size: 10px;
-  color: #7a4f00;
+  font-size: var(--f10);
+  color: var(--gy-ink);
   flex-shrink: 0;
 }
 .ai-keyrow svg {
-  width: 13px;
-  height: 13px;
+  width: var(--s13);
+  height: var(--s13);
   flex-shrink: 0;
-  stroke: #7a4f00;
+  stroke: var(--gy-ink);
   fill: none;
 }
 #aiKey {
@@ -3107,32 +3311,32 @@ body.ai-dot-on .ai-dot {
   background: transparent;
   outline: none;
   font-family: var(--mono);
-  font-size: 10px;
-  color: #7a4f00;
+  font-size: var(--f10);
+  color: var(--gy-ink);
 }
 #aiKey::placeholder {
   color: #b8850a;
   opacity: 0.618;
 }
 .ai-ksave {
-  padding: 2px var(--s8);
+  padding: var(--s2) var(--s8);
   border-radius: var(--r5);
   border: 1px solid var(--gy);
   background: var(--bg);
-  color: #7a4f00;
+  color: var(--gy-ink);
   font-family: var(--font);
-  font-size: 10px;
+  font-size: var(--f10);
   font-weight: 700;
   cursor: pointer;
-  transition: background 144ms;
+  transition: background var(--d144);
 }
 .ai-ksave:hover {
   background: var(--gy);
   color: #fff;
 }
 .ai-btn {
-  width: 34px;
-  height: 34px;
+  width: var(--s34);
+  height: var(--s34);
   border: none;
   border-radius: var(--r8);
   background: transparent;
@@ -3143,21 +3347,20 @@ body.ai-dot-on .ai-dot {
   color: var(--mut);
   flex-shrink: 0;
   transition:
-    background 144ms,
-    color 144ms,
-    transform 89ms;
+    background var(--d144),
+    color var(--d144),
+    transform var(--d89);
 }
 .ai-btn:hover {
-  background: var(--gbt);
-  color: var(--gb);
-  transform: translateY(-2px) scale(1.08);
+  background: var(--surf2);
+  color: var(--accent);
 }
 .ai-btn:active {
-  transform: scale(0.93);
+  transform: scale(0.9443);
 }
 .ai-btn svg {
-  width: 16px;
-  height: 16px;
+  width: var(--s16);
+  height: var(--s16);
   stroke: currentColor;
   fill: none;
   stroke-width: 1.8;
@@ -3165,11 +3368,11 @@ body.ai-dot-on .ai-dot {
   stroke-linejoin: round;
 }
 .ai-btn.on {
-  background: var(--gbt);
-  color: var(--gb);
+  background: var(--accent-tint);
+  color: var(--accent);
 }
 /* Адаптивные стили для мобильных экранов */
-@media (max-width: 754px) {
+@media (max-width: 46.9787em) {
   .ai-panel {
     position: fixed;
     top: 0;
@@ -3182,7 +3385,7 @@ body.ai-dot-on .ai-dot {
   .ai-panel.open {
     width: 100%;
     border-left-width: 0;
-    box-shadow: -5px 0 21px rgba(32, 33, 36, 0.18);
+    box-shadow: var(--e3);
   }
 }
 
@@ -3191,9 +3394,9 @@ body.ai-dot-on .ai-dot {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(32, 33, 36, 0.35);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
+  background: var(--scrim);
+  -webkit-backdrop-filter: blur(var(--s2));
+  backdrop-filter: blur(var(--s2));
   z-index: 200;
   align-items: center;
   justify-content: center;
@@ -3205,9 +3408,9 @@ body.ai-dot-on .ai-dot {
   background: var(--bg);
   border: 1px solid var(--bord);
   border-radius: var(--r21);
-  box-shadow: 0 8px 34px rgba(32, 33, 36, 0.18);
-  width: 377px;
-  animation: slideDown 233ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: var(--e3);
+  width: var(--s377);
+  animation: slideDown var(--d233) var(--spring-pop);
 }
 .tbl-dlg-hd {
   display: flex;
@@ -3232,15 +3435,15 @@ body.ai-dot-on .ai-dot {
   gap: var(--s13);
 }
 .tbl-lbl {
-  font-size: 13px;
+  font-size: var(--f13);
   font-weight: 700;
   color: var(--mut);
-  width: 89px;
+  width: var(--s89);
   flex-shrink: 0;
 }
 .tbl-num {
   cursor: text;
-  width: 55px;
+  width: var(--s55);
   padding: var(--s5) var(--s8);
   border-radius: var(--r8);
   border: 1px solid var(--bord);
@@ -3250,10 +3453,10 @@ body.ai-dot-on .ai-dot {
   color: var(--txt);
   outline: none;
   text-align: center;
-  transition: border-color 144ms;
+  transition: border-color var(--d144);
 }
 .tbl-num:focus {
-  border-color: var(--gb);
+  border-color: var(--accent);
 }
 .tbl-chks {
   display: flex;
@@ -3263,12 +3466,12 @@ body.ai-dot-on .ai-dot {
   display: flex;
   align-items: center;
   gap: var(--s5);
-  font-size: 13px;
+  font-size: var(--f13);
   cursor: pointer;
 }
 .tbl-chk input {
   cursor: pointer;
-  accent-color: var(--gb);
+  accent-color: var(--accent);
 }
 .tbl-dlg-ft {
   display: flex;
@@ -3279,7 +3482,7 @@ body.ai-dot-on .ai-dot {
 }
 .tbl-cancel {
   padding: var(--s8) var(--s13);
-  border-radius: var(--r8);
+  border-radius: var(--s10);
   border: 1px solid var(--bord);
   background: transparent;
   font-family: var(--font);
@@ -3287,28 +3490,27 @@ body.ai-dot-on .ai-dot {
   font-weight: 700;
   color: var(--mut);
   cursor: pointer;
-  transition: background 144ms;
+  transition: background var(--d144);
 }
 .tbl-cancel:hover {
   background: var(--surf);
 }
 .tbl-ok {
   padding: var(--s8) var(--s13);
-  border-radius: var(--r8);
+  border-radius: var(--s10);
   border: none;
-  background: var(--gb);
+  background: var(--accent);
   color: #fff;
   font-family: var(--font);
   font-size: var(--f13);
   font-weight: 700;
   cursor: pointer;
   transition:
-    opacity 144ms,
-    transform 89ms;
+    opacity var(--d144),
+    transform var(--d89);
 }
 .tbl-ok:hover {
-  opacity: 0.786;
-  transform: translateY(-1px);
+  background: var(--accent-ink);
 }
 
 /* Модальное окно просмотра предложенных ИИ изменений (diff) */
@@ -3316,9 +3518,9 @@ body.ai-dot-on .ai-dot {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(32, 33, 36, 0.35);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
+  background: var(--scrim);
+  -webkit-backdrop-filter: blur(var(--s2));
+  backdrop-filter: blur(var(--s2));
   z-index: 210;
   align-items: center;
   justify-content: center;
@@ -3330,19 +3532,19 @@ body.ai-dot-on .ai-dot {
   background: var(--bg);
   border: 1px solid var(--bord);
   border-radius: var(--r21);
-  box-shadow: 0 8px 34px rgba(32, 33, 36, 0.18);
-  width: min(754px, 92vw);
-  max-height: 85vh;
+  box-shadow: var(--e3);
+  width: min(var(--s754), calc(100vw - 2 * var(--s21)));
+  max-height: 85.41vh;
   display: flex;
   flex-direction: column;
-  animation: slideDown 233ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: slideDown var(--d233) var(--spring-pop);
 }
 .diffm-body {
   padding: var(--s13) var(--s21);
   overflow-y: auto;
   flex: 1;
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: var(--f13);
   line-height: 1.618;
   white-space: pre-wrap;
   word-break: break-word;
@@ -3359,13 +3561,13 @@ body.ai-dot-on .ai-dot {
 }
 .diff-open-btn {
   margin-left: var(--s5);
-  padding: 2px var(--s8);
-  border: 1px solid var(--gb);
+  padding: var(--s2) var(--s8);
+  border: 1px solid color-mix(in oklab, var(--accent) 38.2%, #fff);
   border-radius: var(--r5);
-  background: var(--gbt);
-  color: var(--gb);
+  background: var(--accent-tint);
+  color: var(--accent);
   font-family: var(--font);
-  font-size: 10px;
+  font-size: var(--f10);
   font-weight: 700;
   cursor: pointer;
 }
@@ -3416,6 +3618,16 @@ body.ai-dot-on .ai-dot {
     overflow: visible !important;
     padding: 0 !important;
   }
+  #pv {
+    background: #fff !important;
+  }
+  #pv > .md {
+    max-inline-size: none !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
   .md {
     font-size: 10.5pt;
     line-height: 1.618;
@@ -3449,7 +3661,7 @@ body.ai-dot-on .ai-dot {
   .md pre .hljs-doctag,
   .md pre .hljs-template-tag,
   .md pre .hljs-meta .hljs-keyword {
-    color: #1a73e8 !important;
+    color: var(--accent-ink) !important;
   }
   .md pre .hljs-built_in,
   .md pre .hljs-type,
@@ -3468,7 +3680,7 @@ body.ai-dot-on .ai-dot {
   .md pre .hljs-symbol,
   .md pre .hljs-bullet,
   .md pre .hljs-variable.constant_ {
-    color: #b06000 !important;
+    color: var(--gy-ink) !important;
   }
   .md pre .hljs-title,
   .md pre .hljs-title.function_,
@@ -3490,7 +3702,7 @@ body.ai-dot-on .ai-dot {
   .md pre .hljs-regexp,
   .md pre .hljs-deletion,
   .md pre .hljs-link {
-    color: #d93025 !important;
+    color: var(--gr-ink) !important;
   }
   .md pre .hljs-comment,
   .md pre .hljs-quote {
@@ -3520,7 +3732,7 @@ body.ai-dot-on .ai-dot {
     box-shadow: none !important;
   }
   .md blockquote {
-    border-left: 3px solid #fbbc04;
+    border-left: var(--s3) solid #fbbc04;
     background: #fffde7 !important;
   }
   @page {
@@ -3574,26 +3786,26 @@ body.ai-dot-on .ai-dot {
   }
   .pre-body {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+    scrollbar-color: rgb(255 255 255 / 0.146) transparent;
   }
 }
 
 .toast {
   position: fixed;
   left: 50%;
-  bottom: 34px;
-  transform: translate(-50%, 13px);
-  max-width: calc(100vw - 34px);
-  padding: 8px 21px;
+  bottom: var(--s34);
+  transform: translate(-50%, var(--s13));
+  max-width: calc(100vw - var(--s34));
+  padding: var(--s8) var(--s21);
   border-radius: 999px;
-  background: #202124;
+  background: var(--ink-dark);
   color: #fff;
-  font-size: 13px;
+  font-size: var(--f13);
   font-weight: 600;
-  box-shadow: 0 5px 13px rgba(0, 0, 0, 0.28);
+  box-shadow: var(--e3);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 233ms, transform 233ms;
+  transition: opacity var(--d233), transform var(--d233);
   z-index: 2000;
 }
 .toast.show {
@@ -3601,8 +3813,38 @@ body.ai-dot-on .ai-dot {
   transform: translate(-50%, 0);
 }
 .toast.ok {
-  background: #1e8e3e;
+  background: var(--gg-ink);
 }
 .toast.err {
-  background: #d93025;
+  background: var(--gr-ink);
+}
+
+/* Уменьшение движения: длительности сжимаются до одного кадра, бесконечные циклы останавливаются */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Режим высокой контрастности Windows: системные цвета, видимые границы и фокус */
+@media (forced-colors: active) {
+  .hd::after,
+  .md h1::after,
+  .md h2::before {
+    forced-color-adjust: none;
+  }
+  .btn:hover,
+  .about-btn:hover,
+  .lang-btn:hover,
+  .ai-btn:hover {
+    outline: 1px solid CanvasText;
+  }
+  #pv > .md {
+    border-color: CanvasText;
+  }
 }
