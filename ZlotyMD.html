@@ -751,17 +751,10 @@
     <div class="app">
       <!-- Шапка: логотип, панель инструментов, статистика документа -->
       <header class="hd">
-        <div class="logo">
-          <div class="logo-grid">
-            <div class="ld" style="background: var(--gb)"></div>
-            <div class="ld" style="background: var(--gr)"></div>
-            <div class="ld" style="background: var(--gy)"></div>
-            <div class="ld" style="background: var(--gg)"></div>
-          </div>
-          <div class="logo-name">
-            <svg class="zmd-wordmark" role="img" aria-label="Złoty MD" focusable="false"><use href="#zmdWordmark" /></svg>
-          </div>
-        </div>
+        <!-- Логотип (assets/logo-wide.svg) — ссылка на главную страницу -->
+        <a class="logo" href="./">
+          <img class="zmd-logo-wide" src="assets/logo-wide.svg" alt="Złoty MD" draggable="false" />
+        </a>
 
         <div class="hsep"></div>
 
@@ -1149,7 +1142,11 @@
           <button
             class="lang-btn"
             id="langBtn"
-            onclick="toggleLang()"
+            type="button"
+            aria-haspopup="menu"
+            aria-expanded="false"
+            aria-controls="langDrop"
+            onclick="toggleLang(event)"
             title="Language"
             data-i18n-title="langBtnTitle"
           >
@@ -1168,7 +1165,7 @@
             </svg>
             <span id="langCurrent">EN</span>
           </button>
-          <div class="lang-drop" id="langDrop">
+          <div class="lang-drop" id="langDrop" role="menu" aria-labelledby="langBtn">
             <!-- Порядок пунктов: «Авто» всегда первым, далее языки по алфавиту их английских названий (Czech, Dutch, English, French, German, Greek, Indonesian, Italian, Japanese, Korean, Latin, Polish, Portuguese, Romanian, Russian, Spanish, Turkish, Ukrainian) -->
             <button class="lang-opt" data-lang="auto" onclick="setLang('auto')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span class="lang-ico" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="8.6" rx="1.6"/><path d="M5.5 14h5M8 11.1V14"/></svg></span><span data-i18n="langAuto">Auto (device language)</span></button>
             <div class="lang-sep" role="separator"></div>
@@ -1234,15 +1231,9 @@
       <div class="about-modal" id="aboutModal">
         <div class="about-header">
           <div class="about-logo">
-            <div class="logo-grid" style="width: 28px; height: 28px; gap: 4px">
-              <div class="ld" style="background: var(--gb)"></div>
-              <div class="ld" style="background: var(--gr)"></div>
-              <div class="ld" style="background: var(--gy)"></div>
-              <div class="ld" style="background: var(--gg)"></div>
-            </div>
-            <span class="about-app-name"><svg class="zmd-wordmark" role="img" aria-label="Złoty MD" focusable="false"><use href="#zmdWordmark" /></svg></span>
+            <img class="zmd-logo-wide" src="assets/logo-wide.svg" alt="Złoty MD" draggable="false" />
           </div>
-          <button class="about-close" onclick="closeAbout()">
+          <button class="about-close" type="button" title="Close" aria-label="Close" data-i18n-title="dlgClose" onclick="closeAbout()">
             <svg
               viewBox="0 0 16 16"
               fill="none"
@@ -1465,7 +1456,7 @@
       <div class="font-modal" id="fontModal">
         <div class="font-modal-header">
           <span data-i18n="fontPanelTitle">Font Sizes</span>
-          <button class="about-close" onclick="closeFontPanel()">
+          <button class="about-close" type="button" title="Close" aria-label="Close" data-i18n-title="dlgClose" onclick="closeFontPanel()">
             <svg
               viewBox="0 0 16 16"
               fill="none"
@@ -1653,7 +1644,7 @@
       <div class="font-modal" id="settingsModal">
         <div class="font-modal-header">
           <span data-i18n="settingsTitle">Settings</span>
-          <button class="about-close" onclick="closeSettings()">
+          <button class="about-close" type="button" title="Close" aria-label="Close" data-i18n-title="dlgClose" onclick="closeSettings()">
             <svg
               viewBox="0 0 16 16"
               fill="none"
@@ -1763,7 +1754,7 @@
       >
         <div class="font-modal-header">
           <span data-i18n="docsPanelTitle">Documents</span>
-          <button class="about-close" onclick="closeDocsPanel()">
+          <button class="about-close" type="button" title="Close" aria-label="Close" data-i18n-title="dlgClose" onclick="closeDocsPanel()">
             <svg
               viewBox="0 0 16 16"
               fill="none"
@@ -2318,7 +2309,7 @@
         </div>
 
         <div class="ai-nav-overlay" id="aiNavOverlay"></div>
-        <div class="ai-nav-modal" id="aiNavModal">
+        <div class="ai-nav-modal" id="aiNavModal" role="alertdialog" aria-modal="true" aria-describedby="aiNavMsg">
           <div class="ai-nav-msg" id="aiNavMsg"></div>
           <div class="ai-nav-actions">
             <button class="ai-nav-btn ai-nav-btn-no" id="aiNavNoBtn" type="button"></button>
@@ -2344,6 +2335,8 @@
           <input class="dlg-input" id="dlgInput" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" list="dlgList" />
           <datalist id="dlgList"></datalist>
           <div class="ai-nav-actions">
+            <!-- Третий вариант (необязательный) — слева, отдельно от «Отмена» и основной кнопки -->
+            <button class="ai-nav-btn ai-nav-btn-no ai-nav-btn-alt" id="dlgAltBtn" type="button" hidden></button>
             <button class="ai-nav-btn ai-nav-btn-no" id="dlgCancelBtn" type="button"></button>
             <button class="ai-nav-btn ai-nav-btn-yes" id="dlgOkBtn" type="button"></button>
           </div>
@@ -2369,8 +2362,10 @@
         <div class="ai-nav-modal" id="unsavedModal" role="alertdialog" aria-modal="true" aria-describedby="unsavedMsg">
           <div class="ai-nav-msg" id="unsavedMsg"></div>
           <div class="ai-nav-actions">
+            <!-- Порядок по Apple HIG: «Не сохранять» отдельно слева, «Отмена» рядом с основной кнопкой,
+                 основная («Сохранить») — справа и с фокусом (Enter) -->
+            <button class="ai-nav-btn ai-nav-btn-no ai-nav-btn-alt" id="unsavedDiscardBtn" type="button"></button>
             <button class="ai-nav-btn ai-nav-btn-no" id="unsavedCancelBtn" type="button"></button>
-            <button class="ai-nav-btn ai-nav-btn-no" id="unsavedDiscardBtn" type="button"></button>
             <button class="ai-nav-btn ai-nav-btn-save" id="unsavedSaveBtn" type="button"></button>
           </div>
         </div>
@@ -2409,10 +2404,10 @@
 
     <!-- Диалог вставки пользовательской таблицы -->
     <div class="tbl-overlay" id="tblOverlay" onclick="if (event.target === this) closeTblDialog();">
-      <div class="tbl-dlg">
+      <div class="tbl-dlg" id="tblDlg">
         <div class="tbl-dlg-hd">
           <h3 data-i18n="tblDialogTitle">Insert custom table</h3>
-          <button class="about-close" onclick="closeTblDialog()">
+          <button class="about-close" type="button" title="Close" aria-label="Close" data-i18n-title="dlgClose" onclick="closeTblDialog()">
             <svg
               viewBox="0 0 16 16"
               fill="none"
@@ -2462,10 +2457,10 @@
       id="diffmOverlay"
       onclick="if (event.target === this) closeDiffModal();"
     >
-      <div class="diffm-dlg">
+      <div class="diffm-dlg" id="diffmDlg">
         <div class="tbl-dlg-hd">
           <h3 data-i18n="aiDiffModalTitle">Review edit</h3>
-          <button class="about-close" onclick="closeDiffModal()">
+          <button class="about-close" type="button" title="Close" aria-label="Close" data-i18n-title="dlgClose" onclick="closeDiffModal()">
             <svg
               viewBox="0 0 16 16"
               fill="none"

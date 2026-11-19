@@ -198,10 +198,8 @@
   .bar::after{content:'';position:absolute;left:0;right:0;bottom:0;height:var(--s2);background:linear-gradient(90deg,var(--gb) 0 44.72%,var(--gr) 44.72% 72.36%,var(--gy) 72.36% 89.44%,var(--gg) 89.44%)}
   .bar .wrap{height:var(--s55);display:flex;align-items:center;gap:var(--s21)}
   .logo{display:flex;align-items:center;gap:var(--s8);text-decoration:none;font-size:var(--f21);font-weight:700;letter-spacing:-.0213em}
-  .dots{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3);width:var(--s21);height:var(--s21)}
-  .dots i{border-radius:50%}
-  /* Логотип-надпись (SVG): высота заглавных Google Sans — 0.716 em, ширина — по пропорциям контуров */
-  .zmd-wordmark{display:block;height:.716em;width:4.097em;overflow:visible}
+  /* Логотип — assets/logo-wide.svg; отрицательные отступы обрезают поля холста SVG (кружки 60…270, рисунок 60…1218.84 из 1288.29 × 345.54) */
+  .zmd-logo-wide{--logo-dot:var(--s21);display:block;height:calc(var(--logo-dot)*345.54/210);width:auto;margin:calc(var(--logo-dot)*-60/210) calc(var(--logo-dot)*-69.45/210) calc(var(--logo-dot)*-75.54/210) calc(var(--logo-dot)*-60/210);pointer-events:none;user-select:none}
   .bar nav{margin-left:auto;display:flex;gap:var(--s26);font-size:var(--f13);color:var(--mut)}
   .bar nav a{text-decoration:none;padding-block:var(--s8);transition:color 144ms}
   .bar nav a:hover{color:var(--accent)}
@@ -362,26 +360,10 @@
 </style>
 </head>
 <body>
-    <!-- Логотип-надпись «Złoty MD» (контуры Google Sans из assets/logo-wide.svg; шрифт не нужен.
-         Google Sans: © 2025 The Google Sans Project Authors, SIL Open Font License 1.1).
-         Рамка — от верха заглавных до базовой линии, хвост «y» выходит вниз (overflow: visible).
-         Цвета букв — из переменных интерфейса, с запасными значениями. Используется через <use href="#zmdWordmark"> -->
-    <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
-      <symbol id="zmdWordmark" viewBox="358.4 89.82 860.44 150.36" overflow="visible">
-        <path d="M358.4 240.18V211.62L434.63 116.7H361.76V89.82H467.6V118.38L392.21 213.3H468.44V240.18Z" style="fill: var(--gb, #4285f4)" />
-        <path d="M493.62 240.18V89.82H521.13V240.18ZM547.59 144 483.96 189.57 470.31 171.51 533.94 125.73Z" style="fill: var(--gr, #ea4335)" />
-        <path d="M604.65 243.54Q587.89 243.54 574.98 236.09Q562.06 228.63 554.82 215.72Q547.57 202.8 547.57 186.63Q547.57 170.46 554.82 157.55Q562.06 144.63 574.95 137.18Q587.84 129.72 604.67 129.72Q621.49 129.72 634.28 137.31Q647.07 144.89 654.34 157.68Q661.6 170.46 661.6 186.63Q661.6 202.8 654.36 215.72Q647.11 228.63 634.26 236.09Q621.42 243.54 604.65 243.54ZM604.69 217.92Q612.67 217.92 619.29 214.21Q625.91 210.5 630 203.47Q634.09 196.45 634.09 186.61Q634.09 176.76 630 169.83Q625.9 162.9 619.29 159.12Q612.67 155.34 604.8 155.34Q596.92 155.34 590.1 159.12Q583.27 162.9 579.17 169.87Q575.08 176.85 575.08 186.63Q575.08 196.5 579.17 203.53Q583.27 210.57 590.13 214.25Q596.99 217.92 604.69 217.92Z" style="fill: var(--gy, #fbbc04)" />
-        <path d="M666.2 156.6V133.08H685.94V156.6ZM720.38 241.86Q703.79 241.86 694.34 232.31Q684.89 222.75 684.89 205.95V102.84H712.4V200.91Q712.4 208.68 715.55 212.36Q718.7 216.03 725.84 216.03Q729.2 216.03 732.14 215.09Q735.08 214.14 739.49 211.41V238.29Q734.87 239.97 730.14 240.92Q725.42 241.86 720.38 241.86ZM711.35 156.6V133.08H738.65V156.6Z" style="fill: var(--gg, #34a853)" />
-        <path d="M794.91 280.71Q794.28 282.18 793.75 283.34Q793.23 284.49 792.81 285.54H763.2Q764.04 283.86 766.45 278.5Q768.87 273.15 770.55 269.37Q771.81 266.85 773.49 262.86Q775.17 258.87 776.95 254.99Q778.74 251.1 779.79 249L795.96 213.09L801.63 199.65L828.3 133.08H858.96L803.73 260.34Q801.42 265.8 799.63 269.79Q797.85 273.78 796.8 276.41Q795.75 279.03 794.91 280.71ZM787.56 238.5 740.94 133.08H772.23L799.95 199.65H803.1Z" style="fill: var(--gb, #4285f4)" />
-        <path d="M909.95 240.18V89.82H946.49L986.39 195.45H988.07L1027.97 89.82H1064.72V240.18H1036.58V166.05L1038.26 141.06H1036.58L998.36 240.18H976.31L937.88 141.06H936.2L937.88 166.05V240.18Z" style="fill: var(--mut, #5f6368)" />
-        <path d="M1090.74 240.18V89.82H1141.56Q1165.5 89.82 1182.83 99.38Q1200.15 108.93 1209.49 125.84Q1218.84 142.74 1218.84 165Q1218.84 187.26 1209.49 204.27Q1200.15 221.28 1182.83 230.73Q1165.5 240.18 1141.56 240.18ZM1119.09 213.3H1140.3Q1156.89 213.3 1168.02 207.31Q1179.15 201.33 1184.72 190.41Q1190.28 179.49 1190.28 165Q1190.28 150.3 1184.72 139.49Q1179.15 128.67 1168.02 122.69Q1156.89 116.7 1140.3 116.7H1119.09Z" style="fill: var(--txt, #202124)" />
-      </symbol>
-    </svg>
 <header class="bar">
   <div class="wrap">
-    <a class="logo" href="./" aria-label="Złoty MD home">
-      <span class="dots" aria-hidden="true"><i style="background:var(--gb)"></i><i style="background:var(--gr)"></i><i style="background:var(--gy)"></i><i style="background:var(--gg)"></i></span>
-      <svg class="zmd-wordmark" aria-hidden="true" focusable="false"><use href="#zmdWordmark" /></svg>
+    <a class="logo" href="./">
+      <img class="zmd-logo-wide" src="assets/logo-wide.svg" alt="Złoty MD" draggable="false" />
     </a>
     <nav aria-label="Primary">
       <a href="#features">Features</a>
