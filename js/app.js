@@ -134,6 +134,7 @@ function buildPreviewHTML(title, opts) {
       --f13:13px;--f21:21px;--f34:34px;
       --font:'Google Sans','Noto Sans JP','Noto Sans KR',sans-serif;
       --mono:'JetBrains Mono',monospace;
+      --e1:0 1px 3px rgba(31,31,31,.09),0 2px 8px rgba(31,31,31,.056);
       --fz-h1:${fontSizes.h1}px;
       --fz-h2:${fontSizes.h2}px;
       --fz-h3:${fontSizes.h3}px;
@@ -193,15 +194,22 @@ function buildPreviewHTML(title, opts) {
     .diff-meta::before{color:#4285F4}
     .diff-ctx{color:#9AA0A6;border-left:3px solid transparent}
     .diff-ctx::before{color:#5F6368;opacity:.6}
-    .md .mermaid-wrap{background:var(--bg);border:1.5px solid var(--gb);border-top:3px solid var(--gb);border-radius:var(--r13);padding:var(--s34) var(--s21) var(--s21);margin-bottom:var(--s21);overflow-x:auto;overflow-y:hidden;text-align:center;position:relative;box-shadow:0 2px 12px rgba(66,133,244,.08)}
+    /* Карточка диаграммы — как в превью редактора, но без значка типа и сетки точек (в файле они лишние).
+       Полоса сверху — четыре цвета в пропорциях √5 */
+    .md .mermaid-wrap,.md .tikz-wrap{position:relative;background:var(--bg);border:1px solid var(--bord);border-radius:var(--r13);padding:var(--s34) var(--s21) var(--s21);margin-bottom:var(--s21);overflow-x:auto;overflow-y:hidden;text-align:center;box-shadow:var(--e1)}
+    .md .mermaid-wrap::before,.md .tikz-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gb) 0 44.72%,var(--gr) 44.72% 72.36%,var(--gy) 72.36% 89.44%,var(--gg) 89.44%)}
+    .md .mermaid-wrap:has(> .mermaid-error),.md .tikz-wrap:has(> .mermaid-error){background:none;border:none;padding:0;box-shadow:none;overflow:visible}
+    .md .mermaid-wrap:has(> .mermaid-error)::before,.md .tikz-wrap:has(> .mermaid-error)::before{display:none}
     .md .mermaid{display:block;min-width:80px;max-width:100%}
     .md .mermaid svg{display:block;max-width:100%;height:auto;overflow:hidden;margin:0 auto;font-family:var(--font) !important}
     .md .mermaid svg text,.md .mermaid svg .label{font-family:var(--font) !important}
     .md .mermaid svg .edgePath .path{stroke-width:1.5px}
-    .md .tikz-wrap{text-align:center;margin-bottom:var(--s21);overflow-x:auto}
+    .md .mermaid svg g.node>rect.label-container{rx:8px;ry:8px}
     .md .tikz-wrap svg{display:inline-block;max-width:100%;height:auto}
-    .md .mermaid-error{background:var(--grt);border:1px solid var(--gr);border-radius:var(--r8);padding:var(--s13) var(--s21);color:var(--gr);font-size:12px;font-family:var(--mono);text-align:left}
-    .md .mermaid-error svg.zi{display:inline-block;width:1.25em;height:1.25em;max-width:none;margin:0 .5em 0 0;vertical-align:-.25em;flex-shrink:0}
+    /* Карточка ошибки (Mermaid, TikZ): красная черта слева, заголовок и сообщение парсера */
+    .md .mermaid-error{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;gap:var(--s5) var(--s8);padding:var(--s13) var(--s21);border:1px solid #F6C9C4;border-left:3px solid var(--gr);border-radius:var(--r13);background:linear-gradient(135deg,#FDF0EF 0%,#fff 61.8%);color:#B3261E;font-family:var(--font);font-size:13px;font-weight:600;line-height:1.5;text-align:left;white-space:pre-wrap}
+    .md .mermaid-error .zerr-detail{grid-column:2;margin-top:var(--s3);padding:var(--s8) var(--s13);border:1px solid #F6C9C4;border-radius:var(--r8);background:rgba(255,255,255,.75);color:var(--mut);font-family:var(--mono);font-size:11.5px;font-weight:400;line-height:1.6;font-variant-ligatures:none;white-space:pre-wrap;overflow-wrap:anywhere}
+    .md .mermaid-error svg.zi{display:block;width:16px;height:16px;max-width:none;margin:2px 0 0;color:var(--gr);flex-shrink:0}
     .md blockquote{border-left:3px solid var(--gy);background:var(--gyt);padding:var(--s13) var(--s21);border-radius:0 var(--r8) var(--r8) 0;margin-bottom:var(--s13);color:var(--mut);font-style:italic}
     .md table{width:100%;border-collapse:collapse;margin-bottom:var(--s21);font-size:var(--f13);background:#fff}
     .md th{background:var(--gbt);color:var(--gb);padding:var(--s8) var(--s13);font-weight:700;text-align:left}
@@ -234,11 +242,15 @@ function buildPreviewHTML(title, opts) {
     .md .katex-display{overflow-x:auto;overflow-y:hidden;padding:var(--s13) 0;margin:var(--s13) 0}
     .md .katex{font-size:1.08em}
     .md .katex-display>.katex{
-      background:linear-gradient(135deg,var(--gbt) 0%,#f0f4ff 100%);
-      border:1.5px solid var(--gb);border-left:4px solid var(--gb);
-      border-radius:var(--r8);padding:var(--s21) var(--s34);display:block;overflow-x:auto;
-      box-shadow:0 2px 8px rgba(66,133,244,.08)
+      background:linear-gradient(135deg,var(--gbt) 0%,#f7faff 61.8%,#fff 100%);
+      border:1px solid #D2E3FC;border-left:3px solid var(--gb);
+      border-radius:var(--r13);padding:var(--s21) var(--s34);display:block;overflow-x:auto;
+      box-shadow:var(--e1)
     }
+    /* Ошибка в формуле: плашка с волнистым подчёркиванием; в блочной формуле — карточка с сообщением KaTeX */
+    .md .katex-error{color:#B3261E!important;background:var(--grt);border-radius:var(--r5);padding:1px var(--s5);font-family:var(--mono);font-size:.88em;text-decoration:underline wavy rgba(234,67,53,.55);text-decoration-skip-ink:none;text-underline-offset:3px}
+    .md div[data-tex]>.katex-error{display:block;margin:var(--s13) 0;padding:var(--s13) var(--s21);border:1px solid #F6C9C4;border-left:3px solid var(--gr);border-radius:var(--r13);background:linear-gradient(135deg,#FDF0EF 0%,#fff 61.8%);text-decoration:none;white-space:pre-wrap;overflow-wrap:anywhere}
+    .md div[data-tex]>.katex-error::after{content:attr(title);display:block;margin-top:var(--s5);font-family:var(--font);font-size:12px;line-height:1.5;color:var(--mut)}
     .md .katex:not(.katex-display .katex){padding:1px 4px}
   `;
 
@@ -309,6 +321,13 @@ function buildPreviewHTML(title, opts) {
     : '';
   clone.querySelectorAll('.mermaid').forEach(node => {
     const src = node.getAttribute('data-src') || node.dataset.src;
+    // Диаграмма с ошибкой: в файл идёт только карточка ошибки, Mermaid её не перерисовывает
+    const errWrap = node.closest('.mermaid-wrap');
+    if (errWrap && errWrap.querySelector('.mermaid-error')) {
+      node.textContent = '';
+      node.setAttribute('data-processed', 'true');
+      return;
+    }
     if (src) {
       // Исходник как текст (как в превью): «<» в подписях не должен превращаться в HTML-теги
       node.textContent = src;
@@ -1752,6 +1771,37 @@ async function _mmdNextMs() {
   _mmdLastMs = Date.now();
 }
 
+// Карточка ошибки Mermaid: заголовок (переводится вместе с интерфейсом) и сообщение парсера.
+// Исходник диаграммы остаётся в data-src — экспорт и повторная отрисовка работают как раньше
+async function _mmdShowError(node) {
+  const wrap = node.closest('.mermaid-wrap');
+  if (!wrap || wrap.querySelector('.mermaid-error')) return;
+  let detail = '';
+  try {
+    await mermaid.parse(node.dataset.src || node.textContent || '');
+  } catch (e) {
+    detail = String((e && (e.message || e.str)) || '').trim();
+  }
+  // Mermaid мог уже удалить узел при новой отрисовке превью
+  if (!wrap.isConnected || wrap.querySelector('.mermaid-error')) return;
+  node.querySelectorAll('svg[aria-roledescription="error"]').forEach(svg => svg.remove());
+  const errDiv = document.createElement('div');
+  errDiv.className = 'mermaid-error';
+  errDiv.innerHTML = _ziLabel(
+    'warn',
+    'mermaidSyntaxError',
+    LANGS[currentLang]?.mermaidSyntaxError || LANGS['en'].mermaidSyntaxError
+  );
+  if (detail) {
+    // Не <pre>: у .md pre — оформление блока кода. Не больше 8 строк, чтобы карточка не разрасталась
+    const det = document.createElement('div');
+    det.className = 'zerr-detail';
+    det.textContent = detail.split('\n').slice(0, 8).join('\n');
+    errDiv.appendChild(det);
+  }
+  wrap.appendChild(errDiv);
+}
+
 // Ставит на место токенов контейнеры диаграмм (рисует их mermaid.run в render)
 function _restoreMermaid(html) {
   let idx = 0;
@@ -2149,6 +2199,11 @@ function render(v) {
               try {
                 await _mmdNextMs();
                 await mermaid.run({ nodes: [node], suppressErrors: true });
+                // Mermaid нарисовал свою картинку ошибки («бомбу») — заменяем её карточкой Złoty MD
+                if (node.querySelector('svg[aria-roledescription="error"]')) {
+                  await _mmdShowError(node);
+                  continue;
+                }
                 node.querySelectorAll('svg').forEach(svg => {
                   _mmdFitViewBox(svg);
                   const vb = svg.getAttribute('viewBox');
@@ -2167,15 +2222,8 @@ function render(v) {
                 });
               } catch (_) {
                 const wrap = node.closest('.mermaid-wrap');
-                if (wrap && !wrap.querySelector('svg') && !wrap.querySelector('.mermaid-error')) {
-                  const errDiv = document.createElement('div');
-                  errDiv.className = 'mermaid-error';
-                  errDiv.innerHTML = _ziLabel(
-                    'warn',
-                    'mermaidSyntaxError',
-                    LANGS[currentLang]?.mermaidSyntaxError || LANGS['en'].mermaidSyntaxError
-                  );
-                  wrap.appendChild(errDiv);
+                if (wrap && !wrap.querySelector('svg:not([aria-roledescription="error"])')) {
+                  await _mmdShowError(node);
                 }
               }
             }
@@ -3670,8 +3718,8 @@ const MERMAID_CONFIG = {
       background: '#ffffff',
       mainBkg: '#E8F0FE',
       nodeBorder: '#4285F4',
-      clusterBkg: '#F8F9FA',
-      clusterBorder: '#DADCE0',
+      clusterBkg: '#F8FAFD',
+      clusterBorder: '#DDE3EA',
       titleColor: '#202124',
       edgeLabelBackground: '#ffffff',
       lineColor: '#5F6368',
