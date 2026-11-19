@@ -182,6 +182,7 @@
   "errModalTitle": "Fout",
   "errOk": "OK",
   "dlgClose": "Sluiten",
+  "rzLabel": "Breedte van editor en voorbeeld aanpassen",
   "dlgInsert": "Invoegen",
   "aiResetConfirmBtn": "Resetten",
   "dlEmptyTitle": "Niets om te downloaden",

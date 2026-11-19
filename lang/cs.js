@@ -182,6 +182,7 @@
   "errModalTitle": "Chyba",
   "errOk": "OK",
   "dlgClose": "Zavřít",
+  "rzLabel": "Změnit šířku editoru a náhledu",
   "dlgInsert": "Vložit",
   "aiResetConfirmBtn": "Obnovit",
   "dlEmptyTitle": "Není co stáhnout",

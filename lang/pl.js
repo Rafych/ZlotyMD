@@ -182,6 +182,7 @@
   "errModalTitle": "Błąd",
   "errOk": "OK",
   "dlgClose": "Zamknij",
+  "rzLabel": "Zmień szerokość edytora i podglądu",
   "dlgInsert": "Wstaw",
   "aiResetConfirmBtn": "Resetuj",
   "dlEmptyTitle": "Brak treści do pobrania",

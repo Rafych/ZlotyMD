@@ -182,6 +182,7 @@
   "errModalTitle": "Error",
   "errOk": "Aceptar",
   "dlgClose": "Cerrar",
+  "rzLabel": "Cambiar el ancho del editor y la vista previa",
   "dlgInsert": "Insertar",
   "aiResetConfirmBtn": "Restablecer",
   "dlEmptyTitle": "No hay nada que descargar",

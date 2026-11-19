@@ -182,6 +182,7 @@
   "errModalTitle": "Hata",
   "errOk": "OK",
   "dlgClose": "Kapat",
+  "rzLabel": "Düzenleyici ve önizleme genişliğini değiştir",
   "dlgInsert": "Ekle",
   "aiResetConfirmBtn": "Sıfırla",
   "dlEmptyTitle": "İndirilecek bir şey yok",

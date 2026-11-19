@@ -182,6 +182,7 @@
   "errModalTitle": "Eroare",
   "errOk": "OK",
   "dlgClose": "Închide",
+  "rzLabel": "Redimensionează editorul și previzualizarea",
   "dlgInsert": "Inserează",
   "aiResetConfirmBtn": "Resetează",
   "dlEmptyTitle": "Nimic de descărcat",

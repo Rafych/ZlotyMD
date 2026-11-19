@@ -182,6 +182,7 @@
   "errModalTitle": "Erreur",
   "errOk": "OK",
   "dlgClose": "Fermer",
+  "rzLabel": "Redimensionner l’éditeur et l’aperçu",
   "dlgInsert": "Insérer",
   "aiResetConfirmBtn": "Réinitialiser",
   "dlEmptyTitle": "Rien à télécharger",

@@ -182,6 +182,7 @@
   "errModalTitle": "Помилка",
   "errOk": "OK",
   "dlgClose": "Закрити",
+  "rzLabel": "Змінити ширину редактора й перегляду",
   "dlgInsert": "Вставити",
   "aiResetConfirmBtn": "Скинути",
   "dlEmptyTitle": "Нічого завантажувати",

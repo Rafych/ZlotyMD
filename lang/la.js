@@ -182,6 +182,7 @@
   "errModalTitle": "Error",
   "errOk": "OK",
   "dlgClose": "Claudere",
+  "rzLabel": "Latitudinem editoris et praevisionis mutare",
   "dlgInsert": "Inserere",
   "aiResetConfirmBtn": "Reficere",
   "dlEmptyTitle": "Nihil est quod deponatur",

@@ -182,6 +182,7 @@
   "errModalTitle": "Kesalahan",
   "errOk": "OK",
   "dlgClose": "Tutup",
+  "rzLabel": "Ubah lebar editor dan pratinjau",
   "dlgInsert": "Sisipkan",
   "aiResetConfirmBtn": "Atur ulang",
   "dlEmptyTitle": "Tidak ada yang diunduh",

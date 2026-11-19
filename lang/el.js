@@ -182,6 +182,7 @@
   "errModalTitle": "Σφάλμα",
   "errOk": "OK",
   "dlgClose": "Κλείσιμο",
+  "rzLabel": "Αλλαγή πλάτους επεξεργαστή και προεπισκόπησης",
   "dlgInsert": "Εισαγωγή",
   "aiResetConfirmBtn": "Επαναφορά",
   "dlEmptyTitle": "Δεν υπάρχει τίποτα για λήψη",

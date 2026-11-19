@@ -182,6 +182,7 @@
   "errModalTitle": "Fehler",
   "errOk": "OK",
   "dlgClose": "Schließen",
+  "rzLabel": "Breite von Editor und Vorschau ändern",
   "dlgInsert": "Einfügen",
   "aiResetConfirmBtn": "Zurücksetzen",
   "dlEmptyTitle": "Nichts zum Herunterladen",
