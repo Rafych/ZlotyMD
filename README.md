@@ -10,7 +10,7 @@ A Markdown editor with golden-ratio proportions and a Google-inspired color pale
 
 # Screenshot
 
-![Снимок экрана](./Снимок%20экрана%202026-11-19%20134943.png)
+![Screenshot](./Снимок%20экрана%202026-11-19%20134943.png)
 
 # License
 
