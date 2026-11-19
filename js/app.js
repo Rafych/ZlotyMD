@@ -626,12 +626,15 @@ const ZMD_FILE_EXT_RE = /\.(zmd|md|markdown|text|txt|docx|pdf)$/i;
 
 // Файл DOCX/PDF, экспортированный из Złoty MD и затем изменённый: открыть исходный документ или
 // преобразовать текущее содержимое
+// Результат: true — исходный документ, false — преобразовать, null — «Отмена» (файл не открывается).
+// Раньше Esc и щелчок по фону выбирали «преобразовать»; теперь они только отменяют (Apple HIG)
 async function _askImportSource(file) {
-  return showConfirmModal(tr('importEditedMsg'), {
+  const r = await showConfirmModal(tr('importEditedMsg'), {
     title: file.name || '',
     ok: tr('importRestore'),
-    cancel: tr('importConvert')
+    alt: tr('importConvert')
   });
+  return r === 'alt' ? false : r ? true : null;
 }
 
 // ---------- Кодировка текстовых файлов ----------
@@ -773,6 +776,7 @@ async function openFileObject(file) {
     const stopBusy = startBusy('importingFile');
     try {
       const res = await ZmdImport.open(file, () => _askImportSource(file));
+      if (!res) return; // пользователь отменил открытие
       text = res.text;
     } catch (e) {
       console.warn('Import failed:', e);
@@ -2594,8 +2598,7 @@ const LANGS = {
     aiSelectedSuffix: ' (selected text: {n} chars)',
     aiEmptyResponse: '(empty response)',
     aiNavWarning: 'The AI is still responding. If you leave now, the response will be lost. Continue?',
-    aiNavYes: 'Yes',
-    aiNavNo: 'No',
+    aiNavYes: 'Leave',
     loadingFile: 'Loading file…',
     pdfGenerating: 'Creating PDF…',
     docxGenerating: 'Creating DOCX…',
@@ -2615,6 +2618,7 @@ const LANGS = {
     loadingLang: 'Loading language…',
     errModalTitle: 'Error',
     errOk: 'OK',
+    dlgClose: 'Close',
     dlgInsert: 'Insert',
     aiResetConfirmBtn: 'Reset',
     dlEmptyTitle: 'Nothing to download',
@@ -3139,6 +3143,8 @@ function applyLang(code) {
     const key = el.getAttribute('data-i18n-title');
     if (t[key] !== undefined) el.title = t[key];
   });
+  // Кнопки-крестики без текста: доступное имя «Закрыть» на текущем языке
+  document.querySelectorAll('.about-close').forEach(el => el.setAttribute('aria-label', t.dlgClose || 'Close'));
 
   document.querySelectorAll('[data-i18n-html]').forEach(el => {
     const key = el.getAttribute('data-i18n-html');
@@ -3366,8 +3372,10 @@ function showErrorModal(message, title) {
 }
 
 // Модальное окно подтверждения или ввода текста (вместо window.confirm / window.prompt).
-// opts: { title, message, ok, cancel, danger, input: { value, placeholder, suggestions } }.
-// Результат: для подтверждения — true/false, для ввода — строка или null (отмена)
+// opts: { title, message, ok, cancel, alt, danger, input: { value, placeholder, suggestions } }.
+// Результат: для подтверждения — true/false, для ввода — строка или null (отмена).
+// alt — текст третьей кнопки (другое действие, слева); при нажатии на неё результат — 'alt'.
+// Esc и щелчок по фону всегда означают «Отмена» и никогда не выполняют действие (Apple HIG)
 function _openDialog(opts) {
   return new Promise(resolve => {
     const overlay = document.getElementById('dlgOverlay');
@@ -3376,15 +3384,19 @@ function _openDialog(opts) {
     const list = document.getElementById('dlgList');
     const okBtn = document.getElementById('dlgOkBtn');
     const cancelBtn = document.getElementById('dlgCancelBtn');
+    const altBtn = document.getElementById('dlgAltBtn');
     const withInput = !!opts.input;
     const prevFocus = document.activeElement;
     document.getElementById('dlgTitle').textContent = opts.title || '';
     document.getElementById('dlgMsg').textContent = opts.message || '';
     okBtn.textContent = opts.ok || tr('errOk');
     cancelBtn.textContent = opts.cancel || tr('unsavedCancel');
+    altBtn.hidden = !opts.alt;
+    altBtn.textContent = opts.alt || '';
     // Опасное действие (удаление, сброс) — красная кнопка, обычное — синяя
     okBtn.className = 'ai-nav-btn ' + (opts.danger ? 'ai-nav-btn-yes' : 'ai-nav-btn-save');
     modal.classList.toggle('has-input', withInput);
+    modal.classList.toggle('has-alt', !!opts.alt);
     modal.setAttribute('role', withInput ? 'dialog' : 'alertdialog');
     list.replaceChildren();
     if (withInput) {
@@ -3398,6 +3410,7 @@ function _openDialog(opts) {
     }
     overlay.classList.add('open');
     modal.classList.add('open');
+    _fitDialogButtons(modal);
     // Фокус: поле ввода; для опасного подтверждения — «Отмена» (Enter не удалит случайно)
     if (withInput) {
       input.focus();
@@ -3408,6 +3421,7 @@ function _openDialog(opts) {
       modal.classList.remove('open');
       okBtn.removeEventListener('click', onOk);
       cancelBtn.removeEventListener('click', onCancel);
+      altBtn.removeEventListener('click', onAlt);
       overlay.removeEventListener('click', onCancel);
       document.removeEventListener('keydown', onKey, true);
       if (prevFocus && typeof prevFocus.focus === 'function' && document.contains(prevFocus)) {
@@ -3415,10 +3429,11 @@ function _openDialog(opts) {
           prevFocus.focus({ preventScroll: true });
         } catch (e) {}
       }
-      resolve(withInput ? (ok ? input.value : null) : ok);
+      resolve(ok === 'alt' ? 'alt' : withInput ? (ok ? input.value : null) : ok);
     };
     const onOk = () => done(true);
     const onCancel = () => done(false);
+    const onAlt = () => done('alt');
     const onKey = e => {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -3430,7 +3445,7 @@ function _openDialog(opts) {
         done(true);
       } else if (e.key === 'Tab') {
         // Фокус не уходит из окна
-        const items = [withInput ? input : null, cancelBtn, okBtn].filter(Boolean);
+        const items = [withInput ? input : null, opts.alt ? altBtn : null, cancelBtn, okBtn].filter(Boolean);
         const i = items.indexOf(document.activeElement);
         e.preventDefault();
         items[(i + (e.shiftKey ? items.length - 1 : 1)) % items.length].focus();
@@ -3438,9 +3453,21 @@ function _openDialog(opts) {
     };
     okBtn.addEventListener('click', onOk);
     cancelBtn.addEventListener('click', onCancel);
+    altBtn.addEventListener('click', onAlt);
     overlay.addEventListener('click', onCancel);
     document.addEventListener('keydown', onKey, true);
   });
+}
+// Кнопки окна не помещаются в одну строку — ставим их столбцом во всю ширину:
+// основная сверху, затем другой вариант, «Отмена» внизу (как в окнах Apple с длинными надписями)
+function _fitDialogButtons(modal) {
+  const row = modal.querySelector('.ai-nav-actions');
+  if (!row) return;
+  row.classList.remove('stacked');
+  const btns = Array.from(row.querySelectorAll('button')).filter(b => !b.hidden && b.getClientRects().length);
+  if (btns.length < 2) return;
+  const top = btns[0].offsetTop;
+  if (btns.some(b => Math.abs(b.offsetTop - top) > 2)) row.classList.add('stacked');
 }
 function showConfirmModal(message, opts) {
   return _openDialog(Object.assign({ message }, opts));
@@ -3448,6 +3475,154 @@ function showConfirmModal(message, opts) {
 function showPromptModal(message, input, opts) {
   return _openDialog(Object.assign({ message, input: input || {} }, opts));
 }
+
+// ---------- Фокус в модальных окнах (по Apple HIG) ----------
+// Общие правила для всех окон и панелей:
+//   • при открытии фокус переходит в окно (если окно само не выбрало элемент — на само окно, чтобы
+//     на телефоне не всплывала клавиатура, а экранный диктор прочитал заголовок);
+//   • Tab / Shift+Tab ходят по кругу только внутри верхнего окна;
+//   • Esc закрывает только верхнее окно (раньше закрывались все панели сразу);
+//   • после закрытия фокус возвращается туда, где был до открытия (кнопка панели инструментов,
+//     редактор), если окно не перевело его само.
+// Состояние окна берётся из класса open, поэтому правила работают при любом способе открытия и закрытия.
+const ZmdModals = (function () {
+  // el — окно (получает фокус), host — элемент с классом open, close — закрытие по Esc
+  // (null — Esc обрабатывает само окно), title — элемент заголовка
+  const defs = [
+    { el: 'aboutModal', close: () => closeAbout(), label: 'Złoty MD' },
+    { el: 'fontModal', close: () => closeFontPanel(), title: '#fontModal .font-modal-header > span' },
+    { el: 'settingsModal', close: () => closeSettings(), title: '#settingsModal .font-modal-header > span' },
+    { el: 'docsModal', close: () => closeDocsPanel(), title: '#docsModal .font-modal-header > span' },
+    { el: 'dlModal', close: () => closeDownloadMenu(), title: '#dlModal .dl-title' },
+    { el: 'tblDlg', host: 'tblOverlay', close: () => closeTblDialog(), title: '#tblOverlay h3' },
+    { el: 'diffmDlg', host: 'diffmOverlay', close: () => closeDiffModal(), title: '#diffmOverlay h3' },
+    { el: 'aiNavModal', alert: true },
+    { el: 'unsavedModal', alert: true },
+    { el: 'errModal' },
+    { el: 'dlgModal' },
+    { el: 'encModal' }
+  ];
+  const stack = []; // открытые окна, последнее — верхнее
+  let lastOutside = null; // последний элемент с фокусом вне окон
+  const recent = []; // последние элементы с фокусом (в том числе внутри окон) — куда вернуть фокус
+
+  const FOCUSABLE =
+    'button, [href], input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"]), [contenteditable="true"]';
+  function focusables(root) {
+    return Array.from(root.querySelectorAll(FOCUSABLE)).filter(
+      n => !n.disabled && !n.closest('[hidden], [inert]') && n.getClientRects().length && getComputedStyle(n).visibility !== 'hidden'
+    );
+  }
+  function isOpen(d) {
+    return d.hostEl.classList.contains('open');
+  }
+  function inAnyOpen(node) {
+    return defs.some(d => d.dlg && isOpen(d) && d.dlg.contains(node));
+  }
+  function focusQuiet(node) {
+    try {
+      node.focus({ preventScroll: true });
+    } catch (e) {}
+  }
+  // Элемент, на который можно вернуть фокус: ещё в документе, виден и не выключен
+  function canFocus(node) {
+    return node && node !== document.body && document.contains(node) && !node.disabled && node.getClientRects().length;
+  }
+
+  function onOpen(d) {
+    if (stack.indexOf(d) === -1) stack.push(d);
+    // Куда вернуть фокус: последний элемент вне этого окна (кнопка панели инструментов, редактор
+    // или кнопка в окне под ним — например, «Удалить» в списке документов)
+    const active = document.activeElement;
+    let back = active && !d.dlg.contains(active) && active !== document.body ? active : null;
+    for (let i = recent.length - 1; !back && i >= 0; i--) if (!d.dlg.contains(recent[i])) back = recent[i];
+    d.returnTo = back || lastOutside;
+    // Окно могло уже поставить фокус само (поле ввода, безопасная кнопка) — тогда не трогаем
+    if (!d.dlg.contains(document.activeElement)) {
+      const auto = d.dlg.querySelector('[data-autofocus]');
+      focusQuiet(auto && auto.getClientRects().length ? auto : d.dlg);
+    }
+  }
+  function onClose(d) {
+    const i = stack.indexOf(d);
+    if (i !== -1) stack.splice(i, 1);
+    const active = document.activeElement;
+    // Фокус остался в закрытом окне (или потерян) — возвращаем его на место
+    if (!active || active === document.body || d.dlg.contains(active)) {
+      const top = stack[stack.length - 1];
+      const target = canFocus(d.returnTo) ? d.returnTo : top ? top.dlg : canFocus(lastOutside) ? lastOutside : null;
+      if (target) focusQuiet(target);
+      else if (window.innerWidth > 768) focusQuiet(ed);
+    }
+    d.returnTo = null;
+  }
+
+  function init() {
+    defs.forEach(d => {
+      d.dlg = document.getElementById(d.el);
+      d.hostEl = d.host ? document.getElementById(d.host) : d.dlg;
+      if (!d.dlg || !d.hostEl) return;
+      if (!d.dlg.hasAttribute('role')) d.dlg.setAttribute('role', d.alert ? 'alertdialog' : 'dialog');
+      d.dlg.setAttribute('aria-modal', 'true');
+      d.dlg.setAttribute('tabindex', '-1');
+      if (d.title && !d.dlg.hasAttribute('aria-labelledby')) {
+        const t = document.querySelector(d.title);
+        if (t) {
+          if (!t.id) t.id = d.el + 'Title';
+          d.dlg.setAttribute('aria-labelledby', t.id);
+        }
+      }
+      if (d.label) d.dlg.setAttribute('aria-label', d.label);
+      let was = isOpen(d);
+      new MutationObserver(() => {
+        const now = isOpen(d);
+        if (now === was) return;
+        was = now;
+        if (now) onOpen(d);
+        else onClose(d);
+      }).observe(d.hostEl, { attributes: true, attributeFilter: ['class'] });
+    });
+
+    document.addEventListener('focusin', e => {
+      if (!inAnyOpen(e.target)) lastOutside = e.target;
+      if (e.target !== document.body && !defs.some(d => d.dlg === e.target)) {
+        recent.push(e.target);
+        if (recent.length > 8) recent.shift();
+      }
+    });
+
+    // Esc — закрыть только верхнее окно. Окна-вопросы обрабатывают Esc сами (в фазе перехвата)
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Escape' || e.defaultPrevented || e.isComposing) return;
+      const top = stack[stack.length - 1];
+      if (!top || !top.close) return;
+      e.preventDefault();
+      top.close();
+    });
+
+    // Tab не выпускает фокус из верхнего окна. Обработчик на window в фазе всплытия: окна,
+    // которые сами переводят фокус по Tab (preventDefault), здесь пропускаются
+    window.addEventListener('keydown', e => {
+      if (e.key !== 'Tab' || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+      const top = stack[stack.length - 1];
+      if (!top) return;
+      const items = focusables(top.dlg);
+      e.preventDefault();
+      if (!items.length) {
+        focusQuiet(top.dlg);
+        return;
+      }
+      const i = items.indexOf(document.activeElement);
+      let next;
+      if (i === -1) next = e.shiftKey ? items[items.length - 1] : items[0];
+      else next = items[(i + (e.shiftKey ? items.length - 1 : 1)) % items.length];
+      focusQuiet(next);
+    });
+  }
+
+  return { init, isOpen: () => stack.length > 0 };
+})();
+ZmdModals.init();
 
 // Преобразует ошибку загрузки языка в локализованное сообщение и показывает модальное окно
 function showLangError(err) {
@@ -3505,7 +3680,12 @@ let _langAuto = true;
 function syncLangMenu() {
   const active = _langAuto ? LANG_AUTO : currentLang;
   document.querySelectorAll('.lang-opt').forEach(b => {
-    b.classList.toggle('active', b.dataset.lang === active);
+    const on = b.dataset.lang === active;
+    b.classList.toggle('active', on);
+    b.setAttribute('role', 'menuitemradio');
+    b.setAttribute('aria-checked', on ? 'true' : 'false');
+    // В меню Tab не ходит по пунктам — только стрелки (как в меню macOS)
+    b.tabIndex = -1;
   });
 }
 
@@ -3576,8 +3756,10 @@ async function setLang(code) {
   saveLangSetting();
   saveContent();
 }
-// Открывает панель выбора языка
-function toggleLang() {
+// Открывает панель выбора языка.
+// Открыли с клавиатуры (Enter, пробел, стрелка; у щелчка мышью event.detail > 0) — фокус на выбранном языке,
+// мышью — фокус остаётся на кнопке, как в меню macOS
+function toggleLang(ev, fromKeyboard) {
   const drop = document.getElementById('langDrop');
   const btn = document.getElementById('langBtn');
   const isOpen = drop.classList.contains('open');
@@ -3589,8 +3771,64 @@ function toggleLang() {
   drop.style.top = r.bottom + 6 + 'px';
   drop.style.right = window.innerWidth - r.right + 'px';
   drop.classList.add('open');
+  btn.setAttribute('aria-expanded', 'true');
   fitLangDrop(drop, r.bottom + 6);
+  if (fromKeyboard || (ev && ev.detail === 0)) {
+    const item = drop.querySelector('.lang-opt.active') || drop.querySelector('.lang-opt');
+    if (item) item.focus({ preventScroll: true });
+  }
 }
+
+// Клавиатура в меню языков: ↑/↓, Home/End, первая буква названия, Esc и Tab — закрыть
+document.getElementById('langWrap').addEventListener('keydown', e => {
+  const drop = document.getElementById('langDrop');
+  const btn = document.getElementById('langBtn');
+  const open = drop.classList.contains('open');
+  if (!open) {
+    if (e.target === btn && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      e.preventDefault();
+      toggleLang(null, true);
+    }
+    return;
+  }
+  const items = Array.from(drop.querySelectorAll('.lang-opt'));
+  const i = items.indexOf(document.activeElement);
+  const go = n => {
+    const it = items[Math.max(0, Math.min(items.length - 1, n))];
+    if (it) it.focus();
+  };
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    e.stopPropagation();
+    closeLang();
+    btn.focus();
+  } else if (e.key === 'Tab') {
+    closeLang();
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    go(i === -1 ? 0 : i + 1);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    go(i === -1 ? items.length - 1 : i - 1);
+  } else if (e.key === 'Home' || e.key === 'PageUp') {
+    e.preventDefault();
+    go(0);
+  } else if (e.key === 'End' || e.key === 'PageDown') {
+    e.preventDefault();
+    go(items.length - 1);
+  } else if (e.key.length === 1 && /\S/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    // Переход к следующему пункту, название которого начинается с этой буквы
+    const k = e.key.toLocaleLowerCase();
+    for (let n = 1; n <= items.length; n++) {
+      const it = items[(Math.max(i, 0) + n) % items.length];
+      if (it.textContent.trim().toLocaleLowerCase().startsWith(k)) {
+        e.preventDefault();
+        it.focus();
+        break;
+      }
+    }
+  }
+});
 
 // Пять и более языков: высота списка ограничена (видно 5,5 пункта — последний обрезан,
 // чтобы было понятно, что список прокручивается) и появляется вертикальная полоса прокрутки
@@ -3622,7 +3860,14 @@ function fitLangDrop(drop, top) {
 }
 // Закрывает панель выбора языка
 function closeLang() {
-  document.getElementById('langDrop').classList.remove('open');
+  const drop = document.getElementById('langDrop');
+  if (!drop.classList.contains('open')) return;
+  const hadFocus = drop.contains(document.activeElement);
+  drop.classList.remove('open');
+  const btn = document.getElementById('langBtn');
+  btn.setAttribute('aria-expanded', 'false');
+  // Фокус был в меню — возвращаем его на кнопку, а не теряем
+  if (hadFocus) btn.focus({ preventScroll: true });
 }
 document.addEventListener('click', e => {
   if (!document.getElementById('langWrap').contains(e.target)) closeLang();
@@ -4025,15 +4270,6 @@ function closeFontPanel() {
   document.getElementById('fontModal').classList.remove('open');
   document.getElementById('fontSizeBtn').style.color = '';
 }
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    closeFontPanel();
-    closeAbout();
-    closeSettings();
-    closeDownloadMenu();
-    closeDocsPanel();
-  }
-});
 
 // Возвращает размеры шрифтов по умолчанию для нового документа
 function defaultFontSizesForNewDoc() {
@@ -4667,6 +4903,7 @@ function _askUnsaved() {
     btns.cancel.textContent = tr('unsavedCancel');
     overlay.classList.add('open');
     modal.classList.add('open');
+    _fitDialogButtons(modal);
     const handlers = {};
     const done = result => {
       overlay.classList.remove('open');
@@ -4681,6 +4918,11 @@ function _askUnsaved() {
         e.preventDefault();
         e.stopPropagation();
         done('cancel');
+      } else if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && (e.key === 'd' || e.key === 'D' || e.code === 'KeyD')) {
+        // ⌘D / Ctrl+D — «Не сохранять», как в стандартном окне macOS
+        e.preventDefault();
+        e.stopPropagation();
+        done('discard');
       }
     };
     Object.keys(btns).forEach(k => {
@@ -5176,6 +5418,8 @@ function onDocNameKeydown(event, id) {
     event.target.blur();
   }
   if (event.key === 'Escape') {
+    // Esc отменяет только переименование, панель документов остаётся открытой
+    event.stopPropagation();
     const item = docIndex.find(d => d.id === id);
     event.target.value = item ? item.name : '';
     event.target.blur();
@@ -5376,12 +5620,6 @@ function insertCustomTable() {
   render(ed.value);
   closeTblDialog();
 }
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    closeTblDialog();
-    closeDiffModal();
-  }
-});
 
 // Формирует дополнительную инструкцию для ИИ в режиме редактирования выделенного текста
 function _aiEditDirective() {
@@ -5413,23 +5651,35 @@ function confirmAiNav() {
     const noBtn = document.getElementById('aiNavNoBtn');
     const t = LANGS[currentLang] || LANGS['en'];
     msgEl.textContent = t.aiNavWarning;
+    // Кнопки называют действие («Уйти» / «Отмена»), а не «Да» / «Нет» (Apple HIG)
     yesBtn.textContent = t.aiNavYes;
-    noBtn.textContent = t.aiNavNo;
+    noBtn.textContent = tr('unsavedCancel');
     overlay.classList.add('open');
     modal.classList.add('open');
+    // Действие теряет ответ ИИ — фокус (и Enter) на безопасной кнопке «Отмена»
+    noBtn.focus();
     const cleanup = result => {
       overlay.classList.remove('open');
       modal.classList.remove('open');
       yesBtn.removeEventListener('click', onYes);
       noBtn.removeEventListener('click', onNo);
       overlay.removeEventListener('click', onNo);
+      document.removeEventListener('keydown', onKey, true);
       resolve(result);
     };
     const onYes = () => cleanup(true);
     const onNo = () => cleanup(false);
+    const onKey = e => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        cleanup(false);
+      }
+    };
     yesBtn.addEventListener('click', onYes);
     noBtn.addEventListener('click', onNo);
     overlay.addEventListener('click', onNo);
+    document.addEventListener('keydown', onKey, true);
   });
 }
 

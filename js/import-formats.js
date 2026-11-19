@@ -738,7 +738,12 @@
     } catch (e) {
       embedded = null;
     }
-    if (embedded && (!embedded.edited || (await ask('docx')))) return { text: embedded.zmd, restored: true };
+    if (embedded) {
+      // ask: true — исходный документ, false — преобразовать, null — открытие отменено
+      const restore = embedded.edited ? await ask('docx') : true;
+      if (restore === null) return null;
+      if (restore) return { text: embedded.zmd, restored: true };
+    }
     return { text: await docxToMarkdown(files), restored: false };
   }
 
@@ -1113,7 +1118,7 @@
 
   // Открытие файла DOCX/PDF: { text, restored } — text в формате .zmd или Markdown.
   // ask(kind) — вопрос пользователю (только когда исходник есть, но файл после экспорта правили):
-  // true — открыть исходный документ, false — преобразовать текущее содержимое
+  // true — открыть исходный документ, false — преобразовать текущее содержимое, null — отмена (результат null)
   async function open(file, ask) {
     const k = kind(file);
     if (k === 'docx') return openDocx(file, ask || (async () => true));
