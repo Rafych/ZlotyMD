@@ -1121,5 +1121,5 @@
     return null;
   }
 
-  window.ZmdImport = { kind, open, docxTextHash, ommlToLatex, htmlToMarkdown };
+  window.ZmdImport = { kind, open, docxTextHash };
 })();

@@ -763,7 +763,7 @@
   async function paginate(win, doc, root) {
     await repeatTableHeaders(win, doc, root);
     const mc = await buildMulticol(win, doc, root);
-    const { M, R2, H, colOf, yOf } = mc;
+    const { M, R2, H, colOf } = mc;
 
 
     // Параллельные списки узлов оригинала и копии

@@ -33,25 +33,7 @@ let fontSizes = { ...FONT_DEFAULTS };
 let currentLang = 'en';
 
 marked.setOptions({ gfm: true, breaks: true });
-// Экранирование HTML-тегов внутри Markdown, чтобы пользовательский ввод не исполнялся как разметка
-function escapeHtmlInMarkdown(text) {
-  const parts = [];
-  const codePattern = /(```[\s\S]*?```|`[^`]+`)/g;
-
-  let last = 0;
-  let match;
-
-  while ((match = codePattern.exec(text)) !== null) {
-    parts.push(escapeHtmlTags(text.slice(last, match.index)));
-    parts.push(match[0]);
-    last = match.index + match[0].length;
-  }
-
-  parts.push(escapeHtmlTags(text.slice(last)));
-
-  return parts.join('');
-}
-
+// Экранирование HTML-тегов, чтобы пользовательский ввод не исполнялся как разметка
 function escapeHtmlTags(str) {
   return str.replace(/<(\/?[a-zA-Z][^>]*)>/g, '&lt;$1&gt;');
 }
@@ -64,6 +46,7 @@ const FAVICON_HREF = 'data:image/svg+xml,' + encodeURIComponent(FAVICON_SVG);
 // Комментарий о лицензиях в начале экспортируемого HTML. В нём перечислено только то, что загружает
 // сам экспортированный файл (а не весь редактор), и сказано, что содержимое принадлежит автору документа
 function _exportLicenseHeader(hasEmoji, hasTikz) {
+  // Компоненты по лицензиям (по алфавиту), внутри — по названию; эмодзи и TikZ — только если они есть в документе
   const parts = [
     `<!--
   Created with Złoty MD — https://github.com/Rafych/ZlotyMD
@@ -72,25 +55,13 @@ function _exportLicenseHeader(hasEmoji, hasTikz) {
   MIT License — https://github.com/Rafych/ZlotyMD/blob/main/LICENSE
 
   This page loads the following third-party components at runtime from a CDN (none of their files
-  are copied into this file):
-
-  KaTeX v0.16.9 — formula styles and fonts
-    Copyright (c) 2013-2020 Khan Academy and other contributors
-    MIT License — https://github.com/KaTeX/KaTeX/blob/main/LICENSE
-    KaTeX fonts: Copyright (c) 2009-2010, Design Science, Inc. (www.mathjax.org); Copyright (c) 2014-2018
-    Khan Academy (www.khanacademy.org), with Reserved Font Names KaTeX_AMS, KaTeX_Caligraphic, KaTeX_Fraktur,
-    KaTeX_Main, KaTeX_Math, KaTeX_SansSerif, KaTeX_Script, KaTeX_Size1-4, KaTeX_Typewriter
-    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
-
-  Mermaid v10.6.1 — diagrams
-    Copyright (c) 2014 - 2022 Knut Sveidqvist
-    MIT License — https://github.com/mermaid-js/mermaid/blob/develop/LICENSE
-    The distributed bundle includes dependencies (e.g. d3, dagre-d3-es, DOMPurify, dayjs, khroma)
-    under their own permissive licenses (MIT / ISC / BSD-3-Clause / Apache-2.0 / MPL-2.0).
+  are copied into this file), sorted by license and then by name:
 `
   ];
   if (hasEmoji) {
     parts.push(`
+  ── Creative Commons Attribution 4.0 International ──
+
   Twemoji graphics v17.0.3 — emoji images
     Copyright (c) Twitter, Inc and other contributors; Copyright (c) jdecked/twemoji contributors
     CC BY 4.0 — https://github.com/jdecked/twemoji/blob/main/LICENSE-GRAPHICS
@@ -98,13 +69,29 @@ function _exportLicenseHeader(hasEmoji, hasTikz) {
   }
   if (hasTikz) {
     parts.push(`
-  TikZJax (@drgrice1/tikzjax v1.0.0-beta24) — fonts of the TikZ figures
+  ── GNU General Public License v3.0 or later ──
+
+  TikZJax (@drgrice1/tikzjax) v1.0.0-beta24 — fonts of the TikZ figures
     Copyright (c) Jim Fowler, Glenn Rice and contributors
     GPL-3.0-or-later — https://github.com/drgrice1/tikzjax
     The TeX fonts (Computer Modern, BaKoMa) are distributed under their own licenses.
 `);
   }
   parts.push(`
+  ── MIT License ──
+
+  KaTeX v0.16.9 — formula styles
+    Copyright (c) 2013-2020 Khan Academy and other contributors
+    MIT License — https://github.com/KaTeX/KaTeX/blob/main/LICENSE
+
+  Mermaid v10.6.1 — diagrams
+    Copyright (c) 2014 - 2022 Knut Sveidqvist
+    MIT License — https://github.com/mermaid-js/mermaid/blob/develop/LICENSE
+    The distributed bundle includes dependencies (e.g. d3, dagre-d3-es, DOMPurify, dayjs, khroma)
+    under their own permissive licenses (MIT / ISC / BSD-3-Clause / Apache-2.0 / MPL-2.0).
+
+  ── SIL Open Font License 1.1 ──
+
   Google Sans
     Copyright 2025 The Google Sans Project Authors (https://github.com/googlefonts/googlesans)
     SIL Open Font License 1.1 — https://github.com/google/fonts/blob/main/ofl/googlesans/OFL.txt
@@ -112,6 +99,16 @@ function _exportLicenseHeader(hasEmoji, hasTikz) {
   JetBrains Mono
     Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono)
     SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
+
+  KaTeX fonts (based on the MathJax TeX fonts) v0.16.9
+    Copyright (c) 2009-2010, Design Science, Inc. (www.mathjax.org); Copyright (c) 2014-2018 Khan Academy
+    (www.khanacademy.org), with Reserved Font Names KaTeX_AMS, KaTeX_Caligraphic, KaTeX_Fraktur, KaTeX_Main,
+    KaTeX_Math, KaTeX_SansSerif, KaTeX_Script, KaTeX_Size1-4, KaTeX_Typewriter
+    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
+
+  Noto Sans JP / KR — fallback fonts for Japanese and Korean text
+    Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
+    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
 
   The text was converted from Markdown with marked (MIT License, Copyright (c) 2018+, MarkedJS;
   Copyright (c) 2011-2018, Christopher Jeffrey) and code was highlighted with highlight.js
@@ -619,33 +616,11 @@ async function _askImportSource(file) {
 }
 
 // ---------- Кодировка текстовых файлов ----------
-// Определение кодировки — js/encoding.js (BOM → однозначные признаки → строгий UTF-8 → статистика).
-// Если определить не удалось, кодировку выбирают в окне со списком и предпросмотром.
-// Кодировка, способ её определения и переводы строк хранятся в записи документа; исходные байты
-// открытого файла — отдельно (IDB_SRC_PREFIX), чтобы файл можно было перечитать в другой кодировке.
+// Кодировка открываемого файла определяется автоматически (js/encoding.js: BOM → однозначные признаки →
+// строгий UTF-8 → статистика), и текст сразу преобразуется в Unicode: документы хранятся и сохраняются
+// только в UTF-8 с переводами строк LF. Если кодировку определить не удалось, её выбирают в окне со списком
+// и предпросмотром.
 const PLAIN_TEXT_EXT_RE = /\.(txt|text)$/i;
-const IDB_SRC_PREFIX = 'zmd_src_';
-const SRC_MAX_BYTES = 8 * 1024 * 1024;
-const docEncodingDefault = () => ({ encoding: 'utf-8', encodingMethod: null, eol: 'lf', sourceName: null, hasSource: false });
-let docEncoding = docEncodingDefault();
-
-function _docEncodingFrom(data) {
-  const known = data && data.encoding && window.ZmdEncoding && ZmdEncoding.isKnown(data.encoding);
-  return {
-    encoding: known ? data.encoding : 'utf-8',
-    encodingMethod: (data && data.encodingMethod) || null,
-    eol: data && data.eol === 'crlf' ? 'crlf' : 'lf',
-    sourceName: (data && data.sourceName) || null,
-    hasSource: !!(data && data.hasSource)
-  };
-}
-// Переводы строк файла: CRLF, если их больше, чем одиночных LF
-function _eolOf(text) {
-  const crlf = (text.match(/\r\n/g) || []).length;
-  const lf = (text.match(/\n/g) || []).length - crlf;
-  return crlf > lf ? 'crlf' : 'lf';
-}
-const _normEol = text => text.replace(/\r\n?/g, '\n');
 
 // Временно убирает индикатор занятости (на время модального окна)
 async function _withoutBusy(fn) {
@@ -694,8 +669,8 @@ function chooseEncodingModal(bytes, fileName, guess) {
         _fillEncodingSelect(sel, guess);
         const head = bytes.subarray(0, 64 * 1024);
         const update = () => {
-          const text = ZmdEncoding.decode(head, sel.value).replace(/^﻿/, '');
-          const lines = _normEol(text).split('\n').slice(0, 40).join('\n');
+          const text = ZmdEncoding.decode(head, sel.value).replace(/^\uFEFF/, '');
+          const lines = text.replace(/\r\n?/g, '\n').split('\n').slice(0, 40).join('\n');
           preview.textContent = lines.length > 3000 ? lines.slice(0, 3000) + '…' : lines;
           const bad = (text.match(/�/g) || []).length;
           warn.textContent = bad ? tr('encReplaced').replace('{n}', bad.toLocaleString(currentLang)) : '';
@@ -743,119 +718,25 @@ function chooseEncodingModal(bytes, fileName, guess) {
   );
 }
 
-// Читает текстовый файл: { text, encoding, method, eol, bytes } или null, если выбор кодировки отменён
+// Читает текстовый файл и преобразует его в Unicode (переводы строк — LF).
+// Возвращает текст или null, если выбор кодировки отменён
 async function readTextFile(file) {
   const bytes = new Uint8Array(await file.arrayBuffer());
-  let encoding;
-  let method;
   let text;
-  const r = window.ZmdEncoding ? ZmdEncoding.detect(bytes) : { status: 'detected', encoding: 'utf-8', method: 'auto', text: new TextDecoder().decode(bytes) };
+  const r = window.ZmdEncoding ? ZmdEncoding.detect(bytes) : { status: 'detected', text: new TextDecoder().decode(bytes) };
   if (r.status === 'detected') {
-    ({ encoding, method, text } = r);
+    text = r.text;
   } else {
-    encoding = await chooseEncodingModal(bytes, file.name, r.guess);
+    const encoding = await chooseEncodingModal(bytes, file.name, r.guess);
     if (!encoding) return null;
-    method = 'manual';
     text = ZmdEncoding.decode(bytes, encoding);
   }
-  text = text.replace(/^﻿/, '');
-  if (encoding === 'utf-8' && method !== 'bom' && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) encoding = 'utf-8-bom';
-  return { text: _normEol(text), encoding, method, eol: _eolOf(text), bytes };
+  return text.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n');
 }
 
-// Сохраняет кодировку текущего документа в его записи
-async function saveDocEncoding() {
-  if (!currentDocId || docReadOnly) return;
-  try {
-    await updateDocRecord(currentDocId, d => Object.assign(d, docEncoding));
-  } catch (e) {}
-}
-
-// Подпись под списком кодировок в настройках документа
-function syncDocEncodingUI() {
-  const sel = document.getElementById('docEncSelect');
-  const eolSel = document.getElementById('docEolSelect');
-  const info = document.getElementById('docEncInfo');
-  if (!sel) return;
-  _fillEncodingSelect(sel, docEncoding.encoding);
-  sel.disabled = !!docReadOnly;
-  if (eolSel) {
-    eolSel.value = docEncoding.eol;
-    eolSel.disabled = !!docReadOnly;
-  }
-  if (info) {
-    if (docEncoding.encodingMethod && docEncoding.sourceName) {
-      info.textContent = tr('docEncInfo')
-        .replace('{name}', docEncoding.sourceName)
-        .replace('{method}', tr('encMethod_' + docEncoding.encodingMethod));
-      info.hidden = false;
-    } else {
-      info.textContent = '';
-      info.hidden = true;
-    }
-  }
-}
-
-// Изменение кодировки в настройках документа: используется при сохранении; если исходный файл
-// сохранён, его можно перечитать в выбранной кодировке
-async function onDocEncodingChange(value) {
-  if (!window.ZmdEncoding || !ZmdEncoding.isKnown(value) || docReadOnly || !currentDocId) {
-    syncDocEncodingUI();
-    return;
-  }
-  const id = currentDocId;
-  docEncoding.encoding = value;
-  let reread = false;
-  if (docEncoding.hasSource) {
-    reread = await showConfirmModal(
-      tr('docEncRereadMsg').replace('{name}', docEncoding.sourceName || '').replace('{enc}', ZmdEncoding.name(value)),
-      { title: tr('docEncTitle'), ok: tr('docEncReread'), cancel: tr('docEncSaveOnly') }
-    );
-  }
-  if (id !== currentDocId) return;
-  if (reread) {
-    let bytes = null;
-    try {
-      bytes = await idbGet(IDB_SRC_PREFIX + id);
-    } catch (e) {}
-    if (bytes) {
-      let text = ZmdEncoding.decode(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), value).replace(/^﻿/, '');
-      docEncoding.eol = _eolOf(text);
-      text = _normEol(text);
-      const content = PLAIN_TEXT_EXT_RE.test(docEncoding.sourceName || '') ? text : parseZmdText(text).content;
-      docEncoding.encodingMethod = 'manual';
-      ed.value = content;
-      render(ed.value);
-    }
-  }
-  await saveDocEncoding();
-  syncDocEncodingUI();
-}
-function onDocEolChange(value) {
-  if (docReadOnly) return;
-  docEncoding.eol = value === 'crlf' ? 'crlf' : 'lf';
-  saveDocEncoding();
-}
-
-// Скачивание текста в кодировке документа (Markdown, .zmd, .txt). Символы, которых нет в кодировке,
-// заменяются на «?» после подтверждения
-async function downloadTextFile(text, fileName, mime) {
-  let body = docEncoding.eol === 'crlf' ? text.replace(/\r?\n/g, '\r\n') : text;
-  const enc = docEncoding.encoding || 'utf-8';
-  let bytes;
-  if (window.ZmdEncoding && enc !== 'utf-8') {
-    const r = ZmdEncoding.encode(body, enc);
-    if (r.unmappable) {
-      const ok = await showConfirmModal(
-        tr('encUnmappableMsg').replace('{n}', r.unmappable.toLocaleString(currentLang)).replace('{enc}', ZmdEncoding.name(enc)),
-        { title: fileName, ok: tr('encSaveAnyway') }
-      );
-      if (!ok) return;
-    }
-    bytes = r.bytes;
-  } else bytes = new TextEncoder().encode(body);
-  const charset = /^utf-8/.test(enc) ? 'utf-8' : enc;
-  const url = URL.createObjectURL(new Blob([bytes], { type: mime + ';charset=' + charset }));
+// Скачивание текстового файла (Markdown, .zmd, .txt) — всегда UTF-8
+function downloadTextFile(text, fileName, mime) {
+  const url = URL.createObjectURL(new Blob([text], { type: mime + ';charset=utf-8' }));
   const a = document.createElement('a');
   a.href = url;
   a.download = fileName;
@@ -866,7 +747,7 @@ async function downloadTextFile(text, fileName, mime) {
 // Открывает объект File как новый документ: общий код для диалога «Открыть файл» и запуска из ОС (PWA file handler)
 async function openFileObject(file) {
   let text;
-  let read = null; // результат чтения текстового файла (кодировка, переводы строк, байты)
+  let read = null; // результат чтения текстового файла
   const importKind = window.ZmdImport ? ZmdImport.kind(file) : null;
   if (importKind) {
     // DOCX и PDF: исходный документ (если файл экспортирован из Złoty MD) или преобразование в Markdown
@@ -892,8 +773,8 @@ async function openFileObject(file) {
       await showErrorModal(tr('fileOpenFailed').replace('{name}', file.name || ''));
       return;
     }
-    if (!read) return; // выбор кодировки отменён
-    text = read.text;
+    if (read === null) return; // выбор кодировки отменён
+    text = read;
   }
   // .txt/.text — обычный текст: открываем как есть, без разбора метаданных Złoty MD
   const { meta, content } = PLAIN_TEXT_EXT_RE.test(file.name || '') ? { meta: null, content: text } : parseZmdText(text);
@@ -906,19 +787,8 @@ async function openFileObject(file) {
     content: content,
     fontSizes: Object.assign({ ...FONT_DEFAULTS }, (meta && meta.fontSizes) || {}),
     scrollEd: 0,
-    scrollPv: 0,
-    ...docEncodingDefault()
+    scrollPv: 0
   };
-  if (read) {
-    Object.assign(data, { encoding: read.encoding, encodingMethod: read.method, eol: read.eol, sourceName: file.name || null });
-    // Исходные байты — чтобы файл можно было перечитать в другой кодировке из настроек документа
-    if (read.bytes.length <= SRC_MAX_BYTES) {
-      try {
-        await idbSet(IDB_SRC_PREFIX + id, read.bytes);
-        data.hasSource = true;
-      } catch (e) {}
-    }
-  }
   await persistDocRecord(id, data);
   await updateDocIndex(list => list.unshift({ id, name: data.name, updatedAt: Date.now() }));
   await switchToDoc(id);
@@ -2689,22 +2559,10 @@ const LANGS = {
     importRestore: 'Exported document',
     importConvert: 'Current content',
     encTitle: 'Choose the text encoding',
-    encMsg: 'The text encoding of “{name}” could not be detected automatically. Choose the encoding to open it with — the preview shows how the text will look.',
+    encMsg: 'The text encoding of “{name}” could not be detected automatically. Choose the encoding to open it with — the preview shows how the text will look. The text is converted to Unicode (UTF-8).',
     encPreview: 'Preview',
     encOpen: 'Open',
     encReplaced: '{n} characters cannot be read in this encoding and are shown as “�”.',
-    encMethod_bom: 'from the BOM',
-    encMethod_auto: 'detected automatically',
-    encMethod_manual: 'chosen manually',
-    docEncTitle: 'Text encoding',
-    docEncDesc: 'Used when saving as Markdown, Złoty MD or text. When a file is opened, its encoding is detected automatically.',
-    docEncInfo: 'Opened from “{name}” ({method}).',
-    docEolTitle: 'Line endings',
-    docEncRereadMsg: 'Read the original file “{name}” again as {enc}? Changes made since it was opened will be replaced.',
-    docEncReread: 'Read again',
-    docEncSaveOnly: 'Only for saving',
-    encUnmappableMsg: '{n} characters cannot be represented in {enc} and will be saved as “?”. Save anyway?',
-    encSaveAnyway: 'Save',
     docxError: 'Could not create the DOCX file. Check your internet connection and try again.',
     loadingLang: 'Loading language…',
     errModalTitle: 'Error',
@@ -3278,10 +3136,6 @@ function applyLang(code) {
   } catch (_) {}
   // Подписи разметки страниц
   if (window.ZmdPages) ZmdPages.refresh();
-  // Названия языков и письменностей в списках кодировок
-  try {
-    syncDocEncodingUI();
-  } catch (_) {}
   // Язык документа (lang) влияет на подбор шрифтов — пересчитываем страницы PDF
   schedulePdfPageCount();
 }
@@ -4115,7 +3969,6 @@ function toggleFontPanel() {
     modal.classList.add('open');
     document.getElementById('fontSizeBtn').style.color = 'var(--gb)';
     syncFontPanelUI();
-    syncDocEncodingUI();
   }
 }
 // Закрывает панель настроек шрифта
@@ -4311,9 +4164,6 @@ async function removeDocRecord(id) {
   try {
     await idbDelete(IDB_DOC_PREFIX + id);
   } catch (e) {}
-  try {
-    await idbDelete(IDB_SRC_PREFIX + id);
-  } catch (e) {}
 }
 // Запоминает, какой документ был открыт последним
 async function setCurrentDocId(id) {
@@ -4374,7 +4224,6 @@ async function saveContent() {
       d.fontSizes = { ...fontSizes };
       d.scrollEd = ed.scrollTop;
       d.scrollPv = pv.scrollTop;
-      Object.assign(d, docEncoding);
     };
     const data = await updateDocRecord(id, fill);
     if (!data) {
@@ -4832,8 +4681,7 @@ window.addEventListener('pagehide', () => {
       content: ed.value,
       fontSizes: { ...fontSizes },
       scrollEd: ed.scrollTop,
-      scrollPv: pv.scrollTop,
-      ...docEncoding
+      scrollPv: pv.scrollTop
     }).catch(() => {});
     _savedContent = ed.value;
   } catch (e) {}
@@ -4855,12 +4703,6 @@ function _scanSourceBlocks(text) {
   const isQuote = l => /^\s{0,3}>/.test(l);
   const isPb = l => /^ {0,3}\\(?:newpage|pagebreak)[ \t]*$/.test(l);
   const isTableSep = l => /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)+\|?\s*$|^\s*\|\s*:?-+:?\s*\|\s*$/.test(l);
-  // Пропускает строки до той, что подходит под re (включительно); возвращает индекс следующей
-  const skipTo = (from, re) => {
-    let j = from;
-    while (j < lines.length && !re.test(lines[j])) j++;
-    return Math.min(j + 1, lines.length);
-  };
   let i = 0;
   let prevBlank = true;
   while (i < lines.length) {
@@ -5192,13 +5034,11 @@ async function switchToDoc(id) {
   _savedContent = data.content;
   _lastBroadcast = null;
   fontSizes = { ...data.fontSizes };
-  docEncoding = _docEncodingFrom(data);
   applyFontSizesToDOM();
   _render(data.content);
   _invalidateScrollMap();
   docReadOnly = !editable;
   _setReadOnly(!editable);
-  syncDocEncodingUI();
   if (editable) setSaveStatus('saved');
   // Окно просмотра получает текст с ещё не сохранёнными изменениями от окна-редактора
   else _bcPost({ type: 'hello', id });
@@ -5396,10 +5236,17 @@ async function initDocuments() {
 
 // Promise завершения инициализации: нужен, чтобы файлы из ОС открывались только после загрузки документов
 const appReady = (async function initSave() {
+  // Этапы запуска отображаются на экране загрузки (ZmdBoot — скрипт в ZlotyMD.html)
+  const bootStage = (part, key) => window.ZmdBoot && ZmdBoot.stage(part, key);
+  bootStage(0.05, 'lang');
   await loadLangSetting();
+  bootStage(0.35, 'settings');
   await loadSettings();
+  bootStage(0.5, 'ai');
   await _loadAiModelsCaches();
+  bootStage(0.6, 'docs');
   await initDocuments();
+  bootStage(1, 'styles');
 })();
 // Потребитель очереди запуска регистрируем сразу, чтобы не пропустить файлы, переданные при старте
 initLaunchQueue();
@@ -5633,9 +5480,8 @@ async function _addAiAttachment(file) {
     let data, mediaType;
     if (kind === 'text') {
       // Та же автоматическая проверка кодировки, что и при открытии файла
-      const read = await readTextFile(file);
-      if (!read) return;
-      data = read.text;
+      data = await readTextFile(file);
+      if (data === null) return;
       mediaType = 'text/plain';
     } else {
       const dataUrl = await _readFileAsDataURL(file);
@@ -5980,7 +5826,6 @@ function _aiOfferEdit(selS, selE, oldText, newText) {
 function openDiffModal(id) {
   const edit = _aiPendingEdits[id];
   if (!edit) return;
-  const t = LANGS[currentLang] || LANGS['en'];
   _aiActiveModalEditId = id;
   const ops = _diffTokens(edit.oldText, edit.newText);
   document.getElementById('diffmBody').innerHTML = _renderDiffHtml(ops);
@@ -6010,7 +5855,6 @@ function _resolveDiffCard(id, key) {
 // Принимает предложенную ИИ правку и применяет её к тексту редактора
 function acceptAiEdit(id) {
   if (_roGuard()) return;
-  const t = LANGS[currentLang] || LANGS['en'];
   const edit = _aiPendingEdits[id];
   if (!edit) return;
   let { s, e, oldText, newText } = edit;
@@ -6486,4 +6330,46 @@ async function sendAi() {
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(update).observe(tb);
   else window.addEventListener('resize', update);
   update();
+})();
+
+// ---------- Экран загрузки ----------
+// Внешние стили (шрифты Google, KaTeX) подключаются асинхронно, а скрипты — с defer, чтобы экран загрузки
+// появлялся сразу. Экран скрывается, когда загружены язык, настройки и документы (appReady), стили и шрифты:
+// полоса доходит до 100 %, затем экран плавно исчезает.
+// Если стили догрузились уже после первой отрисовки, превью, разметка страниц и синхронизация прокрутки
+// пересчитываются один раз с настоящими шрифтами.
+(function hideBootScreen() {
+  const boot = document.getElementById('bootScreen');
+  const links = Array.from(document.querySelectorAll('link[data-async-css]'));
+  const pendingAtStart = links.some(l => !l.sheet);
+  const stylesReady = Promise.all(
+    links.map(l =>
+      l.sheet
+        ? null
+        : new Promise(resolve => {
+            l.addEventListener('load', resolve, { once: true });
+            l.addEventListener('error', resolve, { once: true });
+          })
+    )
+  ).then(() => (document.fonts && document.fonts.ready ? document.fonts.ready.catch(() => {}) : null));
+  const timeout = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const ready = Promise.all([appReady.catch(() => {}), stylesReady]);
+  if (pendingAtStart) {
+    ready.then(() => {
+      try {
+        _invalidateScrollMap();
+        render(ed.value);
+        if (window.ZmdPages) ZmdPages.refresh();
+      } catch (e) {}
+    });
+  }
+  if (!boot) return;
+  // Не дольше 15 с: при очень медленной сети приложение показывается, а стили догружаются потом
+  Promise.race([ready, timeout(15000)])
+    .then(() => (window.ZmdBoot ? Promise.race([ZmdBoot.finish(), timeout(1500)]) : null))
+    .then(() => timeout(180))
+    .then(() => {
+      boot.classList.add('done');
+      setTimeout(() => boot.remove(), 400);
+    });
 })();

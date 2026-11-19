@@ -294,8 +294,6 @@
   function downloadTXT() {
     if (!ed.value.trim()) return;
     const title = getDocTitle();
-    // Кодировка и переводы строк — из настроек документа (downloadTextFile в app.js)
-    if (typeof downloadTextFile === 'function') return downloadTextFile(buildTxt(), fileBase(title) + '.txt', 'text/plain');
     downloadBlob(new Blob([buildTxt()], { type: 'text/plain;charset=utf-8' }), fileBase(title) + '.txt');
   }
 
@@ -1101,5 +1099,5 @@
     }
   }
 
-  window.ZmdExport = { downloadDOCX, downloadTXT, buildTxt, buildDocxBlob };
+  window.ZmdExport = { downloadDOCX, downloadTXT };
 })();

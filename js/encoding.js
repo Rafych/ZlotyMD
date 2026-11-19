@@ -1,4 +1,4 @@
-// Złoty MD — определение и преобразование кодировок текстовых файлов (window.ZmdEncoding).
+// Złoty MD — определение кодировки текстовых файлов и чтение их в Unicode (window.ZmdEncoding).
 //
 // Определение идёт от самого надёжного признака к наименее надёжному:
 //   1. BOM (UTF-8, UTF-16LE/BE) — явное указание создателя файла; принимается, только если декодируется без ошибок.
@@ -28,7 +28,6 @@
   const CE = ['pl', 'cs', 'sk', 'hu', 'sl', 'hr', 'ro', 'sq', 'de'];
   const ENCODINGS = [
     { id: 'utf-8', name: 'UTF-8', group: 'Unicode', prior: 0.1 },
-    { id: 'utf-8-bom', name: 'UTF-8 (BOM)', group: 'Unicode', decoder: 'utf-8', prior: 0 },
     { id: 'utf-16le', name: 'UTF-16LE', group: 'Unicode', prior: 0 },
     { id: 'utf-16be', name: 'UTF-16BE', group: 'Unicode', prior: 0 },
     { id: 'shift_jis', name: 'Shift_JIS', group: 'Jpan', langs: ['ja'], cjk: 'ja', prior: 0.06 },
@@ -66,10 +65,9 @@
     { id: 'windows-874', name: 'Windows-874 (TIS-620)', group: 'Thai', langs: ['th'], prior: 0.04 }
   ];
   const BY_ID = Object.fromEntries(ENCODINGS.map(e => [e.id, e]));
-  const decoderLabel = id => (BY_ID[id] && BY_ID[id].decoder) || id;
   const isSupported = id => {
     try {
-      new TextDecoder(decoderLabel(id));
+      new TextDecoder(id);
       return true;
     } catch (e) {
       return false;
@@ -364,7 +362,7 @@
 
   function strictDecode(bytes, id) {
     try {
-      return new TextDecoder(decoderLabel(id), { fatal: true }).decode(bytes);
+      return new TextDecoder(id, { fatal: true }).decode(bytes);
     } catch (e) {
       return null;
     }
@@ -387,14 +385,14 @@
     // stream:true не считает ошибкой символ, обрезанный на конце выборки
     const s = sampleOf(bytes);
     try {
-      return new TextDecoder(decoderLabel(id), { fatal: true }).decode(s.bytes, { stream: s.cut });
+      return new TextDecoder(id, { fatal: true }).decode(s.bytes, { stream: s.cut });
     } catch (e) {
       return null;
     }
   }
 
   function bomOf(bytes) {
-    if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) return 'utf-8-bom';
+    if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) return 'utf-8';
     if (bytes[0] === 0xff && bytes[1] === 0xfe) return 'utf-16le';
     if (bytes[0] === 0xfe && bytes[1] === 0xff) return 'utf-16be';
     return null;
@@ -464,32 +462,32 @@
     return bad > 0 && multi >= bad * 3;
   }
 
-  function result(id, text, method) {
-    return { status: 'detected', encoding: id, text: text, method: method, bom: id === 'utf-8-bom' || /^utf-16/.test(id) };
+  function result(id, text) {
+    return { status: 'detected', encoding: id, text: text };
   }
 
   function detect(input) {
     const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
-    if (!bytes.length) return result('utf-8', '', 'auto');
+    if (!bytes.length) return result('utf-8', '');
     // 1. BOM
     const bom = bomOf(bytes);
     if (bom) {
       const t = strictDecode(bytes, bom);
-      if (t !== null) return result(bom, t, 'bom');
+      if (t !== null) return result(bom, t);
     }
     // 2. Однозначные признаки по байтам
     if (looksIso2022jp(bytes)) {
       const t = strictDecode(bytes, 'iso-2022-jp');
-      if (t !== null) return result('iso-2022-jp', t, 'auto');
+      if (t !== null) return result('iso-2022-jp', t);
     }
     const u16 = utf16ByNulls(bytes);
     if (u16) {
       const t = strictDecode(bytes, u16);
-      if (t !== null && !/[\uD800-\uDFFF]/.test(t.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, ''))) return result(u16, t, 'auto');
+      if (t !== null && !/[\uD800-\uDFFF]/.test(t.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, ''))) return result(u16, t);
     }
     // 3. Строгий UTF-8
     const u8 = strictDecode(bytes, 'utf-8');
-    if (u8 !== null) return result('utf-8', u8, 'auto');
+    if (u8 !== null) return result('utf-8', u8);
     // 4. Статистическая оценка
     const ranked = rank(bytes);
     const guessUtf8 = nearlyUtf8(bytes);
@@ -505,7 +503,7 @@
         for (const cand of ranked) {
           if (cand.final < best.final - AMBIGUOUS) break;
           const t = sampleOf(bytes).bytes.length === bytes.length ? cand.sample : strictDecode(bytes, cand.id);
-          if (t !== null) return result(cand.id, t, 'auto');
+          if (t !== null) return result(cand.id, t);
         }
       }
     }
@@ -520,107 +518,9 @@
   // Принудительное декодирование выбранной вручную кодировкой: ошибочные байты → U+FFFD
   function decode(input, id) {
     const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
-    let text = new TextDecoder(decoderLabel(id)).decode(bytes);
+    let text = new TextDecoder(id).decode(bytes);
     if (id === 'utf-8' && text.charCodeAt(0) === 0xfeff) text = text.slice(1);
     return text;
-  }
-
-  // ---------------------------------------------------------------------
-  // Кодирование (TextEncoder умеет только UTF-8, поэтому таблицы строятся из TextDecoder)
-  // ---------------------------------------------------------------------
-  const _encMaps = {};
-  function encMap(id) {
-    if (_encMaps[id]) return _encMaps[id];
-    const d = new TextDecoder(decoderLabel(id));
-    const m = new Map();
-    const put = (ch, seq) => {
-      if (ch && ch !== '�' && !m.has(ch)) m.set(ch, seq);
-    };
-    const one = a => d.decode(new Uint8Array(a));
-    if (id === 'shift_jis') {
-      for (let b = 0xa1; b <= 0xdf; b++) put(one([b]), [b]);
-      for (let a = 0x81; a <= 0xfc; a++) {
-        if (a > 0x9f && a < 0xe0) continue;
-        for (let b = 0x40; b <= 0xfc; b++) if (b !== 0x7f) put(one([a, b]), [a, b]);
-      }
-    } else if (id === 'euc-jp' || id === 'iso-2022-jp') {
-      const de = new TextDecoder('euc-jp');
-      for (let a = 0xa1; a <= 0xfe; a++)
-        for (let b = 0xa1; b <= 0xfe; b++) {
-          const ch = de.decode(new Uint8Array([a, b]));
-          put(ch, id === 'euc-jp' ? [a, b] : [a - 0x80, b - 0x80]);
-        }
-      if (id === 'euc-jp') for (let b = 0xa1; b <= 0xdf; b++) put(de.decode(new Uint8Array([0x8e, b])), [0x8e, b]);
-    } else if (id === 'euc-kr') {
-      for (let a = 0x81; a <= 0xfe; a++)
-        for (let b = 0x41; b <= 0xfe; b++) {
-          if ((b > 0x5a && b < 0x61) || (b > 0x7a && b < 0x81)) continue;
-          put(one([a, b]), [a, b]);
-        }
-    } else {
-      for (let b = 0x80; b <= 0xff; b++) put(one([b]), [b]);
-    }
-    return (_encMaps[id] = m);
-  }
-
-  // Возвращает { bytes: Uint8Array, unmappable: число символов, заменённых на «?» }
-  function encode(text, id) {
-    const eid = BY_ID[id] && isSupported(id) ? id : 'utf-8';
-    if (eid === 'utf-8' || eid === 'utf-8-bom') {
-      const body = new TextEncoder().encode(text);
-      if (eid === 'utf-8') return { bytes: body, unmappable: 0 };
-      const out = new Uint8Array(body.length + 3);
-      out.set([0xef, 0xbb, 0xbf]);
-      out.set(body, 3);
-      return { bytes: out, unmappable: 0 };
-    }
-    if (eid === 'utf-16le' || eid === 'utf-16be') {
-      const out = new Uint8Array(2 + text.length * 2);
-      const le = eid === 'utf-16le';
-      out[0] = le ? 0xff : 0xfe;
-      out[1] = le ? 0xfe : 0xff;
-      for (let i = 0; i < text.length; i++) {
-        const c = text.charCodeAt(i);
-        out[2 + i * 2 + (le ? 0 : 1)] = c & 0xff;
-        out[2 + i * 2 + (le ? 1 : 0)] = c >> 8;
-      }
-      return { bytes: out, unmappable: 0 };
-    }
-    const map = encMap(eid);
-    const out = [];
-    let unmappable = 0;
-    let jisMode = false; // ISO-2022-JP: сейчас включён набор JIS X 0208
-    for (let ch of text) {
-      const u = ch.codePointAt(0);
-      if (u < 0x80) {
-        if (jisMode) {
-          out.push(0x1b, 0x28, 0x42);
-          jisMode = false;
-        }
-        out.push(u);
-        continue;
-      }
-      // В ISO-2022-JP нет полуширинной каны — как и браузеры, пишем полноширинную
-      if (eid === 'iso-2022-jp' && u >= 0xff61 && u <= 0xff9f) ch = ch.normalize('NFKC');
-      let seq = map.get(ch);
-      if (!seq && ch.length > 1 && eid === 'iso-2022-jp') seq = map.get(ch[0]);
-      if (!seq) {
-        unmappable++;
-        if (jisMode) {
-          out.push(0x1b, 0x28, 0x42);
-          jisMode = false;
-        }
-        out.push(0x3f);
-        continue;
-      }
-      if (eid === 'iso-2022-jp' && !jisMode) {
-        out.push(0x1b, 0x24, 0x42);
-        jisMode = true;
-      }
-      for (const b of seq) out.push(b);
-    }
-    if (jisMode) out.push(0x1b, 0x28, 0x42);
-    return { bytes: new Uint8Array(out), unmappable };
   }
 
   // Подпись для списка: «Windows-1250 — polski, čeština, …» (названия языков на языке интерфейса)
@@ -656,13 +556,9 @@
   }
 
   window.ZmdEncoding = {
-    ENCODINGS,
     detect,
     decode,
-    encode,
     options,
-    label,
-    name: id => (BY_ID[id] ? BY_ID[id].name : id),
     isKnown: id => !!BY_ID[id]
   };
 })();
