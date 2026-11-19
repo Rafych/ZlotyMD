@@ -4,62 +4,75 @@
   MIT License — https://github.com/Rafych/ZlotyMD/blob/main/LICENSE
 
   Third-party components used by Złoty MD (loaded at runtime from a CDN; none of their files are
-  copied into this file), sorted by license:
+  copied into this file), sorted by license and then by name:
 
-  Apache License 2.0
+  ── Apache License 2.0 ──
 
-  emmalloc (Emscripten) and Zephyr libc string functions — bundled in the harfbuzzjs WebAssembly build
+  emmalloc (Emscripten) and Zephyr libc string functions — bundled in the harfbuzzjs WebAssembly build (PDF export)
     Copyright (c) the Emscripten authors; Copyright (c) the Zephyr Project contributors
     Apache License 2.0 — https://www.apache.org/licenses/LICENSE-2.0
 
-  BSD 3-Clause License
+  PDF.js (pdfjs-dist) v4.10.38 — used by the editor to import PDF files (PDF → Markdown)
+    Copyright 2024 Mozilla Foundation
+    Apache License 2.0 — https://github.com/mozilla/pdf.js/blob/master/LICENSE
+    Its CMaps and standard fonts are listed below under their own licenses.
+
+  ── BSD 2-Clause License ──
+
+  mammoth v1.13.0 — used by the editor to import DOCX files (DOCX → Markdown)
+    Copyright (c) 2013, Michael Williamson
+    BSD 2-Clause License — https://github.com/mwilliamson/mammoth.js/blob/master/LICENSE
+    The browser bundle includes JSZip, Bluebird, underscore, xmldom and other dependencies
+    (MIT / BSD-style licenses); their notices are kept in the bundle.
+
+  ── BSD 3-Clause License ──
+
+  Adobe CMaps (bundled with PDF.js) — character maps for importing PDF files with CJK text
+    Copyright 1990-2009 Adobe Systems Incorporated
+    BSD 3-Clause License — https://github.com/mozilla/pdf.js/blob/master/external/cmaps/LICENSE
+
+  Foxit fonts (PDF.js standard fonts) — standard PDF fonts for importing PDF files
+    Copyright 2014 PDFium Authors
+    BSD 3-Clause License — https://github.com/mozilla/pdf.js/blob/master/external/standard_fonts/LICENSE_FOXIT
 
   highlight.js v11.11.1 — syntax highlighting in code blocks
     Copyright (c) 2006, Ivan Sagalaev
     BSD 3-Clause License — https://github.com/highlightjs/highlight.js/blob/main/LICENSE
 
-  Creative Commons Attribution 4.0 International
+  ── Creative Commons Attribution 4.0 International ──
 
   Twemoji graphics v17.0.3 — emoji images in the editor interface, the preview and exported documents
     Copyright (c) Twitter, Inc and other contributors; Copyright (c) jdecked/twemoji contributors
     CC BY 4.0 — https://github.com/jdecked/twemoji/blob/main/LICENSE-GRAPHICS
 
-  GPL-3.0-or-later
+  ── GNU General Public License v3.0 or later ──
 
-  TikZJax (@drgrice1/tikzjax v1.0.0-beta24) — loaded only when a document contains TikZ
+  TikZJax (@drgrice1/tikzjax) v1.0.0-beta24 — loaded only when a document contains TikZ
     Copyright (c) Jim Fowler, Glenn Rice and contributors
     GPL-3.0-or-later — https://github.com/drgrice1/tikzjax
     It bundles TeX, TeX packages (e.g. PGF/TikZ, pgfplots) and TeX fonts (Computer Modern, BaKoMa)
     under their own licenses.
 
-  MIT License
+  ── MIT License ──
 
-  harfbuzzjs v0.4.12 (HarfBuzz) — used by the editor for PDF export (text shaping: ligatures)
-    Copyright (c) 2019 Ebrahim Byagowi; HarfBuzz: Copyright (c) the HarfBuzz authors
-    MIT License — https://github.com/harfbuzz/harfbuzzjs/blob/main/LICENSE
-    HarfBuzz: "Old MIT" License — https://github.com/harfbuzz/harfbuzz/blob/main/COPYING
-
-  docx v9.15.4 (with docx/math and docx/html) — used by the editor for DOCX export
-    Copyright (c) 2016 Dolan Miu
+  docx (with docx/math and docx/html) v9.15.4 — used by the editor for DOCX export
+    Copyright (c) 2016 Dolan
     MIT License — https://github.com/dolanmiu/docx/blob/master/LICENSE
     The distributed bundles include fflate, nanoid, parse5, htmlparser2 (MIT) and css-select,
-    domhandler, entities (BSD-2-Clause License); their notices are kept in the bundles.
+    domhandler, entities (BSD 2-Clause License); their notices are kept in the bundles.
 
-  mammoth v1.13.0 — used by the editor to import DOCX files (DOCX → Markdown)
-    Copyright (c) 2013, Michael Williamson
-    BSD-2-Clause License — https://github.com/mwilliamson/mammoth.js/blob/master/LICENSE
-    The browser bundle includes JSZip, Bluebird, underscore, xmldom and other dependencies
-    (MIT / BSD-style licenses); their notices are kept in the bundle.
+  Expo Google Fonts (@expo-google-fonts) — packages from which the fonts embedded into exported PDF files are loaded (the fonts themselves are listed under SIL OFL 1.1)
+    Copyright (c) 2020 Expo
+    MIT License — https://github.com/expo/google-fonts/blob/main/LICENSE
 
   fflate v0.8.2 — used by the editor to read DOCX packages on import
     Copyright (c) 2023 Arjun Barrett
     MIT License — https://github.com/101arrowz/fflate/blob/master/LICENSE
 
-  PDF.js (pdfjs-dist) v4.10.38 — used by the editor to import PDF files (PDF → Markdown)
-    Copyright Mozilla Foundation and contributors
-    Apache License 2.0 — https://github.com/mozilla/pdf.js/blob/master/LICENSE
-    The CMaps are Copyright (c) Adobe Systems Incorporated (BSD-3-Clause License); the standard
-    fonts (Foxit, Liberation) are under their own licenses, kept in the package.
+  harfbuzzjs (HarfBuzz) v0.4.12 — used by the editor for PDF export (text shaping: ligatures)
+    Copyright (c) 2019 Ebrahim Byagowi; HarfBuzz: Copyright (c) the HarfBuzz authors
+    MIT License — https://github.com/harfbuzz/harfbuzzjs/blob/main/LICENSE
+    HarfBuzz: "Old MIT" License — https://github.com/harfbuzz/harfbuzz/blob/main/COPYING
 
   html2canvas v1.4.1 — used by jsPDF (html()) for PDF export
     Copyright (c) 2012 Niklas von Hertzen
@@ -67,61 +80,65 @@
     The distributed bundle includes tslib (Copyright (c) Microsoft Corporation, 0BSD License).
 
   jsPDF v4.2.1 — used by the editor for PDF export
-    Copyright (c) 2010-2025 James Hall (https://github.com/parallax/jsPDF), (c) 2015-2025 yWorks GmbH (https://www.yworks.com/)
+    Copyright (c) 2010-2025 James Hall (https://github.com/MrRio/jsPDF), (c) 2015-2025 yWorks GmbH (https://www.yworks.com/)
     MIT License — https://github.com/parallax/jsPDF/blob/master/LICENSE
     The distributed bundle includes third-party code (e.g. pako, a JPEG encoder, a Unicode bidi engine)
     under their own permissive licenses (MIT / Zlib / BSD); see the license comments in the bundle.
 
-  KaTeX v0.16.9
+  KaTeX v0.16.9 — math formulas
     Copyright (c) 2013-2020 Khan Academy and other contributors
     MIT License — https://github.com/KaTeX/KaTeX/blob/main/LICENSE
 
-  marked v9.1.6
+  marked v9.1.6 — Markdown parser
     Copyright (c) 2018+, MarkedJS (https://github.com/markedjs/); Copyright (c) 2011-2018, Christopher Jeffrey (https://github.com/chjj/)
     MIT License — https://github.com/markedjs/marked/blob/master/LICENSE.md
     Its license file also contains the Markdown license: Copyright (c) 2004, John Gruber (BSD-style).
 
-  Mermaid v10.6.1
+  Mermaid v10.6.1 — diagrams
     Copyright (c) 2014 - 2022 Knut Sveidqvist
     MIT License — https://github.com/mermaid-js/mermaid/blob/develop/LICENSE
     The distributed bundle includes dependencies (e.g. d3, dagre-d3-es, DOMPurify, dayjs, khroma)
     under their own permissive licenses (MIT / ISC / BSD-3-Clause / Apache-2.0 / MPL-2.0).
 
   svg2pdf.js v2.9.0 — used by the editor for PDF export (SVG diagrams and formulas as vectors)
-    Copyright (c) 2015-2026 yWorks GmbH; Copyright (c) 2013-2015 Vitaly Puzrin
+    Copyright (c) 2015-2026 yWorks GmbH; Copyright (c) 2013-2015 by Vitaly Puzrin
     MIT License — https://github.com/yWorks/svg2pdf.js/blob/master/LICENSE
 
-  Twemoji (@twemoji/api v17.0.3) — replaces emoji in the editor interface and the preview with Twemoji images
-    Copyright (c) 2014-2021 Twitter; Copyright (c) 2022-present Jason Sofonia & Justine De Caires
+  Twemoji (@twemoji/api) v17.0.3 — replaces emoji in the editor interface and the preview with Twemoji images
+    Copyright (c) 2014–2021 Twitter; Copyright (c) 2022–present Jason Sofonia & Justine De Caires
     MIT License — https://github.com/jdecked/twemoji/blob/main/LICENSE
 
-  SIL Open Font License 1.1
-  (Google Sans, JetBrains Mono, the KaTeX fonts and the Noto fonts are also embedded, as subsets,
-  into exported PDF files, which the license permits)
+  ── SIL Open Font License 1.1 ──
 
-  Google Sans
+  Google Sans — interface font; its outlines also form the "Złoty MD" wordmark logo
     Copyright 2025 The Google Sans Project Authors (https://github.com/googlefonts/googlesans)
     SIL Open Font License 1.1 — https://github.com/google/fonts/blob/main/ofl/googlesans/OFL.txt
 
-  JetBrains Mono
+  JetBrains Mono — code font
     Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono)
     SIL Open Font License 1.1 — https://github.com/JetBrains/JetBrainsMono/blob/master/OFL.txt
 
-  KaTeX fonts (based on the MathJax TeX fonts)
+  KaTeX fonts (based on the MathJax TeX fonts) v0.16.9 — math formulas
     Copyright (c) 2009-2010, Design Science, Inc. (www.mathjax.org); Copyright (c) 2014-2018 Khan Academy
     (www.khanacademy.org), with Reserved Font Names KaTeX_AMS, KaTeX_Caligraphic, KaTeX_Fraktur, KaTeX_Main,
     KaTeX_Math, KaTeX_SansSerif, KaTeX_Script, KaTeX_Size1-4, KaTeX_Typewriter
     SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
 
-  Noto Sans, Noto Sans Arabic, Noto Sans Hebrew, Noto Sans Math, Noto Sans Symbols 2 — embedded into
-  exported PDF files in place of system fonts and for characters the document fonts do not cover
+  Liberation Sans (PDF.js standard fonts) — standard PDF fonts for importing PDF files
+    Digitized data copyright (c) 2010 Google Corporation; Copyright (c) 2012 Red Hat, Inc.,
+    with Reserved Font Names Arimo and Liberation
+    SIL Open Font License 1.1 — https://github.com/mozilla/pdf.js/blob/master/external/standard_fonts/LICENSE_LIBERATION
+
+  Noto Sans, Noto Sans Arabic, Noto Sans Hebrew, Noto Sans Math, Noto Sans Symbols 2 — embedded into exported PDF files in place of system fonts and for characters the document fonts do not cover
     Copyright 2022 The Noto Project Authors (https://github.com/notofonts)
     SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
 
-  Noto Sans JP / KR / SC / TC — embedded into exported PDF files for characters the document fonts
-  do not cover (Japanese, Korean and Chinese text)
+  Noto Sans JP / KR / SC / TC — JP and KR: interface fallback fonts for Japanese and Korean text; all four: embedded into exported PDF files for CJK characters the document fonts do not cover
     Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'
     SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
+
+  The fonts under the SIL Open Font License are also embedded, as subsets, into exported PDF files,
+  which the license permits.
 
   Content delivery / font services (no code included): cdnjs (Cloudflare), jsDelivr, Google Fonts.
 
@@ -134,6 +151,348 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Złoty MD</title>
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+    <!-- Экран загрузки и экран «включите JavaScript»: стили встроены, чтобы показать их сразу,
+         до загрузки внешних стилей. Внешние стили CDN подключаются асинхронно (media=print → all),
+         скрипты — с defer, поэтому экран загрузки появляется, пока они скачиваются -->
+    <style>
+      .noscript-screen {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background: #fff;
+        font-family: 'Google Sans', 'Noto Sans JP', 'Noto Sans KR', system-ui, sans-serif;
+        color: #202124;
+      }
+      .boot-dots {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        width: 42px;
+        height: 42px;
+      }
+      .boot-dots i {
+        border-radius: 50%;
+      }
+      .boot-dots i:nth-child(1) { background: #4285f4; }
+      .boot-dots i:nth-child(2) { background: #ea4335; }
+      .boot-dots i:nth-child(3) { background: #fbbc04; }
+      .boot-dots i:nth-child(4) { background: #34a853; }
+      /* Логотип-надпись (SVG, <symbol id="zmdWordmark">): высота — высота заглавных Google Sans (0.716 em),
+         ширина — по пропорциям контуров; размер задаётся размером шрифта контейнера */
+      .zmd-wordmark {
+        display: block;
+        height: 0.716em;
+        width: 4.097em;
+        overflow: visible;
+      }
+      .boot-name {
+        font-size: 21px;
+        padding-bottom: 0.2em;
+      }
+
+      /* ---------- Экран загрузки ----------
+         Виден, пока скачиваются библиотеки и загружаются язык, настройки и документы. Ход загрузки считает
+         window.ZmdBoot (скрипт ниже), экран скрывает app.js — hideBootScreen */
+      .boot-screen {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 21px;
+        background: #fff;
+        font-family: 'Google Sans', 'Noto Sans JP', 'Noto Sans KR', system-ui, sans-serif;
+        color: #202124;
+        transition: opacity 0.35s ease, visibility 0.35s;
+      }
+      .boot-screen.done {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+      .boot-screen .boot-dots i {
+        animation: bootPulse 1.2s ease-in-out infinite;
+      }
+      .boot-screen .boot-dots i:nth-child(2) { animation-delay: 0.15s; }
+      .boot-screen .boot-dots i:nth-child(4) { animation-delay: 0.3s; }
+      .boot-screen .boot-dots i:nth-child(3) { animation-delay: 0.45s; }
+      @keyframes bootPulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(0.55); opacity: 0.55; }
+      }
+      /* Полоса загрузки: трек со скруглением, под ним по центру — процент, ещё ниже — текущее действие. Заливка растёт по ширине,
+         а градиент из цветов логотипа неподвижен (размер фона = ширине трека), поэтому цвета появляются
+         слева направо; у заливки мягкое свечение и бегущий блик */
+      .boot-progress {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        width: 200px;
+        margin-top: 5px;
+      }
+      .boot-pct {
+        font-size: 13px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.02em;
+        color: #3c4043;
+      }
+      /* Что сейчас делается — одна строка; высота постоянная, чтобы экран не прыгал при смене текста */
+      .boot-status {
+        width: 280px;
+        height: 18px;
+        margin-top: -3px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        text-align: center;
+        font-size: 12px;
+        line-height: 18px;
+        color: #80868b;
+      }
+      .boot-bar {
+        position: relative;
+        width: 100%;
+        height: 6px;
+        border-radius: 999px;
+        background: #f1f3f4;
+        box-shadow: inset 0 0 0 1px rgba(60, 64, 67, 0.05);
+      }
+      .boot-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 0;
+        min-width: 6px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #4285f4 0%, #ea4335 36%, #fbbc04 68%, #34a853 100%) 0 0 / 200px 100% no-repeat;
+        box-shadow: 0 0 10px rgba(66, 133, 244, 0.28), 0 1px 3px rgba(60, 64, 67, 0.12);
+        overflow: hidden;
+      }
+      .boot-fill::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.6) 50%, transparent 70%) 0 0 / 200% 100% no-repeat;
+        animation: bootSheen 1.6s ease-in-out infinite;
+      }
+      @keyframes bootSheen {
+        0% { background-position: 200% 0; }
+        100% { background-position: -100% 0; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-screen .boot-dots i { animation-duration: 3s; }
+        .boot-fill::after { animation: none; }
+      }
+      .noscript-screen {
+        z-index: 2147483600;
+        gap: 13px;
+        padding: 34px 21px;
+        overflow: auto;
+        text-align: center;
+      }
+      .ns-msg {
+        max-width: 520px;
+        margin-top: 13px;
+      }
+      .ns-msg + .ns-msg {
+        padding-top: 21px;
+        border-top: 1px solid #e8eaed;
+      }
+      .ns-msg h1 {
+        margin: 0 0 5px;
+        font-size: 21px;
+        font-weight: 700;
+      }
+      .ns-msg p {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #5f6368;
+      }
+      /* Если сообщение выше экрана, оно прокручивается, а не обрезается сверху */
+      .noscript-screen {
+        justify-content: flex-start;
+      }
+      .noscript-screen > :first-child {
+        margin-top: auto;
+      }
+      .noscript-screen > :last-child {
+        margin-bottom: auto;
+      }
+    </style>
+    <noscript>
+      <style>
+        .boot-screen { display: none !important; }
+      </style>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400..700&display=swap" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&display=swap" />
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+    </noscript>
+    <script>
+      // Ход загрузки для экрана загрузки (window.ZmdBoot):
+      //   70 % — скачанные скрипты и внешние стили; вес файла ≈ его размер в КБ (Mermaid — основная часть),
+      //   25 % — этапы запуска приложения (app.js сообщает о них через ZmdBoot.stage(0…1)),
+      //    5 % — стили и шрифты (ZmdBoot.finish() после них доводит до 100 %).
+      // Под полосой — одна строка о текущем действии (по-английски): пока скачиваются файлы — самый большой
+      // из них, затем — этап запуска.
+      // Готовность файлов — из PerformanceObserver (resource) и событий load/error самих элементов.
+      // Для файлов, которые ещё скачиваются, доля оценивается по скорости, измеренной на уже скачанных
+      // (байты ÷ время), — не больше 90 %, пока файл не загрузится.
+      // Показанное значение только растёт; пока ничего не меняется, полоса понемногу ползёт вперёд
+      // (не больше чем на 4 %), чтобы было видно, что загрузка идёт.
+      (function () {
+        // Тексты строки состояния (только английский)
+        var MSG = {
+          dl: 'Downloading {name}…',
+          start: 'Starting Złoty MD…',
+          lang: 'Loading language…',
+          settings: 'Loading settings…',
+          ai: 'Preparing the AI assistant…',
+          docs: 'Opening your documents…',
+          styles: 'Applying fonts and styles…',
+          ready: 'Ready'
+        };
+        // Названия скачиваемых файлов для строки состояния
+        var NAMES = [
+          ['mermaid', 'Mermaid'], ['katex', 'KaTeX'], ['highlight', 'highlight.js'], ['marked', 'Marked'],
+          ['twemoji', 'Twemoji'], ['fonts.googleapis', 'fonts']
+        ];
+        var stageKey = null;
+        var lastStatus = '';
+        function msg(key) {
+          return MSG[key];
+        }
+        function fileName(url) {
+          for (var i = 0; i < NAMES.length; i++) if (url.indexOf(NAMES[i][0]) !== -1) return NAMES[i][1];
+          return 'Złoty MD';
+        }
+        var KB = [
+          ['mermaid', 3200], ['app.js', 265], ['katex.min.js', 270], ['pdf-export', 175], ['highlight.min', 125],
+          ['import-formats', 55], ['export-formats', 53], ['marked', 35], ['encoding', 32], ['katex.min.css', 23],
+          ['render.js', 21], ['pages.js', 21], ['twemoji', 15], ['latex.min', 7], ['pwa.js', 1]
+        ];
+        var done = {};
+        var initPart = 0;
+        var finished = false;
+        var onFull = null;
+        var shown = 0;
+        var lastTarget = -1;
+        var lastChange = 0;
+        var speedBytes = 0;
+        var speedMs = 0;
+        function weight(url) {
+          for (var i = 0; i < KB.length; i++) if (url.indexOf(KB[i][0]) !== -1) return KB[i][1];
+          return 5;
+        }
+        function mark(url) {
+          if (url) done[url] = true;
+        }
+        try {
+          new PerformanceObserver(function (list) {
+            list.getEntries().forEach(function (e) {
+              mark(e.name);
+              // Скорость сети — по файлам больше 20 КБ, пришедшим не из кэша мгновенно
+              var size = e.encodedBodySize || e.transferSize || 0;
+              if (size > 20000 && e.duration > 5) {
+                speedBytes += size;
+                speedMs += e.duration;
+              }
+            });
+          }).observe({ type: 'resource', buffered: true });
+        } catch (e) {}
+        function onElement(ev) {
+          var t = ev.target;
+          if (t && (t.tagName === 'SCRIPT' || t.tagName === 'LINK')) mark(t.src || t.href);
+        }
+        document.addEventListener('load', onElement, true);
+        document.addEventListener('error', onElement, true);
+        // Оценка скачанной доли файла весом w КБ (по умолчанию — 300 КБ/с, пока скорость неизвестна)
+        function pendingPart(w) {
+          var speed = speedMs ? speedBytes / speedMs : 307;
+          return Math.min(0.9, (speed * performance.now()) / (w * 1024));
+        }
+        var pendingBig = null; // самый большой файл, который ещё скачивается
+        function target() {
+          var els = document.querySelectorAll('script[src], link[data-async-css]');
+          var total = 0;
+          var got = 0;
+          var bigW = 0;
+          pendingBig = null;
+          for (var i = 0; i < els.length; i++) {
+            var url = els[i].src || els[i].href;
+            var w = weight(url);
+            total += w;
+            if (done[url]) got += w;
+            else {
+              got += w * pendingPart(w);
+              if (w > bigW) {
+                bigW = w;
+                pendingBig = url;
+              }
+            }
+          }
+          return finished ? 100 : Math.min(99, (total ? got / total : 0) * 70 + initPart * 25);
+        }
+        function tick(now) {
+          var box = document.getElementById('bootScreen');
+          if (!box || box.classList.contains('done')) {
+            if (document.readyState === 'loading') requestAnimationFrame(tick);
+            return;
+          }
+          var t = target();
+          if (t !== lastTarget) {
+            lastTarget = t;
+            lastChange = now;
+          }
+          var goal = finished ? 100 : Math.min(99, t + Math.min(4, (now - lastChange) / 1500));
+          if (goal < shown) goal = shown;
+          shown += (goal - shown) * (finished ? 0.3 : 0.12);
+          if (goal - shown < 0.1) shown = goal;
+          var v = Math.floor(shown);
+          document.getElementById('bootFill').style.width = shown + '%';
+          document.getElementById('bootPct').textContent = v + '%';
+          document.getElementById('bootBar').setAttribute('aria-valuenow', v);
+          var status = finished
+            ? msg('ready')
+            : pendingBig && !stageKey
+              ? msg('dl').replace('{name}', fileName(pendingBig))
+              : msg(stageKey || 'start');
+          if (status !== lastStatus) {
+            lastStatus = status;
+            document.getElementById('bootStatus').textContent = status;
+          }
+          if (finished && shown >= 100) {
+            if (onFull) onFull();
+            return;
+          }
+          requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+        window.ZmdBoot = {
+          // Этап запуска приложения: доля от 0 до 1 и ключ текста (lang, settings, ai, docs, styles)
+          stage: function (part, key) {
+            initPart = Math.max(initPart, Math.min(1, part));
+            if (key) stageKey = key;
+          },
+          // Всё готово: полоса доходит до 100 %, после этого промис выполняется
+          finish: function () {
+            finished = true;
+            return new Promise(function (resolve) {
+              onFull = resolve;
+            });
+          }
+        };
+      })();
+    </script>
     <link rel="manifest" href="manifest.webmanifest">
     <meta name="theme-color" content="#ffffff">
     <meta name="mobile-web-app-capable" content="yes">
@@ -142,31 +501,22 @@
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" media="print" onload="this.media='all'" data-async-css />
     <!-- Запасные шрифты интерфейса для японского и корейского текста (Google Sans → Noto Sans JP → Noto Sans KR).
          Глифы разбиты на поднаборы (unicode-range) и загружаются только при использовании -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400..700&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&display=swap" rel="stylesheet" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css"
-    />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400..700&display=swap" media="print" onload="this.media='all'" data-async-css />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&display=swap" media="print" onload="this.media='all'" data-async-css />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" media="print" onload="this.media='all'" data-async-css />
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" media="print" onload="this.media='all'" data-async-css />
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"></script>
     <!-- Подсветка синтаксиса в блоках кода -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
     <!-- LaTeX нет в основной сборке; используется часто, поэтому загружается сразу -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/latex.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/latex.min.js"></script>
     <!-- Twemoji (https://github.com/jdecked/twemoji) — эмодзи интерфейса, превью и экспорта. Код: MIT License, © 2014–2021 Twitter, © 2022–present Jason Sofonia & Justine De Caires. Графика: CC BY 4.0, © Twitter, Inc and other contributors -->
-    <script
+    <script defer
       src="https://cdn.jsdelivr.net/npm/@twemoji/api@17.0.3/dist/twemoji.min.js"
       integrity="sha384-Y5xukbGJwykbHHkTbLJykYLcBPFxrwipTbEh0puxhkz9CZ90raTPGe2Ks4vCxsYU"
       crossorigin="anonymous"
@@ -174,6 +524,62 @@
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
+    <!-- Логотип-надпись «Złoty MD» (контуры Google Sans из assets/logo-wide.svg; шрифт не нужен.
+         Google Sans: © 2025 The Google Sans Project Authors, SIL Open Font License 1.1).
+         Рамка — от верха заглавных до базовой линии, хвост «y» выходит вниз (overflow: visible).
+         Цвета букв — из переменных интерфейса, с запасными значениями. Используется через <use href="#zmdWordmark"> -->
+    <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+      <symbol id="zmdWordmark" viewBox="358.4 89.82 860.44 150.36" overflow="visible">
+        <path d="M358.4 240.18V211.62L434.63 116.7H361.76V89.82H467.6V118.38L392.21 213.3H468.44V240.18Z" style="fill: var(--gb, #4285f4)" />
+        <path d="M493.62 240.18V89.82H521.13V240.18ZM547.59 144 483.96 189.57 470.31 171.51 533.94 125.73Z" style="fill: var(--gr, #ea4335)" />
+        <path d="M604.65 243.54Q587.89 243.54 574.98 236.09Q562.06 228.63 554.82 215.72Q547.57 202.8 547.57 186.63Q547.57 170.46 554.82 157.55Q562.06 144.63 574.95 137.18Q587.84 129.72 604.67 129.72Q621.49 129.72 634.28 137.31Q647.07 144.89 654.34 157.68Q661.6 170.46 661.6 186.63Q661.6 202.8 654.36 215.72Q647.11 228.63 634.26 236.09Q621.42 243.54 604.65 243.54ZM604.69 217.92Q612.67 217.92 619.29 214.21Q625.91 210.5 630 203.47Q634.09 196.45 634.09 186.61Q634.09 176.76 630 169.83Q625.9 162.9 619.29 159.12Q612.67 155.34 604.8 155.34Q596.92 155.34 590.1 159.12Q583.27 162.9 579.17 169.87Q575.08 176.85 575.08 186.63Q575.08 196.5 579.17 203.53Q583.27 210.57 590.13 214.25Q596.99 217.92 604.69 217.92Z" style="fill: var(--gy, #fbbc04)" />
+        <path d="M666.2 156.6V133.08H685.94V156.6ZM720.38 241.86Q703.79 241.86 694.34 232.31Q684.89 222.75 684.89 205.95V102.84H712.4V200.91Q712.4 208.68 715.55 212.36Q718.7 216.03 725.84 216.03Q729.2 216.03 732.14 215.09Q735.08 214.14 739.49 211.41V238.29Q734.87 239.97 730.14 240.92Q725.42 241.86 720.38 241.86ZM711.35 156.6V133.08H738.65V156.6Z" style="fill: var(--gg, #34a853)" />
+        <path d="M794.91 280.71Q794.28 282.18 793.75 283.34Q793.23 284.49 792.81 285.54H763.2Q764.04 283.86 766.45 278.5Q768.87 273.15 770.55 269.37Q771.81 266.85 773.49 262.86Q775.17 258.87 776.95 254.99Q778.74 251.1 779.79 249L795.96 213.09L801.63 199.65L828.3 133.08H858.96L803.73 260.34Q801.42 265.8 799.63 269.79Q797.85 273.78 796.8 276.41Q795.75 279.03 794.91 280.71ZM787.56 238.5 740.94 133.08H772.23L799.95 199.65H803.1Z" style="fill: var(--gb, #4285f4)" />
+        <path d="M909.95 240.18V89.82H946.49L986.39 195.45H988.07L1027.97 89.82H1064.72V240.18H1036.58V166.05L1038.26 141.06H1036.58L998.36 240.18H976.31L937.88 141.06H936.2L937.88 166.05V240.18Z" style="fill: var(--mut, #5f6368)" />
+        <path d="M1090.74 240.18V89.82H1141.56Q1165.5 89.82 1182.83 99.38Q1200.15 108.93 1209.49 125.84Q1218.84 142.74 1218.84 165Q1218.84 187.26 1209.49 204.27Q1200.15 221.28 1182.83 230.73Q1165.5 240.18 1141.56 240.18ZM1119.09 213.3H1140.3Q1156.89 213.3 1168.02 207.31Q1179.15 201.33 1184.72 190.41Q1190.28 179.49 1190.28 165Q1190.28 150.3 1184.72 139.49Q1179.15 128.67 1168.02 122.69Q1156.89 116.7 1140.3 116.7H1119.09Z" style="fill: var(--txt, #202124)" />
+      </symbol>
+    </svg>
+    <!-- Без JavaScript приложение не работает: сообщение на весь экран на английском, русском и японском -->
+    <noscript>
+      <div class="noscript-screen" role="alert">
+        <div class="boot-dots" aria-hidden="true"><i style="animation:none"></i><i style="animation:none"></i><i style="animation:none"></i><i style="animation:none"></i></div>
+        <div class="boot-name"><svg class="zmd-wordmark" role="img" aria-label="Złoty MD" focusable="false"><use href="#zmdWordmark" /></svg></div>
+        <div class="ns-msg" lang="en">
+          <h1>JavaScript is turned off</h1>
+          <p>Please turn on JavaScript in your browser settings to use Złoty MD, then reload the page.</p>
+        </div>
+        <div class="ns-msg" lang="ru">
+          <h1>JavaScript отключён</h1>
+          <p>Чтобы пользоваться Złoty MD, включите JavaScript в настройках браузера и перезагрузите страницу.</p>
+        </div>
+        <div class="ns-msg" lang="ja">
+          <h1>JavaScript がオフになっています</h1>
+          <p>Złoty MD を使うには、ブラウザの設定で JavaScript をオンにしてから、ページを再読み込みしてください。</p>
+        </div>
+      </div>
+    </noscript>
+
+    <!-- Экран загрузки: виден, пока скачиваются библиотеки и загружаются язык, настройки и документы.
+         Ход загрузки считает window.ZmdBoot (скрипт в <head>), скрывает экран app.js — hideBootScreen -->
+    <div class="boot-screen" id="bootScreen">
+      <div class="boot-dots" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="boot-name"><svg class="zmd-wordmark" role="img" aria-label="Złoty MD" focusable="false"><use href="#zmdWordmark" /></svg></div>
+      <div class="boot-progress">
+        <div class="boot-bar" id="bootBar" role="progressbar" aria-label="Loading Złoty MD" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="boot-fill" id="bootFill"></div>
+        </div>
+        <div class="boot-pct" id="bootPct" aria-hidden="true">0%</div>
+        <div class="boot-status" id="bootStatus" aria-live="polite"></div>
+      </div>
+    </div>
+    <script>
+      // Запасной выход: если скрипт приложения не загрузился или упал, экран загрузки не остаётся навсегда
+      setTimeout(function () {
+        var boot = document.getElementById('bootScreen');
+        if (boot) boot.classList.add('done');
+      }, 30000);
+    </script>
+
     <!-- Декоративный фон в стиле золотого сечения -->
     <div class="doodle" aria-hidden="true">
       <svg
@@ -353,7 +759,7 @@
             <div class="ld" style="background: var(--gg)"></div>
           </div>
           <div class="logo-name">
-            <b>Z</b><b>ł</b><b>o</b><b>t</b><b>y</b><b>&nbsp;</b><b>M</b><b>D</b>
+            <svg class="zmd-wordmark" role="img" aria-label="Złoty MD" focusable="false"><use href="#zmdWordmark" /></svg>
           </div>
         </div>
 
@@ -834,12 +1240,7 @@
               <div class="ld" style="background: var(--gy)"></div>
               <div class="ld" style="background: var(--gg)"></div>
             </div>
-            <span class="about-app-name"
-              ><b style="color: var(--gb)">Z</b><b style="color: var(--gr)">ł</b
-              ><b style="color: var(--gy)">o</b><b style="color: var(--gg)">t</b
-              ><b style="color: var(--gb)">y</b>&nbsp;<b style="color: var(--mut)">M</b
-              ><b style="color: var(--txt)">D</b></span
-            >
+            <span class="about-app-name"><svg class="zmd-wordmark" role="img" aria-label="Złoty MD" focusable="false"><use href="#zmdWordmark" /></svg></span>
           </div>
           <button class="about-close" onclick="closeAbout()">
             <svg
@@ -889,6 +1290,34 @@
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
+                <span class="about-lib-name">PDF.js <span class="about-lib-ver">v4.10.38</span></span>
+                <span class="about-lib-badge">Apache-2.0</span>
+              </div>
+              <span class="about-lib-copy">© 2024 Mozilla Foundation</span>
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
+                <span class="about-lib-name">mammoth <span class="about-lib-ver">v1.13.0</span></span>
+                <span class="about-lib-badge">BSD-2-Clause</span>
+              </div>
+              <span class="about-lib-copy">© 2013 Michael Williamson</span>
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
+                <span class="about-lib-name">Adobe CMaps</span>
+                <span class="about-lib-badge">BSD-3-Clause</span>
+              </div>
+              <span class="about-lib-copy">© 1990–2009 Adobe Systems Incorporated</span>
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
+                <span class="about-lib-name">Foxit fonts</span>
+                <span class="about-lib-badge">BSD-3-Clause</span>
+              </div>
+              <span class="about-lib-copy">© 2014 PDFium Authors</span>
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
                 <span class="about-lib-name">highlight.js <span class="about-lib-ver">v11.11.1</span></span>
                 <span class="about-lib-badge">BSD-3-Clause</span>
               </div>
@@ -904,27 +1333,23 @@
             <li class="about-lib-item">
               <div class="about-lib-top">
                 <span class="about-lib-name">TikZJax <span class="about-lib-ver">v1.0.0-beta24</span></span>
-                <span class="about-lib-badge about-lib-badge-alt" data-i18n="aboutLibTikzjaxBadge"
-                  >GPL-3.0-or-later</span
-                >
+                <span class="about-lib-badge about-lib-badge-alt" data-i18n="aboutLibTikzjaxBadge">GPL-3.0-or-later</span>
               </div>
-              <span class="about-lib-copy" data-i18n="aboutLibTikzjaxCopy"
-                >© Jim Fowler, Glenn Rice and contributors</span
-              >
+              <span class="about-lib-copy" data-i18n="aboutLibTikzjaxCopy">© Jim Fowler, Glenn Rice and contributors</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
                 <span class="about-lib-name">docx <span class="about-lib-ver">v9.15.4</span></span>
                 <span class="about-lib-badge">MIT</span>
               </div>
-              <span class="about-lib-copy">© 2016 Dolan Miu</span>
+              <span class="about-lib-copy">© 2016 Dolan</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
-                <span class="about-lib-name">mammoth <span class="about-lib-ver">v1.13.0</span></span>
-                <span class="about-lib-badge">BSD-2-Clause</span>
+                <span class="about-lib-name">Expo Google Fonts</span>
+                <span class="about-lib-badge">MIT</span>
               </div>
-              <span class="about-lib-copy">© 2013 Michael Williamson</span>
+              <span class="about-lib-copy">© 2020 Expo</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
@@ -935,17 +1360,10 @@
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
-                <span class="about-lib-name">PDF.js <span class="about-lib-ver">v4.10.38</span></span>
-                <span class="about-lib-badge">Apache-2.0</span>
-              </div>
-              <span class="about-lib-copy">© Mozilla Foundation and contributors</span>
-            </li>
-            <li class="about-lib-item">
-              <div class="about-lib-top">
                 <span class="about-lib-name">harfbuzzjs (HarfBuzz) <span class="about-lib-ver">v0.4.12</span></span>
                 <span class="about-lib-badge">MIT</span>
               </div>
-              <span class="about-lib-copy">© 2019 Ebrahim Byagowi, © HarfBuzz authors</span>
+              <span class="about-lib-copy">© 2019 Ebrahim Byagowi, © the HarfBuzz authors</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
@@ -966,29 +1384,21 @@
                 <span class="about-lib-name">KaTeX <span class="about-lib-ver">v0.16.9</span></span>
                 <span class="about-lib-badge">MIT</span>
               </div>
-              <span class="about-lib-copy" data-i18n="aboutLibKatexCopy"
-                >© 2013–2020 Khan Academy and contributors</span
-              >
+              <span class="about-lib-copy" data-i18n="aboutLibKatexCopy">© 2013–2020 Khan Academy and contributors</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
                 <span class="about-lib-name">marked <span class="about-lib-ver">v9.1.6</span></span>
                 <span class="about-lib-badge">MIT</span>
               </div>
-              <span class="about-lib-copy" data-i18n="aboutLibMarkedCopy"
-                >© 2018+ MarkedJS, © 2011–2018 Christopher Jeffrey</span
-              >
+              <span class="about-lib-copy" data-i18n="aboutLibMarkedCopy">© 2018+ MarkedJS, © 2011–2018 Christopher Jeffrey</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
-                <span class="about-lib-name"
-                  >Mermaid <span class="about-lib-ver">v10.6.1</span></span
-                >
+                <span class="about-lib-name">Mermaid <span class="about-lib-ver">v10.6.1</span></span>
                 <span class="about-lib-badge">MIT</span>
               </div>
-              <span class="about-lib-copy" data-i18n="aboutLibMermaidCopy"
-                >© 2014–2022 Knut Sveidqvist</span
-              >
+              <span class="about-lib-copy" data-i18n="aboutLibMermaidCopy">© 2014–2022 Knut Sveidqvist</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
@@ -1007,40 +1417,44 @@
             <li class="about-lib-item">
               <div class="about-lib-top">
                 <span class="about-lib-name">Google Sans</span>
-                <span
-                  class="about-lib-badge about-lib-badge-alt"
-                  data-i18n="aboutLibGoogleFontsBadge"
-                  >SIL OFL 1.1</span
-                >
+                <span class="about-lib-badge about-lib-badge-alt" data-i18n="aboutLibGoogleFontsBadge">SIL OFL 1.1</span>
               </div>
-              <span class="about-lib-copy" data-i18n="aboutLibGoogleSansCopy"
-                >© 2025 The Google Sans Project Authors</span
-              >
+              <span class="about-lib-copy" data-i18n="aboutLibGoogleSansCopy">© 2025 The Google Sans Project Authors</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
                 <span class="about-lib-name">JetBrains Mono</span>
-                <span class="about-lib-badge about-lib-badge-alt" data-i18n="aboutLibJetbrainsBadge"
-                  >SIL OFL 1.1</span
-                >
+                <span class="about-lib-badge about-lib-badge-alt" data-i18n="aboutLibJetbrainsBadge">SIL OFL 1.1</span>
               </div>
-              <span class="about-lib-copy" data-i18n="aboutLibJetbrainsCopy"
-                >© 2020 The JetBrains Mono Project Authors</span
-              >
+              <span class="about-lib-copy" data-i18n="aboutLibJetbrainsCopy">© 2020 The JetBrains Mono Project Authors</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
-                <span class="about-lib-name">KaTeX Fonts</span>
+                <span class="about-lib-name">KaTeX Fonts <span class="about-lib-ver">v0.16.9</span></span>
                 <span class="about-lib-badge about-lib-badge-alt">SIL OFL 1.1</span>
               </div>
               <span class="about-lib-copy">© 2009–2010 Design Science, Inc., © 2014–2018 Khan Academy</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
-                <span class="about-lib-name">Noto Sans / Noto Sans JP, KR, SC, TC</span>
+                <span class="about-lib-name">Liberation Sans</span>
                 <span class="about-lib-badge about-lib-badge-alt">SIL OFL 1.1</span>
               </div>
-              <span class="about-lib-copy">© 2022 The Noto Project Authors; JP, KR, SC, TC: © 2014–2021 Adobe</span>
+              <span class="about-lib-copy">© 2010 Google Corporation, © 2012 Red Hat, Inc.</span>
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
+                <span class="about-lib-name">Noto Sans (Arabic, Hebrew, Math, Symbols 2)</span>
+                <span class="about-lib-badge about-lib-badge-alt">SIL OFL 1.1</span>
+              </div>
+              <span class="about-lib-copy">© 2022 The Noto Project Authors</span>
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
+                <span class="about-lib-name">Noto Sans JP, KR, SC, TC</span>
+                <span class="about-lib-badge about-lib-badge-alt">SIL OFL 1.1</span>
+              </div>
+              <span class="about-lib-copy">© 2014–2021 Adobe</span>
             </li>
           </ul>
         </div>
@@ -1230,20 +1644,6 @@
             <button class="font-reset-btn" onclick="resetFontSizes()" data-i18n="fontReset">
               Reset to Defaults
             </button>
-          </div>
-
-          <!-- Кодировка документа: используется при сохранении в .md / .zmd / .txt; открытый файл можно перечитать -->
-          <div class="settings-section-title settings-section-gap" data-i18n="docEncTitle">Text encoding</div>
-          <div class="doc-enc-row">
-            <select class="enc-select" id="docEncSelect" aria-label="Text encoding" onchange="onDocEncodingChange(this.value)"></select>
-            <select class="enc-select enc-eol" id="docEolSelect" aria-label="Line endings" data-i18n-title="docEolTitle" title="Line endings" onchange="onDocEolChange(this.value)">
-              <option value="lf">LF</option>
-              <option value="crlf">CRLF</option>
-            </select>
-          </div>
-          <div class="doc-enc-info" id="docEncInfo" hidden></div>
-          <div class="settings-row-desc doc-enc-desc" data-i18n="docEncDesc">
-            Used when saving as Markdown, Złoty MD or text. When a file is opened, its encoding is detected automatically.
           </div>
         </div>
       </div>
@@ -2091,13 +2491,13 @@
     </div>
 
     <!-- Экспорт в PDF (jsPDF + html2canvas загружаются при первом использовании) -->
-    <script src="js/pdf-export.js"></script>
-    <script src="js/render.js"></script>
-    <script src="js/encoding.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/pages.js"></script>
-    <script src="js/export-formats.js"></script>
-    <script src="js/import-formats.js"></script>
-    <script src="js/pwa.js"></script>
+    <script defer src="js/pdf-export.js"></script>
+    <script defer src="js/render.js"></script>
+    <script defer src="js/encoding.js"></script>
+    <script defer src="js/app.js"></script>
+    <script defer src="js/pages.js"></script>
+    <script defer src="js/export-formats.js"></script>
+    <script defer src="js/import-formats.js"></script>
+    <script defer src="js/pwa.js"></script>
   </body>
 </html>
