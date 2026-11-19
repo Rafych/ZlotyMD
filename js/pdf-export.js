@@ -3047,6 +3047,11 @@
     pdf.setProperties(props);
     try { pdf.setLanguage(lang); } catch (e) { /* код языка не из списка jsPDF */ }
     pdf.viewerPreferences({ DisplayDocTitle: true });
+    // Исходный документ Złoty MD (Markdown и метаданные, сжатые, base64) — в метаданных XMP:
+    // при открытии этого PDF в Złoty MD документ восстанавливается в точности
+    if (opts.source) {
+      try { pdf.addMetadata(opts.source, 'urn:zlotymd:source'); } catch (e) { /* без исходника */ }
+    }
     await rastersReady();
     return { buffer: pdf.output('arraybuffer') };
   }
@@ -3072,7 +3077,7 @@
         await loadScript(doc, LIBS.hbjs);
       } catch (e) { /* без формирования глифов */ }
       await loadScript(doc, SELF_SRC);
-      const res = await iframe.contentWindow.ZmdPdf.renderHere({ title: opts.title, lang: opts.lang });
+      const res = await iframe.contentWindow.ZmdPdf.renderHere({ title: opts.title, lang: opts.lang, source: opts.source });
       return new Blob([new Uint8Array(res.buffer)], { type: 'application/pdf' });
     } finally {
       iframe.remove();

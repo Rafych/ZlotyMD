@@ -135,7 +135,7 @@ function buildPreviewHTML(title, opts) {
       --s3:3px;--s5:5px;--s8:8px;--s13:13px;--s21:21px;--s34:34px;--s55:55px;
       --r5:5px;--r8:8px;--r13:13px;--r21:21px;--r34:34px;
       --f13:13px;--f21:21px;--f34:34px;
-      --font:'Google Sans',sans-serif;
+      --font:'Google Sans','Noto Sans JP','Noto Sans KR',sans-serif;
       --mono:'JetBrains Mono',monospace;
       --fz-h1:${fontSizes.h1}px;
       --fz-h2:${fontSizes.h2}px;
@@ -330,6 +330,8 @@ ${_exportLicenseHeader(!!clone.querySelector('img.emoji'), !!tikzFonts)}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400..700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 ${tikzFonts}<style>${PREVIEW_CSS}${RD_CSS}${COPY_CSS}</style>
@@ -340,14 +342,8 @@ ${bodyInner}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.6.1/mermaid.min.js"><\/script>
 <script>
 if(typeof mermaid!=='undefined'){
-  mermaid.initialize({startOnLoad:false,securityLevel:'loose',theme:'base',
-    themeVariables:{primaryColor:'#E8F0FE',primaryTextColor:'#1a1a2e',primaryBorderColor:'#4285F4',
-    secondaryColor:'#E6F4EA',tertiaryColor:'#FEF7E0',background:'#ffffff',
-    mainBkg:'#E8F0FE',nodeBorder:'#4285F4',lineColor:'#5F6368',
-    edgeLabelBackground:'#ffffff',
-    noteBkgColor:'#FEF7E0',noteBorderColor:'#FBBC04'},
-    flowchart:{htmlLabels:true,curve:'basis'},
-    pie:{useMaxWidth:true}});
+  mermaid.initialize(${JSON.stringify(MERMAID_CONFIG).replace(/</g, '\\u003c')});
+  ${_mmdFitViewBox.toString()}
   (async function(){
     // Подписи диаграмм измеряются шрифтом страницы: ждём его загрузки, иначе размеры зависят от того,
     // успел ли шрифт загрузиться (и печать, и PDF получают одинаковую раскладку)
@@ -363,6 +359,7 @@ if(typeof mermaid!=='undefined'){
         lastMs=Date.now();
         await mermaid.run({nodes:[node],suppressErrors:true});
         node.querySelectorAll('svg').forEach(function(svg){
+          _mmdFitViewBox(svg);
           var vb=svg.getAttribute('viewBox');
           if(!vb)return;
           var parts=vb.trim().split(/\s+/);
@@ -405,9 +402,9 @@ function openPreviewWindow() {
 }
 
 let dlSelected = new Set();
-const DL_OPT_IDS = { html: 'dlOptHtml', pdf: 'dlOptPdf', zmd: 'dlOptZmd', md: 'dlOptMd' };
+const DL_OPT_IDS = { html: 'dlOptHtml', pdf: 'dlOptPdf', docx: 'dlOptDocx', txt: 'dlOptTxt', zmd: 'dlOptZmd', md: 'dlOptMd' };
 
-// Открывает модальное окно выбора форматов для скачивания (HTML/PDF/ZMD/MD)
+// Открывает модальное окно выбора форматов для скачивания (HTML/PDF/DOCX/TXT/ZMD/MD)
 function openDownloadMenu() {
   // Пустой документ скачивать нечего — сообщаем об этом в модальном окне
   if (!ed.value.trim()) {
@@ -454,13 +451,15 @@ function _updateDlConfirmState() {
 // Выполняет скачивание нескольких выбранных форматов с небольшой задержкой между ними
 function executeDlDownload() {
   if (dlSelected.size === 0) return;
-  const queue = ['html', 'md', 'zmd', 'pdf'].filter(k => dlSelected.has(k));
+  const queue = ['html', 'md', 'zmd', 'txt', 'docx', 'pdf'].filter(k => dlSelected.has(k));
   closeDownloadMenu();
   queue.forEach((key, i) => {
     setTimeout(() => {
       if (key === 'html') downloadHTML();
       else if (key === 'md') downloadMD();
       else if (key === 'zmd') downloadZMD();
+      else if (key === 'txt') ZmdExport.downloadTXT();
+      else if (key === 'docx') ZmdExport.downloadDOCX();
       else if (key === 'pdf') executePdfDownload();
     }, i * 400);
   });
@@ -477,33 +476,52 @@ function buildZmdMeta() {
   };
 }
 
+// Текст документа в формате .zmd (метаданные + Markdown)
+function buildZmdText() {
+  return `${ZMD_FM_OPEN}\n${JSON.stringify(buildZmdMeta(), null, 2)}\n${ZMD_FM_CLOSE}\n\n${ed.value}`;
+}
+
+// Исходник документа, встраиваемый в экспортированные DOCX и PDF: .zmd, сжатый gzip, в base64.
+// При открытии такого файла документ восстанавливается в точности (а не преобразуется обратно)
+const ZMD_SOURCE_NS = 'urn:zlotymd:source';
+function _bytesToBase64(bytes) {
+  let s = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+async function encodeZmdSource(text) {
+  const bytes = new TextEncoder().encode(text);
+  if (typeof CompressionStream === 'function') {
+    try {
+      const gz = new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());
+      return 'zmd-gz:' + _bytesToBase64(gz);
+    } catch (e) {}
+  }
+  return 'zmd-b64:' + _bytesToBase64(bytes);
+}
+async function decodeZmdSource(str) {
+  const m = /^(zmd-gz|zmd-b64):([A-Za-z0-9+/=\s]+)$/.exec((str || '').trim());
+  if (!m) return null;
+  const bin = atob(m[2].replace(/\s+/g, ''));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  if (m[1] === 'zmd-b64') return new TextDecoder().decode(bytes);
+  const out = await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
+  return new TextDecoder().decode(out);
+}
+
 // Сохраняет документ в формате .zmd (собственный формат с метаданными)
 function downloadZMD() {
   if (!ed.value.trim()) return;
   const title = getDocTitle();
-  const meta = buildZmdMeta();
-  const zmd = `${ZMD_FM_OPEN}\n${JSON.stringify(meta, null, 2)}\n${ZMD_FM_CLOSE}\n\n${ed.value}`;
-  const blob = new Blob([zmd], { type: 'text/markdown;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = title.replace(/[\\/:*?"<>|]/g, '_') + '.zmd';
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  return downloadTextFile(buildZmdText(), title.replace(/[\\/:*?"<>|]/g, '_') + '.zmd', 'text/markdown');
 }
 
 // Сохраняет документ в стандартном формате .md (без спецразметки Złoty MD)
 function downloadMD() {
   if (!ed.value.trim()) return;
   const title = getDocTitle();
-  const standard = toStandardMarkdown(ed.value);
-  const blob = new Blob([standard], { type: 'text/markdown;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = title.replace(/[\\/:*?"<>|]/g, '_') + '.md';
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 3000);
+  return downloadTextFile(toStandardMarkdown(ed.value), title.replace(/[\\/:*?"<>|]/g, '_') + '.md', 'text/markdown');
 }
 
 // Убирает нестандартные атрибуты размера у изображений при экспорте в обычный Markdown
@@ -588,19 +606,297 @@ async function handleFileOpenInput(evt) {
 }
 
 // Расширения, с которыми приложение регистрируется в ОС (должны совпадать с file_handlers в manifest.webmanifest)
-const ZMD_FILE_EXT_RE = /\.(zmd|md|markdown|text|txt)$/i;
+const ZMD_FILE_EXT_RE = /\.(zmd|md|markdown|text|txt|docx|pdf)$/i;
+
+// Файл DOCX/PDF, экспортированный из Złoty MD и затем изменённый: открыть исходный документ или
+// преобразовать текущее содержимое
+async function _askImportSource(file) {
+  return showConfirmModal(tr('importEditedMsg'), {
+    title: file.name || '',
+    ok: tr('importRestore'),
+    cancel: tr('importConvert')
+  });
+}
+
+// ---------- Кодировка текстовых файлов ----------
+// Определение кодировки — js/encoding.js (BOM → однозначные признаки → строгий UTF-8 → статистика).
+// Если определить не удалось, кодировку выбирают в окне со списком и предпросмотром.
+// Кодировка, способ её определения и переводы строк хранятся в записи документа; исходные байты
+// открытого файла — отдельно (IDB_SRC_PREFIX), чтобы файл можно было перечитать в другой кодировке.
+const PLAIN_TEXT_EXT_RE = /\.(txt|text)$/i;
+const IDB_SRC_PREFIX = 'zmd_src_';
+const SRC_MAX_BYTES = 8 * 1024 * 1024;
+const docEncodingDefault = () => ({ encoding: 'utf-8', encodingMethod: null, eol: 'lf', sourceName: null, hasSource: false });
+let docEncoding = docEncodingDefault();
+
+function _docEncodingFrom(data) {
+  const known = data && data.encoding && window.ZmdEncoding && ZmdEncoding.isKnown(data.encoding);
+  return {
+    encoding: known ? data.encoding : 'utf-8',
+    encodingMethod: (data && data.encodingMethod) || null,
+    eol: data && data.eol === 'crlf' ? 'crlf' : 'lf',
+    sourceName: (data && data.sourceName) || null,
+    hasSource: !!(data && data.hasSource)
+  };
+}
+// Переводы строк файла: CRLF, если их больше, чем одиночных LF
+function _eolOf(text) {
+  const crlf = (text.match(/\r\n/g) || []).length;
+  const lf = (text.match(/\n/g) || []).length - crlf;
+  return crlf > lf ? 'crlf' : 'lf';
+}
+const _normEol = text => text.replace(/\r\n?/g, '\n');
+
+// Временно убирает индикатор занятости (на время модального окна)
+async function _withoutBusy(fn) {
+  const saved = _busyStack.splice(0);
+  _renderBusy();
+  try {
+    return await fn();
+  } finally {
+    _busyStack.unshift(...saved);
+    _renderBusy();
+  }
+}
+
+// Заполняет <select> кодировками, сгруппированными по письменности
+function _fillEncodingSelect(sel, value) {
+  if (!sel || !window.ZmdEncoding) return;
+  sel.replaceChildren();
+  ZmdEncoding.options(currentLang).forEach(g => {
+    const og = document.createElement('optgroup');
+    og.label = g.label;
+    g.items.forEach(it => {
+      const o = document.createElement('option');
+      o.value = it.id;
+      o.textContent = it.label;
+      og.appendChild(o);
+    });
+    sel.appendChild(og);
+  });
+  sel.value = value && ZmdEncoding.isKnown(value) ? value : 'utf-8';
+}
+
+// Окно выбора кодировки (если автоматически определить не удалось). Возвращает id кодировки или null
+function chooseEncodingModal(bytes, fileName, guess) {
+  return _withoutBusy(
+    () =>
+      new Promise(resolve => {
+        const overlay = document.getElementById('encOverlay');
+        const modal = document.getElementById('encModal');
+        const sel = document.getElementById('encSelect');
+        const preview = document.getElementById('encPreview');
+        const warn = document.getElementById('encWarn');
+        const okBtn = document.getElementById('encOkBtn');
+        const cancelBtn = document.getElementById('encCancelBtn');
+        const prevFocus = document.activeElement;
+        document.getElementById('encMsg').textContent = tr('encMsg').replace('{name}', fileName || '');
+        _fillEncodingSelect(sel, guess);
+        const head = bytes.subarray(0, 64 * 1024);
+        const update = () => {
+          const text = ZmdEncoding.decode(head, sel.value).replace(/^﻿/, '');
+          const lines = _normEol(text).split('\n').slice(0, 40).join('\n');
+          preview.textContent = lines.length > 3000 ? lines.slice(0, 3000) + '…' : lines;
+          const bad = (text.match(/�/g) || []).length;
+          warn.textContent = bad ? tr('encReplaced').replace('{n}', bad.toLocaleString(currentLang)) : '';
+          warn.classList.toggle('show', !!bad);
+        };
+        update();
+        overlay.classList.add('open');
+        modal.classList.add('open');
+        sel.focus();
+        const done = val => {
+          overlay.classList.remove('open');
+          modal.classList.remove('open');
+          sel.removeEventListener('change', update);
+          okBtn.removeEventListener('click', onOk);
+          cancelBtn.removeEventListener('click', onCancel);
+          overlay.removeEventListener('click', onCancel);
+          document.removeEventListener('keydown', onKey, true);
+          if (prevFocus && typeof prevFocus.focus === 'function' && document.contains(prevFocus)) {
+            try {
+              prevFocus.focus({ preventScroll: true });
+            } catch (e) {}
+          }
+          resolve(val);
+        };
+        const onOk = () => done(sel.value);
+        const onCancel = () => done(null);
+        const onKey = e => {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            done(null);
+          } else if (e.key === 'Tab') {
+            const items = [sel, cancelBtn, okBtn];
+            const i = items.indexOf(document.activeElement);
+            e.preventDefault();
+            items[(i + (e.shiftKey ? items.length - 1 : 1)) % items.length].focus();
+          }
+        };
+        sel.addEventListener('change', update);
+        okBtn.addEventListener('click', onOk);
+        cancelBtn.addEventListener('click', onCancel);
+        overlay.addEventListener('click', onCancel);
+        document.addEventListener('keydown', onKey, true);
+      })
+  );
+}
+
+// Читает текстовый файл: { text, encoding, method, eol, bytes } или null, если выбор кодировки отменён
+async function readTextFile(file) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let encoding;
+  let method;
+  let text;
+  const r = window.ZmdEncoding ? ZmdEncoding.detect(bytes) : { status: 'detected', encoding: 'utf-8', method: 'auto', text: new TextDecoder().decode(bytes) };
+  if (r.status === 'detected') {
+    ({ encoding, method, text } = r);
+  } else {
+    encoding = await chooseEncodingModal(bytes, file.name, r.guess);
+    if (!encoding) return null;
+    method = 'manual';
+    text = ZmdEncoding.decode(bytes, encoding);
+  }
+  text = text.replace(/^﻿/, '');
+  if (encoding === 'utf-8' && method !== 'bom' && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) encoding = 'utf-8-bom';
+  return { text: _normEol(text), encoding, method, eol: _eolOf(text), bytes };
+}
+
+// Сохраняет кодировку текущего документа в его записи
+async function saveDocEncoding() {
+  if (!currentDocId || docReadOnly) return;
+  try {
+    await updateDocRecord(currentDocId, d => Object.assign(d, docEncoding));
+  } catch (e) {}
+}
+
+// Подпись под списком кодировок в настройках документа
+function syncDocEncodingUI() {
+  const sel = document.getElementById('docEncSelect');
+  const eolSel = document.getElementById('docEolSelect');
+  const info = document.getElementById('docEncInfo');
+  if (!sel) return;
+  _fillEncodingSelect(sel, docEncoding.encoding);
+  sel.disabled = !!docReadOnly;
+  if (eolSel) {
+    eolSel.value = docEncoding.eol;
+    eolSel.disabled = !!docReadOnly;
+  }
+  if (info) {
+    if (docEncoding.encodingMethod && docEncoding.sourceName) {
+      info.textContent = tr('docEncInfo')
+        .replace('{name}', docEncoding.sourceName)
+        .replace('{method}', tr('encMethod_' + docEncoding.encodingMethod));
+      info.hidden = false;
+    } else {
+      info.textContent = '';
+      info.hidden = true;
+    }
+  }
+}
+
+// Изменение кодировки в настройках документа: используется при сохранении; если исходный файл
+// сохранён, его можно перечитать в выбранной кодировке
+async function onDocEncodingChange(value) {
+  if (!window.ZmdEncoding || !ZmdEncoding.isKnown(value) || docReadOnly || !currentDocId) {
+    syncDocEncodingUI();
+    return;
+  }
+  const id = currentDocId;
+  docEncoding.encoding = value;
+  let reread = false;
+  if (docEncoding.hasSource) {
+    reread = await showConfirmModal(
+      tr('docEncRereadMsg').replace('{name}', docEncoding.sourceName || '').replace('{enc}', ZmdEncoding.name(value)),
+      { title: tr('docEncTitle'), ok: tr('docEncReread'), cancel: tr('docEncSaveOnly') }
+    );
+  }
+  if (id !== currentDocId) return;
+  if (reread) {
+    let bytes = null;
+    try {
+      bytes = await idbGet(IDB_SRC_PREFIX + id);
+    } catch (e) {}
+    if (bytes) {
+      let text = ZmdEncoding.decode(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), value).replace(/^﻿/, '');
+      docEncoding.eol = _eolOf(text);
+      text = _normEol(text);
+      const content = PLAIN_TEXT_EXT_RE.test(docEncoding.sourceName || '') ? text : parseZmdText(text).content;
+      docEncoding.encodingMethod = 'manual';
+      ed.value = content;
+      render(ed.value);
+    }
+  }
+  await saveDocEncoding();
+  syncDocEncodingUI();
+}
+function onDocEolChange(value) {
+  if (docReadOnly) return;
+  docEncoding.eol = value === 'crlf' ? 'crlf' : 'lf';
+  saveDocEncoding();
+}
+
+// Скачивание текста в кодировке документа (Markdown, .zmd, .txt). Символы, которых нет в кодировке,
+// заменяются на «?» после подтверждения
+async function downloadTextFile(text, fileName, mime) {
+  let body = docEncoding.eol === 'crlf' ? text.replace(/\r?\n/g, '\r\n') : text;
+  const enc = docEncoding.encoding || 'utf-8';
+  let bytes;
+  if (window.ZmdEncoding && enc !== 'utf-8') {
+    const r = ZmdEncoding.encode(body, enc);
+    if (r.unmappable) {
+      const ok = await showConfirmModal(
+        tr('encUnmappableMsg').replace('{n}', r.unmappable.toLocaleString(currentLang)).replace('{enc}', ZmdEncoding.name(enc)),
+        { title: fileName, ok: tr('encSaveAnyway') }
+      );
+      if (!ok) return;
+    }
+    bytes = r.bytes;
+  } else bytes = new TextEncoder().encode(body);
+  const charset = /^utf-8/.test(enc) ? 'utf-8' : enc;
+  const url = URL.createObjectURL(new Blob([bytes], { type: mime + ';charset=' + charset }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 3000);
+}
 
 // Открывает объект File как новый документ: общий код для диалога «Открыть файл» и запуска из ОС (PWA file handler)
 async function openFileObject(file) {
   let text;
-  try {
-    text = await file.text();
-  } catch (e) {
-    console.warn('Failed to read file:', e);
-    await showErrorModal(tr('fileOpenFailed').replace('{name}', file.name || ''));
-    return;
+  let read = null; // результат чтения текстового файла (кодировка, переводы строк, байты)
+  const importKind = window.ZmdImport ? ZmdImport.kind(file) : null;
+  if (importKind) {
+    // DOCX и PDF: исходный документ (если файл экспортирован из Złoty MD) или преобразование в Markdown
+    const stopBusy = startBusy('importingFile');
+    try {
+      const res = await ZmdImport.open(file, () => _askImportSource(file));
+      text = res.text;
+    } catch (e) {
+      console.warn('Import failed:', e);
+      stopBusy();
+      await showErrorModal(
+        e && e.code === 'pdf-no-text' ? tr('pdfNoText') : tr('fileImportFailed').replace('{name}', file.name || '')
+      );
+      return;
+    } finally {
+      stopBusy();
+    }
+  } else {
+    try {
+      read = await readTextFile(file);
+    } catch (e) {
+      console.warn('Failed to read file:', e);
+      await showErrorModal(tr('fileOpenFailed').replace('{name}', file.name || ''));
+      return;
+    }
+    if (!read) return; // выбор кодировки отменён
+    text = read.text;
   }
-  const { meta, content } = parseZmdText(text);
+  // .txt/.text — обычный текст: открываем как есть, без разбора метаданных Złoty MD
+  const { meta, content } = PLAIN_TEXT_EXT_RE.test(file.name || '') ? { meta: null, content: text } : parseZmdText(text);
   const baseName = file.name.replace(ZMD_FILE_EXT_RE, '');
 
   if (!(await confirmLeaveDoc())) return;
@@ -610,8 +906,19 @@ async function openFileObject(file) {
     content: content,
     fontSizes: Object.assign({ ...FONT_DEFAULTS }, (meta && meta.fontSizes) || {}),
     scrollEd: 0,
-    scrollPv: 0
+    scrollPv: 0,
+    ...docEncodingDefault()
   };
+  if (read) {
+    Object.assign(data, { encoding: read.encoding, encodingMethod: read.method, eol: read.eol, sourceName: file.name || null });
+    // Исходные байты — чтобы файл можно было перечитать в другой кодировке из настроек документа
+    if (read.bytes.length <= SRC_MAX_BYTES) {
+      try {
+        await idbSet(IDB_SRC_PREFIX + id, read.bytes);
+        data.hasSource = true;
+      } catch (e) {}
+    }
+  }
   await persistDocRecord(id, data);
   await updateDocIndex(list => list.unshift({ id, name: data.name, updatedAt: Date.now() }));
   await switchToDoc(id);
@@ -676,7 +983,7 @@ function downloadHTML() {
 function buildPdfHTML(title) {
   const pdfCSS = `
     @page{margin:20mm}
-    body{font-family:'Google Sans',sans-serif;background:#fff;color:#202124;padding:0;max-width:none;margin:0;line-height:1.85}
+    body{font-family:var(--font);background:#fff;color:#202124;padding:0;max-width:none;margin:0;line-height:1.85}
     @media print{body{padding:0}}
     .md .zmd-pagebreak{display:block;break-after:page;height:0;margin:0;padding:0;border:0;overflow:hidden}
   `;
@@ -857,7 +1164,11 @@ async function executePdfDownload() {
     const stopBusy = startBusy('pdfGenerating');
     _pdfExporting = true;
     try {
-      await window.ZmdPdf.save(pdfHTML, { title, lang: currentLang });
+      let source = null;
+      try {
+        source = await encodeZmdSource(buildZmdText());
+      } catch (e) {}
+      await window.ZmdPdf.save(pdfHTML, { title, lang: currentLang, source });
       return;
     } catch (e) {
       console.warn('PDF export failed, falling back to the print dialog:', e);
@@ -1513,6 +1824,8 @@ function _katexRender(math, displayMode) {
     return displayMode ? `<div>$$${math}$$</div>` : `<span>$${math}$</span>`;
   const el = document.createElement(displayMode ? 'div' : 'span');
   katex.render(math, el, { displayMode, throwOnError: false, output: 'html' });
+  // Исходник формулы: из него DOCX получает уравнения Word, TXT — текст формулы
+  el.setAttribute('data-tex', math);
   return el.outerHTML;
 }
 
@@ -1967,6 +2280,7 @@ function render(v) {
                 await _mmdNextMs();
                 await mermaid.run({ nodes: [node], suppressErrors: true });
                 node.querySelectorAll('svg').forEach(svg => {
+                  _mmdFitViewBox(svg);
                   const vb = svg.getAttribute('viewBox');
                   if (!vb) return;
                   const parts = vb.trim().split(/\s+/);
@@ -2366,6 +2680,32 @@ const LANGS = {
     aiNavNo: 'No',
     loadingFile: 'Loading file…',
     pdfGenerating: 'Creating PDF…',
+    docxGenerating: 'Creating DOCX…',
+    importingFile: 'Converting the file…',
+    fileImportFailed: 'Could not open “{name}”. If it is a DOCX or PDF file, check your internet connection and try again.',
+    pdfNoText: 'This PDF contains no text (it may be a scanned image), so it cannot be converted to Markdown.',
+    importEditedMsg:
+      'This file was exported from Złoty MD and has been changed since. Open the document as it was exported, or convert the current content? Converted content may look slightly different.',
+    importRestore: 'Exported document',
+    importConvert: 'Current content',
+    encTitle: 'Choose the text encoding',
+    encMsg: 'The text encoding of “{name}” could not be detected automatically. Choose the encoding to open it with — the preview shows how the text will look.',
+    encPreview: 'Preview',
+    encOpen: 'Open',
+    encReplaced: '{n} characters cannot be read in this encoding and are shown as “�”.',
+    encMethod_bom: 'from the BOM',
+    encMethod_auto: 'detected automatically',
+    encMethod_manual: 'chosen manually',
+    docEncTitle: 'Text encoding',
+    docEncDesc: 'Used when saving as Markdown, Złoty MD or text. When a file is opened, its encoding is detected automatically.',
+    docEncInfo: 'Opened from “{name}” ({method}).',
+    docEolTitle: 'Line endings',
+    docEncRereadMsg: 'Read the original file “{name}” again as {enc}? Changes made since it was opened will be replaced.',
+    docEncReread: 'Read again',
+    docEncSaveOnly: 'Only for saving',
+    encUnmappableMsg: '{n} characters cannot be represented in {enc} and will be saved as “?”. Save anyway?',
+    encSaveAnyway: 'Save',
+    docxError: 'Could not create the DOCX file. Check your internet connection and try again.',
     loadingLang: 'Loading language…',
     errModalTitle: 'Error',
     errOk: 'OK',
@@ -2456,6 +2796,8 @@ const LANGS = {
     dlPdfDesc: 'Save as a PDF file',
     dlZmdDesc: 'Markdown + editor metadata',
     dlMdDesc: 'Standard Markdown file',
+    dlDocxDesc: 'Word document',
+    dlTxtDesc: 'Plain text file',
     dlHint: 'Select one or more formats',
     dlDownloadBtn: 'Download',
     docsBtnTitle: 'Documents',
@@ -2936,6 +3278,10 @@ function applyLang(code) {
   } catch (_) {}
   // Подписи разметки страниц
   if (window.ZmdPages) ZmdPages.refresh();
+  // Названия языков и письменностей в списках кодировок
+  try {
+    syncDocEncodingUI();
+  } catch (_) {}
   // Язык документа (lang) влияет на подбор шрифтов — пересчитываем страницы PDF
   schedulePdfPageCount();
 }
@@ -3449,12 +3795,15 @@ if (typeof twemoji !== 'undefined') {
   }).observe(document.body, { childList: true, subtree: true, characterData: true });
 }
 
-if (typeof mermaid !== 'undefined') {
-  mermaid.initialize({
+// Настройки Mermaid — общие для превью и для экспорта (HTML, PDF, превью в новом окне)
+const MERMAID_CONFIG = {
     startOnLoad: false,
+    // Шрифт подписей — как у текста (Google Sans → Noto Sans JP): Mermaid измеряет им подписи
+    fontFamily: "'Google Sans', 'Noto Sans JP', 'Noto Sans KR', sans-serif",
     securityLevel: 'loose',
     theme: 'base',
     themeVariables: {
+      fontFamily: "'Google Sans', 'Noto Sans JP', 'Noto Sans KR', sans-serif",
       primaryColor: '#E8F0FE',
       primaryTextColor: '#1a1a2e',
       primaryBorderColor: '#4285F4',
@@ -3544,13 +3893,47 @@ if (typeof mermaid !== 'undefined') {
       labelColor: '#202124',
       altSectionBkgColor: '#F8F9FA',
       attributeBackgroundColorEven: '#F8F9FA',
-      attributeBackgroundColorOdd: '#ffffff'
+      attributeBackgroundColorOdd: '#ffffff',
+      // Подписи состояний: без этого Mermaid берёт цвет фона узла (primaryColor) — текст не виден
+      stateLabelColor: '#202124',
+      compositeTitleBackground: '#F8F9FA'
     },
     flowchart: { htmlLabels: true, curve: 'basis' },
     sequence: { useMaxWidth: true, actorMargin: 50 },
     gantt: { useMaxWidth: true },
     pie: { useMaxWidth: true }
-  });
+};
+if (typeof mermaid !== 'undefined') mermaid.initialize(MERMAID_CONFIG);
+
+// Mermaid иногда рисует за пределами своего viewBox (например, легенда круговой диаграммы) —
+// такие части обрезались бы. viewBox расширяется до фактических границ рисунка.
+// Функция без внешних зависимостей: её текст вставляется и в экспортируемый HTML
+function _mmdFitViewBox(svg) {
+  var vb = (svg.getAttribute('viewBox') || '').trim().split(/[\s,]+/).map(parseFloat);
+  if (vb.length !== 4 || !(vb[2] > 0 && vb[3] > 0)) return;
+  var bb;
+  try {
+    bb = svg.getBBox();
+  } catch (e) {
+    return;
+  }
+  if (!bb || !(bb.width > 0 && bb.height > 0)) return;
+  var pad = 4;
+  var x0 = Math.min(vb[0], bb.x - pad);
+  var y0 = Math.min(vb[1], bb.y - pad);
+  var x1 = Math.max(vb[0] + vb[2], bb.x + bb.width + pad);
+  var y1 = Math.max(vb[1] + vb[3], bb.y + bb.height + pad);
+  var nw = x1 - x0;
+  var nh = y1 - y0;
+  if (nw - vb[2] < 0.5 && nh - vb[3] < 0.5 && x0 === vb[0] && y0 === vb[1]) return;
+  svg.setAttribute('viewBox', [x0, y0, nw, nh].join(' '));
+  // Отображаемый размер растёт в той же пропорции
+  var mw = parseFloat(svg.style.maxWidth);
+  if (mw > 0) svg.style.maxWidth = mw * (nw / vb[2]) + 'px';
+  var w = parseFloat(svg.getAttribute('width'));
+  if (w > 0 && !/%/.test(svg.getAttribute('width'))) svg.setAttribute('width', w * (nw / vb[2]));
+  var h = parseFloat(svg.getAttribute('height'));
+  if (h > 0 && !/%/.test(svg.getAttribute('height'))) svg.setAttribute('height', h * (nh / vb[3]));
 }
 
 const INIT = LANGS['en'].init;
@@ -3732,6 +4115,7 @@ function toggleFontPanel() {
     modal.classList.add('open');
     document.getElementById('fontSizeBtn').style.color = 'var(--gb)';
     syncFontPanelUI();
+    syncDocEncodingUI();
   }
 }
 // Закрывает панель настроек шрифта
@@ -3927,6 +4311,9 @@ async function removeDocRecord(id) {
   try {
     await idbDelete(IDB_DOC_PREFIX + id);
   } catch (e) {}
+  try {
+    await idbDelete(IDB_SRC_PREFIX + id);
+  } catch (e) {}
 }
 // Запоминает, какой документ был открыт последним
 async function setCurrentDocId(id) {
@@ -3987,6 +4374,7 @@ async function saveContent() {
       d.fontSizes = { ...fontSizes };
       d.scrollEd = ed.scrollTop;
       d.scrollPv = pv.scrollTop;
+      Object.assign(d, docEncoding);
     };
     const data = await updateDocRecord(id, fill);
     if (!data) {
@@ -4444,7 +4832,8 @@ window.addEventListener('pagehide', () => {
       content: ed.value,
       fontSizes: { ...fontSizes },
       scrollEd: ed.scrollTop,
-      scrollPv: pv.scrollTop
+      scrollPv: pv.scrollTop,
+      ...docEncoding
     }).catch(() => {});
     _savedContent = ed.value;
   } catch (e) {}
@@ -4803,11 +5192,13 @@ async function switchToDoc(id) {
   _savedContent = data.content;
   _lastBroadcast = null;
   fontSizes = { ...data.fontSizes };
+  docEncoding = _docEncodingFrom(data);
   applyFontSizesToDOM();
   _render(data.content);
   _invalidateScrollMap();
   docReadOnly = !editable;
   _setReadOnly(!editable);
+  syncDocEncodingUI();
   if (editable) setSaveStatus('saved');
   // Окно просмотра получает текст с ещё не сохранёнными изменениями от окна-редактора
   else _bcPost({ type: 'hello', id });
@@ -5215,14 +5606,6 @@ function _readFileAsDataURL(file) {
   });
 }
 
-function _readFileAsText(file) {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result);
-    r.onerror = () => reject(r.error);
-    r.readAsText(file);
-  });
-}
 
 async function _addAiAttachment(file) {
   const t = LANGS[currentLang] || LANGS['en'];
@@ -5249,7 +5632,10 @@ async function _addAiAttachment(file) {
   try {
     let data, mediaType;
     if (kind === 'text') {
-      data = await _readFileAsText(file);
+      // Та же автоматическая проверка кодировки, что и при открытии файла
+      const read = await readTextFile(file);
+      if (!read) return;
+      data = read.text;
       mediaType = 'text/plain';
     } else {
       const dataUrl = await _readFileAsDataURL(file);
