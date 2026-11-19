@@ -2493,13 +2493,17 @@ const rz = document.getElementById('rz'),
 let drag = false,
   sx,
   sw;
+// Ширина разделителя берётся из CSS (раньше было зашито 5px)
+function _rzWidth() {
+  return rz.offsetWidth || 0;
+}
 function _aiPanelReservedWidth() {
   const ai = document.getElementById('aiPanel');
   return ai && ai.classList.contains('open') ? ai.getBoundingClientRect().width : 0;
 }
 function clampEpFlex() {
   const full = document.getElementById('panes').getBoundingClientRect().width;
-  const reserved = 5 + _aiPanelReservedWidth();
+  const reserved = _rzWidth() + _aiPanelReservedWidth();
   const available = full - reserved;
   if (available <= 0 || full <= 0) return;
   const cur = eP.getBoundingClientRect().width;
@@ -2517,7 +2521,7 @@ rz.addEventListener('mousedown', e => {
 document.addEventListener('mousemove', e => {
   if (!drag) return;
   const full = document.getElementById('panes').getBoundingClientRect().width;
-  const tot = full - 5 - _aiPanelReservedWidth();
+  const tot = full - _rzWidth() - _aiPanelReservedWidth();
   const w = Math.max(200, Math.min(tot - 200, sw + (e.clientX - sx)));
   eP.style.flex = `0 0 ${((w / full) * 100).toFixed(3)}%`;
 });
@@ -2538,7 +2542,7 @@ function _syncRzAria() {
 // Задаёт ширину редактора в пикселях с теми же ограничениями, что и при перетаскивании
 function _setEpWidth(w) {
   const full = document.getElementById('panes').getBoundingClientRect().width;
-  const tot = full - 5 - _aiPanelReservedWidth();
+  const tot = full - _rzWidth() - _aiPanelReservedWidth();
   if (full <= 0 || tot <= 400) return;
   w = Math.max(200, Math.min(tot - 200, w));
   eP.style.flex = `0 0 ${((w / full) * 100).toFixed(3)}%`;
@@ -6268,7 +6272,7 @@ function _splitForAiPanel(open) {
     _epFlexBeforeAi = eP.style.flex;
     const full = panes.getBoundingClientRect().width;
     const aiW = 300; // ширина .ai-panel.open в styles.css
-    const available = full - aiW - 5;
+    const available = full - aiW - _rzWidth();
     if (full <= 0 || available <= 0) return;
     const w = Math.max(200, available * 0.618);
     eP.style.flex = `0 0 ${((w / full) * 100).toFixed(3)}%`;
@@ -6676,6 +6680,23 @@ async function sendAi() {
   };
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(update).observe(tb);
   else window.addEventListener('resize', update);
+  update();
+})();
+
+// Панель прокручивается по горизонтали: у края, за которым есть ещё кнопки, — мягкое затухание,
+// чтобы было видно, что панель можно прокрутить
+(function initToolbarEdges() {
+  const tb = document.querySelector('.tb');
+  if (!tb) return;
+  const update = () => {
+    const max = tb.scrollWidth - tb.clientWidth;
+    tb.classList.toggle('fade-l', tb.scrollLeft > 1);
+    tb.classList.toggle('fade-r', max - tb.scrollLeft > 1);
+  };
+  tb.addEventListener('scroll', update, { passive: true });
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(update).observe(tb);
+  window.addEventListener('resize', update);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(update);
   update();
 })();
 
