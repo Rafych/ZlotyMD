@@ -753,7 +753,11 @@
       <header class="hd">
         <!-- Логотип (assets/logo-wide.svg) — ссылка на главную страницу -->
         <a class="logo" href="./">
-          <img class="zmd-logo-wide" src="assets/logo-wide.svg" alt="Złoty MD" draggable="false" />
+          <!-- Узкий экран (до 480px) — квадратный логотип для интерфейса assets/square-icon.svg, иначе — горизонтальный -->
+          <picture>
+            <source media="(max-width: 480px)" srcset="assets/square-icon.svg" width="34" height="34" />
+            <img class="zmd-logo-wide" src="assets/logo-wide.svg" alt="Złoty MD" width="129" height="35" draggable="false" />
+          </picture>
         </a>
 
         <div class="hsep"></div>
@@ -1079,6 +1083,7 @@
 
         <button
           class="about-btn"
+          id="downloadBtn"
           title="Download as HTML"
           data-i18n-title="downloadBtnTitle"
           onclick="openDownloadMenu()"
@@ -1231,7 +1236,7 @@
       <div class="about-modal" id="aboutModal">
         <div class="about-header">
           <div class="about-logo">
-            <img class="zmd-logo-wide" src="assets/logo-wide.svg" alt="Złoty MD" draggable="false" />
+            <img class="zmd-logo-wide" src="assets/logo-wide.svg" alt="Złoty MD" width="172" height="46" draggable="false" />
           </div>
           <button class="about-close" type="button" title="Close" aria-label="Close" data-i18n-title="dlgClose" onclick="closeAbout()">
             <svg

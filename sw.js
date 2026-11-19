@@ -3,7 +3,7 @@
  * (docx для экспорта в DOCX, mammoth/fflate/pdf.js для открытия DOCX и PDF — с jsDelivr при первом использовании)
  * при установке и при использовании, поэтому редактор работает без сети.
  * При изменении файлов приложения увеличьте CACHE_VERSION. */
-const CACHE_VERSION = 'zmd-v77';
+const CACHE_VERSION = 'zmd-v83';
 const CACHE = CACHE_VERSION;
 
 const LOCAL_ASSETS = [
@@ -57,6 +57,8 @@ const LOCAL_ASSETS = [
   'manifest.webmanifest',
   'assets/favicon.svg',
   'assets/logo-wide.svg',
+  'assets/logo-square.svg',
+  'assets/square-icon.svg',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/icon-maskable-512.png',
@@ -147,15 +149,6 @@ self.addEventListener('activate', event => {
   })());
 });
 
-async function staleWhileRevalidate(request, cache, matchOpts) {
-  const cached = await cache.match(request, matchOpts);
-  const network = fetch(request).then(async res => {
-    await putSafe(cache, request, res.clone());
-    return res;
-  }).catch(() => null);
-  return cached || (await network) || Response.error();
-}
-
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
@@ -166,14 +159,17 @@ self.addEventListener('fetch', event => {
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
 
-    // Навигация: stale-while-revalidate, при отсутствии в кэше — редактор
+    // Страницы и файлы приложения: сначала сеть, при офлайне — кэш.
+    // (Раньше был stale-while-revalidate: после обновления новая страница могла получить старый
+    // styles.css из кэша, и раскладка ломалась — например, логотип выводился в исходном размере.)
     if (req.mode === 'navigate') {
-      const hit = await cache.match(req, { ignoreSearch: true });
-      const network = fetch(req).then(async res => {
+      try {
+        const res = await fetch(req, { cache: 'no-cache' });
         await putSafe(cache, req, res.clone());
         return res;
-      }).catch(() => null);
-      return hit || (await network) || (await cache.match('ZlotyMD.html')) || Response.error();
+      } catch (e) {
+        return (await cache.match(req, { ignoreSearch: true })) || (await cache.match('ZlotyMD.html')) || Response.error();
+      }
     }
 
     // Версионированные CDN-ресурсы и шрифты: cache-first
@@ -200,7 +196,13 @@ self.addEventListener('fetch', event => {
       }
     }
 
-    // Локальные файлы: stale-while-revalidate
-    return staleWhileRevalidate(req, cache, { ignoreSearch: true });
+    // Локальные файлы: сначала сеть (версии HTML, CSS и JS всегда совпадают), при офлайне — кэш
+    try {
+      const res = await fetch(req, { cache: 'no-cache' });
+      await putSafe(cache, req, res.clone());
+      return res;
+    } catch (e) {
+      return (await cache.match(req, { ignoreSearch: true })) || Response.error();
+    }
   })());
 });
