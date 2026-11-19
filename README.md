@@ -35,6 +35,24 @@ Un editor Markdown cu proporțiile secțiunii de aur și o paletă de culori ins
 ## 한국어
 황금비 비율과 Google에서 영감을 받은 색상 팔레트를 갖춘 Markdown 편집기.
 
+## Čeština
+Editor Markdownu s proporcemi zlatého řezu a barevnou paletou inspirovanou Googlem.
+
+## Nederlands
+Een Markdown-editor met de verhoudingen van de gulden snede en een kleurenpalet geïnspireerd door Google.
+
+## Bahasa Indonesia
+Editor Markdown dengan proporsi rasio emas dan palet warna yang terinspirasi dari Google.
+
+## Latina
+Editor Markdown cum proportionibus sectionis aureae et colorum paleta a Google inspirata.
+
+## Türkçe
+Altın oran oranlarına ve Google'dan esinlenen bir renk paletine sahip bir Markdown düzenleyicisi.
+
+## Українська
+Редактор Markdown із пропорціями золотого перерізу та кольоровою палітрою в стилі Google.
+
 # Screenshot
 
 ![Снимок экрана](./Снимок%20экрана%202026-11-19%20134943.png)
