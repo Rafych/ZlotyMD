@@ -96,6 +96,12 @@ body {
   outline-offset: 2px;
 }
 
+/* Окно получает фокус целиком при открытии (чтобы фокус был внутри) — рамку вокруг всего окна не рисуем,
+   кольцо появляется на кнопках и полях при переходе по Tab */
+:is([role='dialog'], [role='alertdialog'])[tabindex='-1']:focus {
+  outline: none;
+}
+
 /* Декоративный фон (doodle) в стиле золотого сечения */
 .doodle {
   position: fixed;
@@ -187,33 +193,32 @@ body {
   );
 }
 
-/* Логотип и анимация названия приложения */
-.logo {
-  display: flex;
-  align-items: center;
-  gap: var(--s8);
+/* Логотип — assets/logo-wide.svg (кружки + надпись). Вокруг рисунка в SVG есть поля; отрицательные
+   отступы обрезают их, и размер блока равен квадрату из кружков по высоте (--logo-dot).
+   Координаты в единицах SVG: кружки 60…270 по вертикали, рисунок 60…1218.84 по горизонтали,
+   весь холст 1288.29 × 345.54; хвост «y» выходит вниз за блок (как раньше) */
+.zmd-logo-wide {
+  --logo-dot: 21px;
+  display: block;
+  flex-shrink: 0;
+  height: calc(var(--logo-dot) * 345.54 / 210);
+  width: auto;
+  margin: calc(var(--logo-dot) * -60 / 210) calc(var(--logo-dot) * -69.45 / 210) calc(var(--logo-dot) * -75.54 / 210)
+    calc(var(--logo-dot) * -60 / 210);
+  pointer-events: none;
   -webkit-user-select: none;
   user-select: none;
 }
-.logo-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3px;
-  width: 21px;
-  height: 21px;
-  /* Отдельное свойство rotate — не конфликтует с transform */
-  transition: rotate 0.61s var(--spring);
-}
-@media (hover: hover) {
-  .logo:hover .logo-grid {
-    rotate: 90deg;
-  }
-}
-.ld {
-  border-radius: 50%;
-}
-.logo-name {
-  font-size: var(--f21);
+/* Ссылка на главную (./) без анимации при наведении */
+.logo {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  border-radius: var(--r8);
+  text-decoration: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .hsep {
@@ -1545,8 +1550,10 @@ body {
   .tg:nth-child(n + 7) {
     display: none;
   }
-  .logo-name {
-    display: none;
+  /* Узкий экран: только кружки (надпись обрезается) */
+  .logo {
+    width: 21px;
+    overflow: hidden;
   }
 }
 
@@ -1673,8 +1680,8 @@ body {
   align-items: center;
   gap: var(--s8);
 }
-.about-app-name {
-  font-size: var(--f21);
+.about-logo .zmd-logo-wide {
+  --logo-dot: 28px;
 }
 .about-close {
   width: 28px;
@@ -1906,9 +1913,14 @@ body {
     background 0.1s,
     color 0.1s;
 }
-.lang-opt:hover {
+.lang-opt:hover,
+.lang-opt:focus-visible {
   background: var(--gbt);
   color: var(--gb);
+}
+/* Пункт меню подсвечивается фоном, как при наведении; отдельное кольцо вокруг пункта не нужно */
+.lang-opt:focus-visible {
+  outline: none;
 }
 .lang-opt.active {
   color: var(--gb);
@@ -3048,6 +3060,29 @@ img.emoji {
 .ai-nav-btn-save {
   background: var(--gb);
   color: #fff;
+}
+/* Третий вариант («Не сохранять» и т. п.) — отдельно у левого края, подальше от основной кнопки (Apple HIG) */
+.ai-nav-btn-alt {
+  margin-right: auto;
+}
+/* Окно с тремя вариантами немного шире, чтобы кнопки помещались в строку */
+.dlg-modal.has-alt {
+  width: min(420px, calc(100vw - 2 * var(--s21)));
+}
+/* Не поместились в строку — столбец во всю ширину: основная, другой вариант, «Отмена» */
+.ai-nav-actions.stacked {
+  flex-direction: column;
+  align-items: stretch;
+}
+.ai-nav-actions.stacked .ai-nav-btn {
+  margin: 0;
+}
+.ai-nav-actions.stacked .ai-nav-btn-save,
+.ai-nav-actions.stacked .ai-nav-btn-yes {
+  order: -2;
+}
+.ai-nav-actions.stacked .ai-nav-btn-alt {
+  order: -1;
 }
 
 /* Модальное окно ошибки: наследует вид ai-nav-modal, выше остальных слоёв */
@@ -4290,7 +4325,7 @@ body.ai-dot-on .ai-dot {
   margin-top: var(--s21);
 }
 
-/* Пользователь просит меньше движения: кнопки не подпрыгивают, логотип не вращается
+/* Пользователь просит меньше движения: кнопки не подпрыгивают
    (анимации загрузки и индикаторы прогресса не трогаем — у них свои правила выше) */
 @media (prefers-reduced-motion: reduce) {
   .btn:hover,
@@ -4298,9 +4333,6 @@ body.ai-dot-on .ai-dot {
   .pv-pop-btn:hover,
   .ro-bar-btn:hover {
     transform: none;
-  }
-  .logo:hover .logo-grid {
-    rotate: none;
   }
   .rz::after {
     transition: background 0.15s;
