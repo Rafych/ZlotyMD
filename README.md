@@ -37,7 +37,7 @@ Un editor Markdown cu proporțiile secțiunii de aur și o paletă de culori ins
 
 # Screenshot
 
-![Снимок экрана](./Снимок%20экрана%202026-11-09%20133131.png)
+![Снимок экрана](./Снимок%20экрана%202026-11-19%20134943.png)
 
 # License
 
