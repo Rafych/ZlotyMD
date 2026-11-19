@@ -39,6 +39,28 @@
     MIT License — https://github.com/harfbuzz/harfbuzzjs/blob/main/LICENSE
     HarfBuzz: "Old MIT" License — https://github.com/harfbuzz/harfbuzz/blob/main/COPYING
 
+  docx v9.15.4 (with docx/math and docx/html) — used by the editor for DOCX export
+    Copyright (c) 2016 Dolan Miu
+    MIT License — https://github.com/dolanmiu/docx/blob/master/LICENSE
+    The distributed bundles include fflate, nanoid, parse5, htmlparser2 (MIT) and css-select,
+    domhandler, entities (BSD-2-Clause License); their notices are kept in the bundles.
+
+  mammoth v1.13.0 — used by the editor to import DOCX files (DOCX → Markdown)
+    Copyright (c) 2013, Michael Williamson
+    BSD-2-Clause License — https://github.com/mwilliamson/mammoth.js/blob/master/LICENSE
+    The browser bundle includes JSZip, Bluebird, underscore, xmldom and other dependencies
+    (MIT / BSD-style licenses); their notices are kept in the bundle.
+
+  fflate v0.8.2 — used by the editor to read DOCX packages on import
+    Copyright (c) 2023 Arjun Barrett
+    MIT License — https://github.com/101arrowz/fflate/blob/master/LICENSE
+
+  PDF.js (pdfjs-dist) v4.10.38 — used by the editor to import PDF files (PDF → Markdown)
+    Copyright Mozilla Foundation and contributors
+    Apache License 2.0 — https://github.com/mozilla/pdf.js/blob/master/LICENSE
+    The CMaps are Copyright (c) Adobe Systems Incorporated (BSD-3-Clause License); the standard
+    fonts (Foxit, Liberation) are under their own licenses, kept in the package.
+
   html2canvas v1.4.1 — used by jsPDF (html()) for PDF export
     Copyright (c) 2012 Niklas von Hertzen
     MIT License — https://github.com/niklasvh/html2canvas/blob/master/LICENSE
@@ -123,6 +145,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400..700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <style>
@@ -140,7 +164,7 @@
     --lh:1.618;--lh-s:1.272;
     --page:75.9787rem; /* φ^9 rem */
     --gutter:clamp(var(--s21),4.236vw,var(--s68));
-    --font:'Google Sans',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;
+    --font:'Google Sans','Noto Sans JP','Noto Sans KR',system-ui,sans-serif;--mono:'JetBrains Mono',ui-monospace,monospace;
     --e1:0 1px var(--s3) rgba(31,31,31,.09),0 var(--s2) var(--s8) rgba(31,31,31,.056);
     --e3:0 var(--s8) var(--s26) calc(var(--s5) * -1) rgba(31,31,31,.146),0 var(--s21) var(--s55) calc(var(--s13) * -1) rgba(31,31,31,.146);
     --spring:linear(0,.0273,.0927,.1778,.2704,.3628,.4505,.5309,.6029,.6663,.7211,.7682,.8082,.8419,.8702,.8937,.9132,.9293,.9425,.9534,.9623,.9695,.9754,.9802,1);
@@ -206,20 +230,33 @@
   .demo .katex-display{margin:0}
   .demo .katex{font-size:1.272em}
 
-  pre{background:var(--ink-dark);color:#E3E3E3;border-radius:var(--s13);overflow:hidden;position:relative;margin:0}
-  .pre-header{display:flex;align-items:center;gap:var(--s8);padding:var(--s5) var(--s5) var(--s5) var(--s13);background:var(--ink-dark-2);border-bottom:1px solid rgba(255,255,255,.056);min-height:var(--s34)}
-  .pre-body{overflow-x:auto;padding:var(--s21)}
-  .lang-badge{font-family:var(--mono);font-size:var(--f10);font-weight:500;letter-spacing:.0557em;text-transform:uppercase;color:#9AA0A6;user-select:none}
-  pre code{font-family:var(--mono);font-size:var(--f13);line-height:var(--lh);white-space:pre}
-  .hljs-keyword,.hljs-section{color:#8ab4f8}.hljs-built_in,.hljs-variable.language_{color:#78d9ec}.hljs-string{color:#81c995}
-  .hljs-title{color:#aecbfa}.hljs-bullet{color:#fdd663}.hljs-strong{font-weight:700;color:#fcad70}.hljs-emphasis{font-style:italic;color:#f28b82}
-  .cpbtn{margin-left:auto;display:flex;align-items:center;gap:var(--s5);height:var(--s26);padding:0 var(--s10);border-radius:var(--s10);border:none;background:rgba(255,255,255,.056);color:#C4C7C5;font-family:var(--font);font-size:var(--f10);font-weight:500;cursor:pointer;opacity:0;transition:opacity 144ms,background 144ms,color 144ms,scale 233ms var(--spring)}
-  .cpbtn svg{width:var(--s13);height:var(--s13)}
+  /* Блок кода — как в редакторе Złoty MD (css/styles.css: .md pre, .pre-header, .lang-badge, .cpbtn, .hljs-*) */
+  pre{font-size:13px;line-height:1.85;background:#202124;color:#e8eaed;border-radius:13px;border-top:3px solid #4285f4;overflow:hidden;position:relative;margin:0;padding:0}
+  .pre-header{display:flex;align-items:center;gap:8px;padding:5px 8px;background:#2a2d31;border-bottom:1px solid rgba(255,255,255,.07);position:relative;flex-shrink:0;min-height:34px}
+  .pre-header::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#ea4335 0 33.3%,#fbbc04 33.3% 66.6%,#34a853 66.6%);opacity:.7}
+  .pre-body{overflow-x:auto;padding:21px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
+  .pre-body::-webkit-scrollbar{height:5px}
+  .pre-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:99px}
+  .pre-body::-webkit-scrollbar-track{background:transparent}
+  .lang-badge{padding:2px 8px;border-radius:5px;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.06em;background:rgba(255,255,255,.1);color:#9aa0a6;line-height:1.6;pointer-events:none;-webkit-user-select:none;user-select:none;flex-shrink:0}
+  pre code{background:transparent;color:inherit;padding:0;font-family:var(--mono);font-size:12.5px;white-space:pre}
+  pre .hljs-keyword,pre .hljs-selector-tag,pre .hljs-doctag,pre .hljs-template-tag,pre .hljs-meta .hljs-keyword{color:#8ab4f8}
+  pre .hljs-built_in,pre .hljs-type,pre .hljs-title.class_,pre .hljs-title.class_.inherited__,pre .hljs-variable.language_{color:#78d9ec}
+  pre .hljs-string,pre .hljs-char.escape_,pre .hljs-addition,pre .hljs-meta .hljs-string{color:#81c995}
+  pre .hljs-number,pre .hljs-literal,pre .hljs-symbol,pre .hljs-bullet,pre .hljs-variable.constant_{color:#fdd663}
+  pre .hljs-title,pre .hljs-title.function_,pre .hljs-section{color:#c58af9}
+  pre .hljs-attr,pre .hljs-attribute,pre .hljs-property,pre .hljs-selector-attr,pre .hljs-selector-class,pre .hljs-selector-id,pre .hljs-selector-pseudo{color:#fcad70}
+  pre .hljs-tag,pre .hljs-name,pre .hljs-meta,pre .hljs-regexp,pre .hljs-deletion,pre .hljs-link{color:#f28b82}
+  pre .hljs-comment,pre .hljs-quote{color:#9aa0a6;font-style:italic}
+  pre .hljs-emphasis{font-style:italic}
+  pre .hljs-strong{font-weight:700}
+  .cpbtn{margin-left:auto;flex-shrink:0;display:flex;align-items:center;gap:5px;padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.08);color:#9aa0a6;font-family:var(--font);font-size:11px;font-weight:600;line-height:1;white-space:nowrap;cursor:pointer;opacity:0;transition:opacity .15s,background .15s,color .15s,transform .12s}
+  .cpbtn svg{width:13px;height:13px;flex-shrink:0}
   pre:hover .cpbtn,.cpbtn:focus-visible{opacity:1}
   @media (hover:none){.cpbtn{opacity:1}}
-  .cpbtn:hover{background:rgba(255,255,255,.146);color:#fff}
-  .cpbtn:active{scale:.9443}
-  .cpbtn.ok{background:rgba(52,168,83,.236);color:#81c995}
+  .cpbtn:hover{background:rgba(255,255,255,.16);color:#fff}
+  .cpbtn:active{transform:scale(.93)}
+  .cpbtn.ok{background:rgba(52,168,83,.25);color:#34a853;border-color:rgba(52,168,83,.4)}
 
   .mermaid{display:block;text-align:center;padding:var(--s21)}
   .mermaid svg{max-width:100%;height:auto;font-family:var(--font)!important}
@@ -351,11 +388,12 @@
           <h3>Markdown</h3>
           <p>Standard Markdown syntax is supported, with a toolbar for headings, emphasis, links, tables and task lists.</p>
         </div>
-        <pre><div class="pre-header"><span class="lang-badge">Markdown</span><button class="cpbtn" type="button" data-copy="Copy" data-copied="Copied"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"></rect><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"></path></svg>Copy</button></div><div class="pre-body"><code><span class="hljs-section"># Heading</span>
+        <pre><div class="pre-header"><span class="lang-badge">Markdown</span><button class="cpbtn" type="button" data-copy="Copy" data-copied="Copied"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"></rect><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"></path></svg>Copy</button></div><div class="pre-body"><code class="language-markdown"><span class="hljs-section"># Heading</span>
 <span class="hljs-strong">**Bold text**</span>
 <span class="hljs-emphasis">*Italic*</span>
 <span class="hljs-bullet">-</span> List
-<span class="hljs-bullet">-</span> Item</code></div></pre>
+<span class="hljs-bullet">-</span> Item
+</code></div></pre>
       </div>
 
       <div class="feat flip reveal">
@@ -385,10 +423,11 @@
           <h3>Code highlighting</h3>
           <p>Various programming languages are supported, each block labelled with its language and a copy button.</p>
         </div>
-        <pre><div class="pre-header"><span class="lang-badge">JavaScript</span><button class="cpbtn" type="button" data-copy="Copy" data-copied="Copied"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"></rect><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"></path></svg>Copy</button></div><div class="pre-body"><code><span class="hljs-keyword">const</span> φ = (<span class="hljs-number">1</span> + <span class="hljs-built_in">Math</span>.<span class="hljs-title">sqrt</span>(<span class="hljs-number">5</span>)) / <span class="hljs-number">2</span>;
-<span class="hljs-keyword">function</span> <span class="hljs-title">split</span>(total) {
+        <pre><div class="pre-header"><span class="lang-badge">JavaScript</span><button class="cpbtn" type="button" data-copy="Copy" data-copied="Copied"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="9" height="11" rx="1.5"></rect><path d="M3 12H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"></path></svg>Copy</button></div><div class="pre-body"><code class="language-javascript"><span class="hljs-keyword">const</span> φ = (<span class="hljs-number">1</span> + <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">sqrt</span>(<span class="hljs-number">5</span>)) / <span class="hljs-number">2</span>;
+<span class="hljs-keyword">function</span> <span class="hljs-title function_">split</span>(<span class="hljs-params">total</span>) {
   <span class="hljs-keyword">return</span> [total / φ, total / φ ** <span class="hljs-number">2</span>];
-}</code></div></pre>
+}
+</code></div></pre>
       </div>
 
       <div class="feat reveal">
@@ -469,7 +508,7 @@
 })();
 if(typeof mermaid!=='undefined'){
   mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'base',
-    themeVariables:{fontFamily:'Google Sans, sans-serif',primaryColor:'#E3EDFD',primaryTextColor:'#1F1F1F',primaryBorderColor:'#4285F4',
+    themeVariables:{fontFamily:"'Google Sans','Noto Sans JP','Noto Sans KR',sans-serif",primaryColor:'#E3EDFD',primaryTextColor:'#1F1F1F',primaryBorderColor:'#4285F4',
     secondaryColor:'#DDF0E2',tertiaryColor:'#FEF0C7',background:'#ffffff',mainBkg:'#E3EDFD',nodeBorder:'#4285F4',lineColor:'#747775',edgeLabelBackground:'#ffffff'},
     flowchart:{htmlLabels:true,curve:'basis'}});
   (async function(){

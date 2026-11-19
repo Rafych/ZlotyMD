@@ -32,6 +32,9 @@ Un editor de Markdown con proporciones de la razón áurea y una paleta de color
 ## Română
 Un editor Markdown cu proporțiile secțiunii de aur și o paletă de culori inspirată de Google.
 
+## 한국어
+황금비 비율과 Google에서 영감을 받은 색상 팔레트를 갖춘 Markdown 편집기.
+
 # Screenshot
 
 ![Снимок экрана](./Снимок%20экрана%202026-11-09%20133131.png)
@@ -55,6 +58,10 @@ The libraries below are not part of this repository. The browser loads them from
 | [harfbuzzjs](https://github.com/harfbuzz/harfbuzzjs) ([HarfBuzz](https://github.com/harfbuzz/harfbuzz)) | 0.4.12 | MIT (HarfBuzz: Old MIT; parts Apache-2.0) | jsDelivr, only when exporting to PDF (text shaping) |
 | [html2canvas](https://github.com/niklasvh/html2canvas) | 1.4.1 | MIT | cdnjs, only when exporting to PDF (used by jsPDF `html()`) |
 | [jsPDF](https://github.com/parallax/jsPDF) | 4.2.1 | MIT | cdnjs, only when exporting to PDF |
+| [docx](https://github.com/dolanmiu/docx) (with `docx/math`, `docx/html`) | 9.15.4 | MIT | jsDelivr, only when exporting to DOCX |
+| [mammoth](https://github.com/mwilliamson/mammoth.js) | 1.13.0 | BSD-2-Clause | jsDelivr, only when opening a DOCX file |
+| [fflate](https://github.com/101arrowz/fflate) | 0.8.2 | MIT | jsDelivr, only when opening a DOCX file |
+| [PDF.js](https://github.com/mozilla/pdf.js) (`pdfjs-dist`) | 4.10.38 | Apache-2.0 | jsDelivr, only when opening a PDF file (with Adobe CMaps — BSD-3-Clause) |
 | [KaTeX](https://github.com/KaTeX/KaTeX) | 0.16.9 | MIT | cdnjs |
 | [marked](https://github.com/markedjs/marked) | 9.1.6 | MIT (its license file also contains the BSD-style Markdown license, © 2004 John Gruber) | cdnjs |
 | [Mermaid](https://github.com/mermaid-js/mermaid) | 10.6.1 | MIT | cdnjs |
@@ -67,4 +74,4 @@ The libraries below are not part of this repository. The browser loads them from
 
 TikZJax runs TeX in the browser (WebAssembly) and bundles TeX packages such as PGF/TikZ and pgfplots, and TeX fonts (Computer Modern, BaKoMa), under their own licenses; see its repository for details. None of its files are copied into this repository.
 
-The distributed bundles of some libraries include third-party code under their own permissive licenses: Mermaid (e.g. d3, dagre-d3-es, DOMPurify, dayjs, khroma — MIT / ISC / BSD-3-Clause / Apache-2.0 / MPL-2.0), jsPDF (e.g. pako, a JPEG encoder, a Unicode bidi engine — MIT / Zlib / BSD) and html2canvas (tslib — 0BSD). Their notices are kept in the bundles.
+The distributed bundles of some libraries include third-party code under their own permissive licenses: Mermaid (e.g. d3, dagre-d3-es, DOMPurify, dayjs, khroma — MIT / ISC / BSD-3-Clause / Apache-2.0 / MPL-2.0), jsPDF (e.g. pako, a JPEG encoder, a Unicode bidi engine — MIT / Zlib / BSD), html2canvas (tslib — 0BSD) and docx (fflate, nanoid, parse5, htmlparser2 — MIT; css-select, domhandler, entities — BSD-2-Clause), mammoth (JSZip, Bluebird, underscore, xmldom and others — MIT / BSD-style) and PDF.js (Adobe CMaps — BSD-3-Clause; standard fonts — their own licenses). Their notices are kept in the bundles.

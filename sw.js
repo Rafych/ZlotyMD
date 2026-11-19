@@ -1,8 +1,9 @@
 /* Złoty MD — Service Worker (offline support)
  * Локальные файлы и CDN-ресурсы (marked, KaTeX, Mermaid, highlight.js, jsPDF, html2canvas, svg2pdf.js, HarfBuzz, шрифты) кэшируются
+ * (docx для экспорта в DOCX, mammoth/fflate/pdf.js для открытия DOCX и PDF — с jsDelivr при первом использовании)
  * при установке и при использовании, поэтому редактор работает без сети.
  * При изменении файлов приложения увеличьте CACHE_VERSION. */
-const CACHE_VERSION = 'zmd-v45';
+const CACHE_VERSION = 'zmd-v62';
 const CACHE = CACHE_VERSION;
 
 const LOCAL_ASSETS = [
@@ -13,6 +14,9 @@ const LOCAL_ASSETS = [
   'js/render.js',
   'js/app.js',
   'js/pages.js',
+  'js/export-formats.js',
+  'js/import-formats.js',
+  'js/encoding.js',
   'js/pdf-export.js',
   'js/pwa.js',
   // Языковые файлы (английский встроен в app.js). Новый язык: добавьте сюда lang/<код>.json и lang/<код>.js
@@ -36,6 +40,8 @@ const LOCAL_ASSETS = [
   'lang/es.js',
   'lang/ro.json',
   'lang/ro.js',
+  'lang/ko.json',
+  'lang/ko.js',
   'manifest.webmanifest',
   'assets/favicon.svg',
   'icons/icon-192.png',
@@ -65,6 +71,12 @@ const CDN_STYLES = [
   'https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css',
   'https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap',
   'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap'
+];
+// CSS, который кэшируется без файлов шрифтов: у Noto Sans JP ~100 поднаборов глифов,
+// они кэшируются по мере использования (fonts.gstatic.com — в CACHEABLE_HOSTS)
+const CDN_STYLES_LAZY = [
+  'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400..700&display=swap',
+  'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&display=swap'
 ];
 
 const CACHEABLE_HOSTS = [
@@ -107,7 +119,8 @@ self.addEventListener('install', event => {
     // Внешние ресурсы — по возможности (ошибка не отменяет установку)
     await Promise.allSettled([
       ...CDN_SCRIPTS.map(async u => putSafe(cache, u, await fetch(u))),
-      ...CDN_STYLES.map(u => precacheStyle(cache, u))
+      ...CDN_STYLES.map(u => precacheStyle(cache, u)),
+      ...CDN_STYLES_LAZY.map(async u => putSafe(cache, u, await fetch(u)))
     ]);
     await self.skipWaiting();
   })());

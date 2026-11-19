@@ -39,6 +39,28 @@
     MIT License — https://github.com/harfbuzz/harfbuzzjs/blob/main/LICENSE
     HarfBuzz: "Old MIT" License — https://github.com/harfbuzz/harfbuzz/blob/main/COPYING
 
+  docx v9.15.4 (with docx/math and docx/html) — used by the editor for DOCX export
+    Copyright (c) 2016 Dolan Miu
+    MIT License — https://github.com/dolanmiu/docx/blob/master/LICENSE
+    The distributed bundles include fflate, nanoid, parse5, htmlparser2 (MIT) and css-select,
+    domhandler, entities (BSD-2-Clause License); their notices are kept in the bundles.
+
+  mammoth v1.13.0 — used by the editor to import DOCX files (DOCX → Markdown)
+    Copyright (c) 2013, Michael Williamson
+    BSD-2-Clause License — https://github.com/mwilliamson/mammoth.js/blob/master/LICENSE
+    The browser bundle includes JSZip, Bluebird, underscore, xmldom and other dependencies
+    (MIT / BSD-style licenses); their notices are kept in the bundle.
+
+  fflate v0.8.2 — used by the editor to read DOCX packages on import
+    Copyright (c) 2023 Arjun Barrett
+    MIT License — https://github.com/101arrowz/fflate/blob/master/LICENSE
+
+  PDF.js (pdfjs-dist) v4.10.38 — used by the editor to import PDF files (PDF → Markdown)
+    Copyright Mozilla Foundation and contributors
+    Apache License 2.0 — https://github.com/mozilla/pdf.js/blob/master/LICENSE
+    The CMaps are Copyright (c) Adobe Systems Incorporated (BSD-3-Clause License); the standard
+    fonts (Foxit, Liberation) are under their own licenses, kept in the package.
+
   html2canvas v1.4.1 — used by jsPDF (html()) for PDF export
     Copyright (c) 2012 Niklas von Hertzen
     MIT License — https://github.com/niklasvh/html2canvas/blob/master/LICENSE
@@ -124,6 +146,10 @@
       href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap"
       rel="stylesheet"
     />
+    <!-- Запасные шрифты интерфейса для японского и корейского текста (Google Sans → Noto Sans JP → Noto Sans KR).
+         Глифы разбиты на поднаборы (unicode-range) и загружаются только при использовании -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400..700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&display=swap" rel="stylesheet" />
     <link
       href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
@@ -737,7 +763,7 @@
             <span id="langCurrent">EN</span>
           </button>
           <div class="lang-drop" id="langDrop">
-            <!-- Порядок пунктов: «Авто» всегда первым, далее языки по алфавиту их английских названий (English, French, German, Greek, Italian, Japanese, Polish, Portuguese, Romanian, Russian, Spanish) -->
+            <!-- Порядок пунктов: «Авто» всегда первым, далее языки по алфавиту их английских названий (English, French, German, Greek, Italian, Japanese, Korean, Polish, Portuguese, Romanian, Russian, Spanish) -->
             <button class="lang-opt" data-lang="auto" onclick="setLang('auto')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span class="lang-ico" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="8.6" rx="1.6"/><path d="M5.5 14h5M8 11.1V14"/></svg></span><span data-i18n="langAuto">Auto (device language)</span></button>
             <div class="lang-sep" role="separator"></div>
             <button class="lang-opt" data-lang="en" onclick="setLang('en')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>English</span></button>
@@ -746,6 +772,7 @@
             <button class="lang-opt" data-lang="el" onclick="setLang('el')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>Ελληνικά</span></button>
             <button class="lang-opt" data-lang="it" onclick="setLang('it')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>Italiano</span></button>
             <button class="lang-opt" data-lang="ja" onclick="setLang('ja')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>日本語</span></button>
+            <button class="lang-opt" data-lang="ko" onclick="setLang('ko')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>한국어</span></button>
             <button class="lang-opt" data-lang="pl" onclick="setLang('pl')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>Polski</span></button>
             <button class="lang-opt" data-lang="pt" onclick="setLang('pt')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>Português (Brasil)</span></button>
             <button class="lang-opt" data-lang="ro" onclick="setLang('ro')"><span class="lang-check" aria-hidden="true"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 8.4 6.2 11.8 13.2 4.4"/></svg></span><span>Română</span></button>
@@ -878,6 +905,34 @@
               <span class="about-lib-copy" data-i18n="aboutLibTikzjaxCopy"
                 >© Jim Fowler, Glenn Rice and contributors</span
               >
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
+                <span class="about-lib-name">docx <span class="about-lib-ver">v9.15.4</span></span>
+                <span class="about-lib-badge">MIT</span>
+              </div>
+              <span class="about-lib-copy">© 2016 Dolan Miu</span>
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
+                <span class="about-lib-name">mammoth <span class="about-lib-ver">v1.13.0</span></span>
+                <span class="about-lib-badge">BSD-2-Clause</span>
+              </div>
+              <span class="about-lib-copy">© 2013 Michael Williamson</span>
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
+                <span class="about-lib-name">fflate <span class="about-lib-ver">v0.8.2</span></span>
+                <span class="about-lib-badge">MIT</span>
+              </div>
+              <span class="about-lib-copy">© 2023 Arjun Barrett</span>
+            </li>
+            <li class="about-lib-item">
+              <div class="about-lib-top">
+                <span class="about-lib-name">PDF.js <span class="about-lib-ver">v4.10.38</span></span>
+                <span class="about-lib-badge">Apache-2.0</span>
+              </div>
+              <span class="about-lib-copy">© Mozilla Foundation and contributors</span>
             </li>
             <li class="about-lib-item">
               <div class="about-lib-top">
@@ -1170,6 +1225,20 @@
               Reset to Defaults
             </button>
           </div>
+
+          <!-- Кодировка документа: используется при сохранении в .md / .zmd / .txt; открытый файл можно перечитать -->
+          <div class="settings-section-title settings-section-gap" data-i18n="docEncTitle">Text encoding</div>
+          <div class="doc-enc-row">
+            <select class="enc-select" id="docEncSelect" aria-label="Text encoding" onchange="onDocEncodingChange(this.value)"></select>
+            <select class="enc-select enc-eol" id="docEolSelect" aria-label="Line endings" data-i18n-title="docEolTitle" title="Line endings" onchange="onDocEolChange(this.value)">
+              <option value="lf">LF</option>
+              <option value="crlf">CRLF</option>
+            </select>
+          </div>
+          <div class="doc-enc-info" id="docEncInfo" hidden></div>
+          <div class="settings-row-desc doc-enc-desc" data-i18n="docEncDesc">
+            Used when saving as Markdown, Złoty MD or text. When a file is opened, its encoding is detected automatically.
+          </div>
         </div>
       </div>
 
@@ -1335,7 +1404,7 @@
           <input
             type="file"
             id="fileOpenInput"
-            accept=".zmd,.md,.markdown,.txt,.text,text/markdown,text/plain"
+            accept=".zmd,.md,.markdown,.txt,.text,.docx,.pdf,text/markdown,text/plain,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
             style="display: none"
             onchange="handleFileOpenInput(event)"
           />
@@ -1652,15 +1721,20 @@
                   <polyline points="3 8.5 6.5 12 13 4" /></svg
               ></span>
               <svg
+                class="dl-opt-icon"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="1.8"
+                stroke-width="1.6"
                 stroke-linecap="round"
                 stroke-linejoin="round"
+                aria-hidden="true"
               >
-                <polyline points="16 18 22 12 16 6" />
-                <polyline points="8 6 2 12 8 18" />
+                <path class="dl-ic-body" d="M7.25 2.75h6.34a1.5 1.5 0 0 1 1.06.44l4.41 4.41a1.5 1.5 0 0 1 .44 1.06v10.09a2.5 2.5 0 0 1-2.5 2.5h-9.75a2.5 2.5 0 0 1-2.5-2.5v-13.5a2.5 2.5 0 0 1 2.5-2.5z" />
+                <path class="dl-ic-fold" d="M14 2.9v3.6a1.75 1.75 0 0 0 1.75 1.75h3.6" />
+                <path d="M10 12.25 7.75 14.5 10 16.75" />
+                <path d="M14 12.25 16.25 14.5 14 16.75" />
+                <path d="M12.6 11.75 11.4 17.25" />
               </svg>
               <span class="dl-opt-label">HTML</span>
               <span class="dl-opt-desc" data-i18n="dlHtmlDesc">Standalone HTML file</span>
@@ -1678,20 +1752,83 @@
                   <polyline points="3 8.5 6.5 12 13 4" /></svg
               ></span>
               <svg
+                class="dl-opt-icon"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="1.8"
+                stroke-width="1.6"
                 stroke-linecap="round"
                 stroke-linejoin="round"
+                aria-hidden="true"
               >
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="9" y1="13" x2="15" y2="13" />
-                <line x1="9" y1="17" x2="15" y2="17" />
+                <path class="dl-ic-body" d="M7.25 2.75h6.34a1.5 1.5 0 0 1 1.06.44l4.41 4.41a1.5 1.5 0 0 1 .44 1.06v10.09a2.5 2.5 0 0 1-2.5 2.5h-9.75a2.5 2.5 0 0 1-2.5-2.5v-13.5a2.5 2.5 0 0 1 2.5-2.5z" />
+                <path class="dl-ic-fold" d="M14 2.9v3.6a1.75 1.75 0 0 0 1.75 1.75h3.6" />
+                <rect x="7.75" y="11.25" width="8.5" height="6.5" rx="1.4" />
+                <path d="m8.4 17.3 2.45-2.45a.8.8 0 0 1 1.13 0l1.12 1.12" />
+                <circle class="dl-ic-dot" cx="13.9" cy="13.4" r=".85" />
               </svg>
               <span class="dl-opt-label">PDF</span>
               <span class="dl-opt-desc" data-i18n="dlPdfDesc">Save as a PDF file</span>
+            </button>
+            <button class="dl-opt" id="dlOptDocx" type="button" onclick="toggleDlOpt('docx')">
+              <span class="dl-opt-check"
+                ><svg
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="3 8.5 6.5 12 13 4" /></svg
+              ></span>
+              <svg
+                class="dl-opt-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path class="dl-ic-body" d="M7.25 2.75h6.34a1.5 1.5 0 0 1 1.06.44l4.41 4.41a1.5 1.5 0 0 1 .44 1.06v10.09a2.5 2.5 0 0 1-2.5 2.5h-9.75a2.5 2.5 0 0 1-2.5-2.5v-13.5a2.5 2.5 0 0 1 2.5-2.5z" />
+                <path class="dl-ic-fold" d="M14 2.9v3.6a1.75 1.75 0 0 0 1.75 1.75h3.6" />
+                <path d="M7.6 12.4 9.45 17.9a.25.25 0 0 0 .47.02L12 13.3l2.08 4.62a.25.25 0 0 0 .47-.02l1.85-5.5" />
+              </svg>
+              <span class="dl-opt-label">DOCX</span>
+              <span class="dl-opt-desc" data-i18n="dlDocxDesc">Word document</span>
+            </button>
+            <button class="dl-opt" id="dlOptTxt" type="button" onclick="toggleDlOpt('txt')">
+              <span class="dl-opt-check"
+                ><svg
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="3 8.5 6.5 12 13 4" /></svg
+              ></span>
+              <svg
+                class="dl-opt-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path class="dl-ic-body" d="M7.25 2.75h6.34a1.5 1.5 0 0 1 1.06.44l4.41 4.41a1.5 1.5 0 0 1 .44 1.06v10.09a2.5 2.5 0 0 1-2.5 2.5h-9.75a2.5 2.5 0 0 1-2.5-2.5v-13.5a2.5 2.5 0 0 1 2.5-2.5z" />
+                <path class="dl-ic-fold" d="M14 2.9v3.6a1.75 1.75 0 0 0 1.75 1.75h3.6" />
+                <path d="M8.25 12.25h7.5" />
+                <path d="M8.25 14.9h7.5" />
+                <path d="M8.25 17.55h4.5" />
+              </svg>
+              <span class="dl-opt-label">TXT</span>
+              <span class="dl-opt-desc" data-i18n="dlTxtDesc">Plain text file</span>
             </button>
             <button class="dl-opt" id="dlOptZmd" type="button" onclick="toggleDlOpt('zmd')">
               <span class="dl-opt-check"
@@ -1706,17 +1843,22 @@
                   <polyline points="3 8.5 6.5 12 13 4" /></svg
               ></span>
               <svg
+                class="dl-opt-icon"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="1.8"
+                stroke-width="1.6"
                 stroke-linecap="round"
                 stroke-linejoin="round"
+                aria-hidden="true"
               >
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="8" y1="13" x2="16" y2="13" />
-                <line x1="8" y1="17" x2="13" y2="17" />
+                <path class="dl-ic-body" d="M7.25 2.75h6.34a1.5 1.5 0 0 1 1.06.44l4.41 4.41a1.5 1.5 0 0 1 .44 1.06v10.09a2.5 2.5 0 0 1-2.5 2.5h-9.75a2.5 2.5 0 0 1-2.5-2.5v-13.5a2.5 2.5 0 0 1 2.5-2.5z" />
+                <path class="dl-ic-fold" d="M14 2.9v3.6a1.75 1.75 0 0 0 1.75 1.75h3.6" />
+                <path d="M10.2 13 9.45 18.25" />
+                <path d="M12.95 13 12.2 18.25" />
+                <path d="M8.3 14.75h5.6" />
+                <path d="M8 16.75h5.6" />
+                <path class="dl-ic-dot" d="M15.75 10.6c.2 1.1.6 1.5 1.7 1.7-1.1.2-1.5.6-1.7 1.7-.2-1.1-.6-1.5-1.7-1.7 1.1-.2 1.5-.6 1.7-1.7z" />
               </svg>
               <span class="dl-opt-label">ZMD</span>
               <span class="dl-opt-desc" data-i18n="dlZmdDesc">Markdown + editor metadata</span>
@@ -1734,15 +1876,21 @@
                   <polyline points="3 8.5 6.5 12 13 4" /></svg
               ></span>
               <svg
+                class="dl-opt-icon"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="1.8"
+                stroke-width="1.6"
                 stroke-linecap="round"
                 stroke-linejoin="round"
+                aria-hidden="true"
               >
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
+                <path class="dl-ic-body" d="M7.25 2.75h6.34a1.5 1.5 0 0 1 1.06.44l4.41 4.41a1.5 1.5 0 0 1 .44 1.06v10.09a2.5 2.5 0 0 1-2.5 2.5h-9.75a2.5 2.5 0 0 1-2.5-2.5v-13.5a2.5 2.5 0 0 1 2.5-2.5z" />
+                <path class="dl-ic-fold" d="M14 2.9v3.6a1.75 1.75 0 0 0 1.75 1.75h3.6" />
+                <path d="M10.75 11.75 9.75 18.25" />
+                <path d="M14.25 11.75 13.25 18.25" />
+                <path d="M8.4 13.75h7.6" />
+                <path d="M8 16.25h7.6" />
               </svg>
               <span class="dl-opt-label">MD</span>
               <span class="dl-opt-desc" data-i18n="dlMdDesc">Standard Markdown file</span>
@@ -1792,6 +1940,21 @@
           <div class="ai-nav-actions">
             <button class="ai-nav-btn ai-nav-btn-no" id="dlgCancelBtn" type="button"></button>
             <button class="ai-nav-btn ai-nav-btn-yes" id="dlgOkBtn" type="button"></button>
+          </div>
+        </div>
+
+        <!-- Выбор кодировки, если автоматически определить её не удалось -->
+        <div class="ai-nav-overlay enc-overlay" id="encOverlay"></div>
+        <div class="ai-nav-modal enc-modal" id="encModal" role="dialog" aria-modal="true" aria-labelledby="encTitle" aria-describedby="encMsg">
+          <div class="dlg-title" id="encTitle" data-i18n="encTitle">Choose the text encoding</div>
+          <div class="ai-nav-msg" id="encMsg"></div>
+          <select class="enc-select" id="encSelect" aria-labelledby="encTitle"></select>
+          <div class="enc-preview-label" data-i18n="encPreview">Preview</div>
+          <pre class="enc-preview" id="encPreview"></pre>
+          <div class="enc-warn" id="encWarn"></div>
+          <div class="ai-nav-actions">
+            <button class="ai-nav-btn ai-nav-btn-no" id="encCancelBtn" type="button" data-i18n="unsavedCancel">Cancel</button>
+            <button class="ai-nav-btn ai-nav-btn-save" id="encOkBtn" type="button" data-i18n="encOpen">Open</button>
           </div>
         </div>
 
@@ -1924,8 +2087,11 @@
     <!-- Экспорт в PDF (jsPDF + html2canvas загружаются при первом использовании) -->
     <script src="js/pdf-export.js"></script>
     <script src="js/render.js"></script>
+    <script src="js/encoding.js"></script>
     <script src="js/app.js"></script>
     <script src="js/pages.js"></script>
+    <script src="js/export-formats.js"></script>
+    <script src="js/import-formats.js"></script>
     <script src="js/pwa.js"></script>
   </body>
 </html>

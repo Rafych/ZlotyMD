@@ -14,7 +14,9 @@
       "action": "./ZlotyMD.html",
       "accept": {
         "text/markdown": [".md", ".markdown", ".zmd"],
-        "text/plain": [".txt", ".text"]
+        "text/plain": [".txt", ".text"],
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
+        "application/pdf": [".pdf"]
       },
       "icons": [
         { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }
