@@ -279,17 +279,25 @@
   .mermaid{display:block;text-align:center;padding:var(--s21)}
   .mermaid svg{max-width:100%;height:auto;font-family:var(--font)!important}
 
-  /* Live preview demo: two panes in the editor's own 61.8 : 38.2 split */
-  .split{display:grid;grid-template-columns:1.618fr 1fr;min-height:13.5rem}
-  .split > div{padding:var(--s21)}
-  .split .src{font-family:var(--mono);font-size:var(--f13);color:var(--mut);white-space:pre-wrap;border-right:1px solid var(--bord)}
-  .split .out{background:var(--canvas)}
-  .split .out .sheet{background:var(--bg);border:1px solid var(--bord);border-radius:var(--s8);padding:var(--s16)}
-  .split .out strong{font-size:var(--f18);display:block;line-height:var(--lh-s);margin-bottom:var(--s5)}
-  .split .out em{color:var(--mut)}
-  .split .out li{margin-left:var(--s21);font-size:var(--f13)}
-  .split .out li::marker{color:var(--gb)}
-  .caret{display:inline-block;width:1px;height:1.1em;background:var(--accent);vertical-align:-.15em;animation:blink 1597ms steps(1) infinite}
+  /* Live preview demo — как в редакторе Złoty MD (css/styles.css: .panes, .ep, .pp, .pl, .badge, .rz, #ed, #pv, .md):
+     editor 61.8 % | 5px resizer | preview, headers with the MARKDOWN / HTML badges */
+  .split{display:grid;grid-template-columns:61.8fr 5px 38.2fr;min-height:13.5rem;font-family:var(--font)}
+  .split .pane{display:flex;flex-direction:column;min-width:0}
+  .split .pp{border-left:1.5px solid #dadce0}
+  .split .rz{background:#dadce0}
+  .split .pl{height:34px;padding:0 21px;border-bottom:1px solid #dadce0;background:#f8f9fa;display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#5f6368;flex-shrink:0;white-space:nowrap;overflow:hidden}
+  .split .badge{padding:2px 8px;border-radius:34px;font-size:10px;font-weight:700}
+  .split .badge.bl{background:#e8f0fe;color:#4285f4}
+  .split .badge.gn{background:#e6f4ea;color:#34a853}
+  .split .src{flex:1;padding:21px;font-family:var(--mono);font-size:13px;line-height:1.85;color:#202124;background:#fff;white-space:pre-wrap;overflow-wrap:anywhere;tab-size:2}
+  .split .out{flex:1;padding:21px;background:#fff;color:#202124;font-size:13px;line-height:1.85;min-width:0}
+  .split .out h2{font-size:21px;font-weight:700;line-height:1.85;letter-spacing:0;margin-bottom:8px;display:flex;align-items:center;gap:8px;text-wrap:initial}
+  .split .out h2::before{content:'';display:block;width:5px;height:21px;background:#ea4335;border-radius:99px;flex-shrink:0}
+  .split .out p{margin-bottom:13px}
+  .split .out ul{padding-left:21px;margin-bottom:13px}
+  .split .out li{margin-bottom:5px}
+  .split .out li::marker{color:#4285f4;font-weight:700}
+  .caret{display:inline-block;width:1.5px;height:1.2em;background:#202124;vertical-align:-.2em;animation:blink 1060ms steps(1) infinite}
   @keyframes blink{50%{opacity:0}}
 
   /* The system: a type specimen and the colour proportions */
@@ -334,15 +342,13 @@
     .hero{padding-block:var(--s55) var(--s89);gap:var(--s55)}
     .tiling{max-width:11.0902rem;margin-inline:var(--s5) 0}
     .cta{width:100%;justify-content:center}
-    .split{grid-template-columns:1fr}
-    .split .src{border-right:0;border-bottom:1px solid var(--bord)}
     footer .right{text-align:left}
     .bar nav a:not(.gh){display:none}
   }
   /* Live-preview demo stacks when its column gets narrower than the text needs (φ^8.5 rem) */
   @media (max-width:59.7576em){
-    .split{grid-template-columns:1fr}
-    .split .src{border-right:0;border-bottom:1px solid var(--bord)}
+    .split{grid-template-columns:1fr;grid-template-rows:auto 5px auto}
+    .split .pp{border-left:0;border-top:1.5px solid #dadce0}
   }
   @media (max-width:29.0344em){
     .demo .katex{font-size:1em}
@@ -470,12 +476,19 @@
           <p>Instant real-time rendering of editing results, in the same 61.8 : 38.2 split the editor uses.</p>
         </div>
         <div class="demo split" aria-hidden="true">
-          <div class="src">## Golden notes
+          <div class="pane ep">
+            <div class="pl"><span class="badge bl">Markdown</span><span>Editor</span></div>
+            <div class="src">## Golden notes
 *proportion is a habit*
 
 - edit on the left
 - read on the right<span class="caret"></span></div>
-          <div class="out"><div class="sheet"><strong>Golden notes</strong><em>proportion is a habit</em><ul><li>edit on the left</li><li>read on the right</li></ul></div></div>
+          </div>
+          <div class="rz"></div>
+          <div class="pane pp">
+            <div class="pl"><span class="badge gn">HTML</span><span>Preview</span></div>
+            <div class="out"><h2>Golden notes</h2><p><em>proportion is a habit</em></p><ul><li>edit on the left</li><li>read on the right</li></ul></div>
+          </div>
         </div>
       </div>
     </div>
