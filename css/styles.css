@@ -19,11 +19,13 @@
   --gyt: #fef7e0;
   --ggt: #e6f4ea;
   --bg: #fff;
-  --surf: #f8f9fa;
-  --bord: #dadce0;
-  --txt: #202124;
-  --mut: #5f6368;
-  --sub: #9aa0a6;
+  /* Нейтральные тона — те же, что на странице index.html (холодный оттенок Material 3) */
+  --surf: #f8fafd;
+  --canvas: #f0f4f9;
+  --bord: #dde3ea;
+  --txt: #1f1f1f;
+  --mut: #444746;
+  --sub: #747775;
   --s3: 3px;
   --s5: 5px;
   --s8: 8px;
@@ -43,6 +45,22 @@
   /* Порядок запасных шрифтов: Google Sans → Noto Sans JP (японский текст) → Noto Sans KR (хангыль) → системный */
   --font: 'Google Sans', 'Noto Sans JP', 'Noto Sans KR', sans-serif;
   --mono: 'JetBrains Mono', monospace;
+  /* Цвет выделения текста и кольца фокуса */
+  --sel: #c9dbf7;
+  --ring: #1b64da;
+  /* Тени-уровни (как --e1/--e3 на index.html): мягкая контактная тень + рассеянная */
+  --e1: 0 1px 3px rgba(31, 31, 31, 0.09), 0 2px 8px rgba(31, 31, 31, 0.056);
+  --e3: 0 8px 26px -5px rgba(31, 31, 31, 0.146), 0 21px 55px -13px rgba(31, 31, 31, 0.146);
+  /* Пружинная кривая; без поддержки linear() — обычная плавная кривая (см. @supports ниже) */
+  --spring: cubic-bezier(0.2, 0, 0, 1);
+  /* Значок предупреждения для карточек ошибок (используется как маска) */
+  --zerr-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7.13 2.5a1 1 0 0 1 1.74 0l5.5 9.75a1 1 0 0 1-.87 1.5H2.5a1 1 0 0 1-.87-1.5z'/%3E%3Cpath d='M8 6.5v3M8 11.6v.01'/%3E%3C/svg%3E");
+}
+/* linear() поддерживается — включаем «пружину» из index.html */
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --spring: linear(0, 0.0273, 0.0927, 0.1778, 0.2704, 0.3628, 0.4505, 0.5309, 0.6029, 0.6663, 0.7211, 0.7682, 0.8082, 0.8419, 0.8702, 0.8937, 0.9132, 0.9293, 0.9425, 0.9534, 0.9623, 0.9695, 0.9754, 0.9802, 1);
+  }
 }
 
 /* Элементы форм не наследуют шрифт страницы — задаём тот же порядок запасных шрифтов
@@ -65,6 +83,17 @@ body {
   background: var(--bg);
   color: var(--txt);
   overflow: hidden;
+}
+
+/* Выделение текста — мягкий голубой, как на index.html */
+::selection {
+  background: var(--sel);
+}
+/* Единое кольцо фокуса с клавиатуры; :where() не повышает специфичность,
+   поэтому собственные правила элементов (.dl-opt, .ai-nav-btn) остаются в силе */
+:where(button, a, select, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
 /* Декоративный фон (doodle) в стиле золотого сечения */
@@ -148,12 +177,13 @@ body {
   left: 0;
   right: 0;
   height: 3px;
+  /* Доли цветов убывают по правилу √5 (44.72 · 27.64 · 17.08 · 10.56 %) — как на index.html */
   background: linear-gradient(
     90deg,
-    var(--gb) 0 25%,
-    var(--gr) 25% 50%,
-    var(--gy) 50% 75%,
-    var(--gg) 75%
+    var(--gb) 0 44.72%,
+    var(--gr) 44.72% 72.36%,
+    var(--gy) 72.36% 89.44%,
+    var(--gg) 89.44%
   );
 }
 
@@ -171,6 +201,13 @@ body {
   gap: 3px;
   width: 21px;
   height: 21px;
+  /* Отдельное свойство rotate — не конфликтует с transform */
+  transition: rotate 0.61s var(--spring);
+}
+@media (hover: hover) {
+  .logo:hover .logo-grid {
+    rotate: 90deg;
+  }
 }
 .ld {
   border-radius: 50%;
@@ -261,11 +298,14 @@ body {
   transition:
     background 0.12s,
     color 0.12s,
-    transform 0.1s;
+    transform 0.233s var(--spring);
   flex-shrink: 0;
 }
-.btn:hover {
-  transform: translateY(-2px) scale(1.08);
+/* Подъём при наведении — только для устройств с курсором (на сенсорных экранах hover «залипает») */
+@media (hover: hover) {
+  .btn:hover {
+    transform: translateY(-2px) scale(1.08);
+  }
 }
 .btn:active {
   transform: scale(0.93);
@@ -357,7 +397,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-left: 1.5px solid var(--bord);
+  border-left: 1px solid var(--bord);
   container-type: inline-size;
 }
 #pP .pl {
@@ -425,7 +465,7 @@ body {
   gap: var(--s8);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.0618em;
   text-transform: uppercase;
   color: var(--mut);
   flex-shrink: 0;
@@ -471,7 +511,7 @@ body {
     border-color 0.15s,
     color 0.15s,
     background 0.15s,
-    transform 0.12s;
+    transform 0.233s var(--spring);
 }
 .pv-pop-btn svg {
   width: 12px;
@@ -491,14 +531,35 @@ body {
 /* Разделитель для изменения ширины панелей (resizer) */
 .rz {
   width: 5px;
-  background: var(--bord);
+  background: var(--surf);
   cursor: col-resize;
   flex-shrink: 0;
+  position: relative;
   transition: background 0.15s;
+}
+/* «Ручка» по центру разделителя: подсказывает, что его можно тянуть */
+.rz::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 34px;
+  translate: -50% -50%;
+  border-radius: 99px;
+  background: var(--bord);
+  transition:
+    background 0.15s,
+    height 0.377s var(--spring);
 }
 .rz:hover,
 .rz.on {
   background: var(--gb);
+}
+.rz:hover::after,
+.rz.on::after {
+  height: 55px;
+  background: rgba(255, 255, 255, 0.7);
 }
 
 /* Стили текстового поля редактора */
@@ -516,6 +577,7 @@ body {
   padding: var(--s34);
   overflow-y: auto;
   tab-size: 2;
+  caret-color: var(--gb);
 }
 /* Полоса «только просмотр»: документ редактируется в другом окне */
 .ro-bar {
@@ -1106,6 +1168,9 @@ body {
   cursor: pointer;
   accent-color: var(--gg);
 }
+/* ---------- Формулы, диаграммы Mermaid и рисунки TikZ в стиле Złoty MD ----------
+   Общая идея: белая карточка с тонкой рамкой и мягкой тенью (--e1), сверху — полоса из четырёх цветов
+   в пропорциях √5 (как под шапкой), для диаграмм — значок типа и сетка точек с шагом 21px (Фибоначчи) */
 .md .katex-display {
   overflow-x: auto;
   overflow-y: hidden;
@@ -1115,32 +1180,148 @@ body {
 .md .katex {
   font-size: 1.08em;
 }
+/* Блочная формула: светлая карточка, синяя черта слева нарисована тенью — не ломает скругление углов */
 .md .katex-display > .katex {
-  background: linear-gradient(135deg, var(--gbt) 0%, #f0f4ff 100%);
-  border: 1.5px solid var(--gb);
-  border-left: 4px solid var(--gb);
-  border-radius: var(--r8);
+  background: linear-gradient(135deg, var(--gbt) 0%, #f7faff 61.8%, #fff 100%);
+  border: 1px solid #d2e3fc;
+  border-radius: var(--r13);
   padding: var(--s21) var(--s34);
   display: block;
   overflow-x: auto;
-  box-shadow: 0 2px 8px rgba(66, 133, 244, 0.08);
+  box-shadow:
+    inset 3px 0 0 var(--gb),
+    var(--e1);
 }
 .md .katex:not(.katex-display .katex) {
   padding: 1px 4px;
 }
 
-.md .mermaid-wrap {
-  background: var(--bg);
-  border: 1.5px solid var(--gb);
-  border-top: 3px solid var(--gb);
+/* Ошибка в формуле (KaTeX, throwOnError: false): вместо красного исходника — аккуратная плашка
+   с волнистым подчёркиванием; текст ошибки KaTeX — во всплывающей подсказке (атрибут title) */
+.md .katex-error {
+  color: #b3261e !important;
+  background: var(--grt);
+  border-radius: var(--r5);
+  padding: 1px var(--s5);
+  font-family: var(--mono);
+  font-size: 0.88em;
+  font-variant-ligatures: none;
+  text-decoration: underline wavy rgba(234, 67, 53, 0.55);
+  text-decoration-skip-ink: none;
+  text-underline-offset: 3px;
+  cursor: help;
+}
+/* Ошибка в блочной формуле — карточка: значок, исходник и под ним сообщение KaTeX (из title) */
+.md div[data-tex] > .katex-error {
+  display: block;
+  position: relative;
+  margin: var(--s13) 0;
+  padding: var(--s13) var(--s21) var(--s13) calc(var(--s21) + 26px);
+  border: 1px solid #f6c9c4;
+  border-radius: var(--r13);
+  background: linear-gradient(135deg, #fdf0ef 0%, #fff 61.8%);
+  box-shadow:
+    inset 3px 0 0 var(--gr),
+    var(--e1);
+  text-decoration: none;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: default;
+}
+.md div[data-tex] > .katex-error::before {
+  content: '';
+  position: absolute;
+  left: var(--s21);
+  top: calc(var(--s13) + 2px);
+  width: 16px;
+  height: 16px;
+  background: var(--gr);
+  -webkit-mask: var(--zerr-icon) center / contain no-repeat;
+  mask: var(--zerr-icon) center / contain no-repeat;
+}
+.md div[data-tex] > .katex-error::after {
+  content: attr(title);
+  display: block;
+  margin-top: var(--s5);
+  font-family: var(--font);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--mut);
+}
+
+/* Карточка диаграммы (Mermaid и TikZ) */
+.md .mermaid-wrap,
+.md .tikz-wrap {
+  position: relative;
+  background:
+    radial-gradient(circle, #e3e8ef 1px, transparent 1.5px) 0 0 / 21px 21px,
+    var(--bg);
+  border: 1px solid var(--bord);
   border-radius: var(--r13);
   padding: var(--s34) var(--s21) var(--s21);
   margin-bottom: var(--s21);
   overflow-x: auto;
   overflow-y: hidden;
   text-align: center;
-  position: relative;
-  box-shadow: 0 2px 12px rgba(66, 133, 244, 0.08);
+  box-shadow: var(--e1);
+}
+/* Полоса сверху: четыре цвета в пропорциях √5 */
+.md .mermaid-wrap::before,
+.md .tikz-wrap::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--gb) 0 44.72%,
+    var(--gr) 44.72% 72.36%,
+    var(--gy) 72.36% 89.44%,
+    var(--gg) 89.44%
+  );
+}
+/* Значок типа диаграммы в левом верхнем углу (как значок языка у блока кода) */
+.md .mermaid-wrap::after,
+.md .tikz-wrap::after {
+  content: 'Mermaid';
+  position: absolute;
+  top: var(--s8);
+  left: var(--s13);
+  padding: 1px var(--s8);
+  border-radius: var(--r34);
+  background: var(--gbt);
+  color: var(--gb);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+  text-transform: uppercase;
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.md .tikz-wrap::after {
+  content: 'TikZ';
+  background: var(--ggt);
+  color: var(--gg);
+}
+/* В карточке — ошибка: рамку, сетку и значок прячем, остаётся только карточка ошибки */
+.md .mermaid-wrap:has(> .mermaid-error),
+.md .tikz-wrap:has(> .mermaid-error) {
+  background: none;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+.md .mermaid-wrap:has(> .mermaid-error)::before,
+.md .mermaid-wrap:has(> .mermaid-error)::after,
+.md .tikz-wrap:has(> .mermaid-error)::before,
+.md .tikz-wrap:has(> .mermaid-error)::after {
+  display: none;
 }
 
 .md .mermaid {
@@ -1163,11 +1344,13 @@ body {
 .md .mermaid svg .edgePath .path {
   stroke-width: 1.5px;
 }
+/* Прямоугольные узлы блок-схем — со скруглением, как остальные карточки интерфейса */
+.md .mermaid svg g.node > rect.label-container {
+  rx: 8px;
+  ry: 8px;
+}
 /* Рисунки TikZ (SVG от TikZJax) */
 .md .tikz-wrap {
-  text-align: center;
-  margin-bottom: var(--s21);
-  overflow-x: auto;
   min-height: 24px;
 }
 .md .tikz-wrap svg {
@@ -1175,26 +1358,72 @@ body {
   max-width: 100%;
   height: auto;
 }
-.md .tikz-error {
+/* Пока TikZJax компилирует рисунок — мерцающая заглушка вместо пустого места */
+.md .tikz-inner:not(:has(svg)) {
+  height: 89px;
+  border-radius: var(--r8);
+  background: linear-gradient(90deg, transparent 0%, rgba(66, 133, 244, 0.1) 50%, transparent 100%) 0 0 / 200% 100%;
+  animation: zShimmer 1.6s ease-in-out infinite;
+}
+@keyframes zShimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -100% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .md .tikz-inner:not(:has(svg)) {
+    animation: none;
+  }
+}
+
+/* Карточка ошибки (Mermaid и TikZ): значок, заголовок и — если есть — сообщение парсера моноширинным шрифтом */
+.md .mermaid-error {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--s5) var(--s8);
+  padding: var(--s13) var(--s21);
+  border: 1px solid #f6c9c4;
+  border-radius: var(--r13);
+  background: linear-gradient(135deg, #fdf0ef 0%, #fff 61.8%);
+  box-shadow:
+    inset 3px 0 0 var(--gr),
+    var(--e1);
+  color: #b3261e;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: left;
   white-space: pre-wrap;
 }
-.md .mermaid-error {
-  background: var(--grt);
-  border: 1px solid var(--gr);
-  border-radius: var(--r8);
-  padding: var(--s13) var(--s21);
-  color: var(--gr);
-  font-size: 12px;
-  font-family: var(--mono);
-  text-align: left;
-}
 .md .mermaid-error svg.zi {
-  display: inline-block;
-  width: 1.25em;
-  height: 1.25em;
+  display: block;
+  width: 16px;
+  height: 16px;
   max-width: none;
-  margin: 0 0.5em 0 0;
-  vertical-align: -0.25em;
+  margin: 2px 0 0;
+  color: var(--gr);
+}
+.md .mermaid-error .zerr-detail {
+  grid-column: 2;
+  margin-top: var(--s3);
+  padding: var(--s8) var(--s13);
+  border: 1px solid #f6c9c4;
+  border-radius: var(--r8);
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--mut);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 400;
+  line-height: 1.6;
+  /* Без лигатур: «-->» и стрелка «^» под ошибкой должны стоять ровно по символам */
+  font-variant-ligatures: none;
+  white-space: pre;
+  overflow-x: auto;
 }
 
 .empty {
@@ -1336,12 +1565,16 @@ body {
   transition:
     background 0.12s,
     color 0.12s,
-    transform 0.1s;
+    transform 0.233s var(--spring);
 }
 .about-btn:hover {
   background: var(--gbt);
   color: var(--gb);
-  transform: translateY(-2px) scale(1.08);
+}
+@media (hover: hover) {
+  .about-btn:hover {
+    transform: translateY(-2px) scale(1.08);
+  }
 }
 .about-btn:active {
   transform: scale(0.93);
@@ -1364,8 +1597,8 @@ body {
   position: fixed;
   inset: 0;
   background: rgba(32, 33, 36, 0.35);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(3px) saturate(1.272);
+  backdrop-filter: blur(3px) saturate(1.272);
   z-index: 100;
 }
 .about-overlay.open {
@@ -1383,7 +1616,7 @@ body {
   background: var(--bg);
   border: 1.5px solid var(--bord);
   border-radius: var(--r21);
-  box-shadow: 0 8px 32px rgba(32, 33, 36, 0.18);
+  box-shadow: var(--e3);
   z-index: 101;
   overflow: hidden;
 }
@@ -1840,8 +2073,8 @@ img.emoji {
   position: fixed;
   inset: 0;
   background: rgba(32, 33, 36, 0.35);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(3px) saturate(1.272);
+  backdrop-filter: blur(3px) saturate(1.272);
   z-index: 100;
 }
 .font-overlay.open {
@@ -1860,7 +2093,7 @@ img.emoji {
   background: var(--bg);
   border: 1.5px solid var(--bord);
   border-radius: var(--r21);
-  box-shadow: 0 8px 32px rgba(32, 33, 36, 0.18);
+  box-shadow: var(--e3);
   z-index: 101;
 }
 .font-modal::-webkit-scrollbar {
@@ -2282,8 +2515,8 @@ img.emoji {
   position: fixed;
   inset: 0;
   background: rgba(32, 33, 36, 0.35);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(3px) saturate(1.272);
+  backdrop-filter: blur(3px) saturate(1.272);
   z-index: 200;
 }
 .dl-overlay.open {
@@ -2299,7 +2532,7 @@ img.emoji {
   background: var(--bg);
   border: 1.5px solid var(--bord);
   border-radius: var(--r21);
-  box-shadow: 0 8px 32px rgba(32, 33, 36, 0.18);
+  box-shadow: var(--e3);
   z-index: 201;
   padding: var(--s13) var(--s13) var(--s13);
   /* На низком экране три ряда квадратных карточек могут не поместиться — тогда окно прокручивается */
@@ -2756,8 +2989,8 @@ img.emoji {
   position: fixed;
   inset: 0;
   background: rgba(32, 33, 36, 0.45);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(3px) saturate(1.272);
+  backdrop-filter: blur(3px) saturate(1.272);
   z-index: 500;
 }
 .ai-nav-overlay.open {
@@ -3365,8 +3598,8 @@ body.ai-dot-on .ai-dot {
   position: fixed;
   inset: 0;
   background: rgba(32, 33, 36, 0.35);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(3px) saturate(1.272);
+  backdrop-filter: blur(3px) saturate(1.272);
   z-index: 200;
   align-items: center;
   justify-content: center;
@@ -3378,7 +3611,7 @@ body.ai-dot-on .ai-dot {
   background: var(--bg);
   border: 1.5px solid var(--bord);
   border-radius: var(--r21);
-  box-shadow: 0 8px 32px rgba(32, 33, 36, 0.18);
+  box-shadow: var(--e3);
   width: 340px;
   animation: slideDown 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -3490,8 +3723,8 @@ body.ai-dot-on .ai-dot {
   position: fixed;
   inset: 0;
   background: rgba(32, 33, 36, 0.35);
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(3px) saturate(1.272);
+  backdrop-filter: blur(3px) saturate(1.272);
   z-index: 210;
   align-items: center;
   justify-content: center;
@@ -3503,7 +3736,7 @@ body.ai-dot-on .ai-dot {
   background: var(--bg);
   border: 1.5px solid var(--bord);
   border-radius: var(--r21);
-  box-shadow: 0 8px 32px rgba(32, 33, 36, 0.18);
+  box-shadow: var(--e3);
   width: min(720px, 92vw);
   max-height: 85vh;
   display: flex;
@@ -3687,11 +3920,19 @@ body.ai-dot-on .ai-dot {
   }
   .md .tikz-wrap {
     break-inside: avoid;
+    background: #fff !important;
+    box-shadow: none !important;
   }
   .md .mermaid-wrap {
     break-inside: avoid;
+    background: #fff !important;
     border: 1px solid #ccc !important;
     box-shadow: none !important;
+  }
+  /* На бумаге значок типа диаграммы не нужен */
+  .md .mermaid-wrap::after,
+  .md .tikz-wrap::after {
+    display: none;
   }
   .md blockquote {
     border-left: 3px solid #fbbc04;
@@ -4047,4 +4288,21 @@ body.ai-dot-on .ai-dot {
 }
 .enc-modal .ai-nav-actions {
   margin-top: var(--s21);
+}
+
+/* Пользователь просит меньше движения: кнопки не подпрыгивают, логотип не вращается
+   (анимации загрузки и индикаторы прогресса не трогаем — у них свои правила выше) */
+@media (prefers-reduced-motion: reduce) {
+  .btn:hover,
+  .about-btn:hover,
+  .pv-pop-btn:hover,
+  .ro-bar-btn:hover {
+    transform: none;
+  }
+  .logo:hover .logo-grid {
+    rotate: none;
+  }
+  .rz::after {
+    transition: background 0.15s;
+  }
 }
