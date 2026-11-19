@@ -533,38 +533,101 @@ body {
   transform: scale(0.95);
 }
 
-/* Разделитель для изменения ширины панелей (resizer) */
+/* Разделитель для изменения ширины панелей (resizer).
+   В покое — тонкая линия по центру и небольшая «капсула» с тремя точками (видно, что её можно тянуть);
+   при наведении (с короткой задержкой, чтобы не мигал при случайном проходе мыши), фокусе с клавиатуры
+   и перетаскивании линия и капсула становятся синими. Ширина в разметке — 5px (её учитывает app.js),
+   область захвата шире за счёт ::before */
 .rz {
+  --rz-line: var(--bord);
+  --rz-dot: var(--sub);
   width: 5px;
-  background: var(--surf);
-  cursor: col-resize;
   flex-shrink: 0;
   position: relative;
-  transition: background 0.15s;
+  z-index: 3;
+  cursor: col-resize;
+  outline: none;
+  background: linear-gradient(var(--rz-line), var(--rz-line)) center / 1px 100% no-repeat, var(--bg);
+  transition:
+    background-size 0.2s var(--spring),
+    --rz-line 0.15s;
 }
-/* «Ручка» по центру разделителя: подсказывает, что его можно тянуть */
+/* Линию рисует сам разделитель — у превью рядом с ним своя граница не нужна */
+.rz + .pp {
+  border-left-color: transparent;
+}
+/* Невидимая расширенная область захвата: 13px вместо 5px */
+.rz::before {
+  content: '';
+  position: absolute;
+  inset: 0 -4px;
+}
+/* Капсула-ручка с тремя точками */
 .rz::after {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 3px;
+  width: 8px;
   height: 34px;
   translate: -50% -50%;
+  box-sizing: border-box;
+  border: 1px solid var(--bord);
   border-radius: 99px;
-  background: var(--bord);
+  /* Три точки по центру (шаг 5px) */
+  background:
+    radial-gradient(circle at 50% calc(50% - 5px), var(--rz-dot) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 50% 50%, var(--rz-dot) 0 1px, transparent 1.6px),
+    radial-gradient(circle at 50% calc(50% + 5px), var(--rz-dot) 0 1px, transparent 1.6px),
+    var(--bg);
+  box-shadow: 0 1px 3px rgba(60, 64, 67, 0.12);
+  pointer-events: none;
   transition:
-    background 0.15s,
-    height 0.377s var(--spring);
+    height 0.377s var(--spring),
+    border-color 0.15s,
+    background-color 0.15s,
+    box-shadow 0.15s;
 }
-.rz:hover,
-.rz.on {
-  background: var(--gb);
+@property --rz-line {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #dde3ea;
 }
-.rz:hover::after,
-.rz.on::after {
+@property --rz-dot {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #747775;
+}
+@media (hover: hover) {
+  .rz:hover {
+    --rz-line: var(--gb);
+    --rz-dot: var(--gb);
+    background-size: 2px 100%;
+    transition-delay: 0.12s;
+  }
+  .rz:hover::after {
+    height: 55px;
+    border-color: var(--gb);
+    box-shadow: 0 1px 4px rgba(66, 133, 244, 0.28);
+    transition-delay: 0.12s;
+  }
+}
+.rz.on,
+.rz:focus-visible {
+  --rz-line: var(--gb);
+  --rz-dot: var(--gb);
+  background-size: 2px 100%;
+}
+.rz.on::after,
+.rz:focus-visible::after {
   height: 55px;
-  background: rgba(255, 255, 255, 0.7);
+  border-color: var(--gb);
+  box-shadow: 0 1px 4px rgba(66, 133, 244, 0.28);
+}
+/* Фокус с клавиатуры: кольцо вокруг капсулы */
+.rz:focus-visible::after {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
 /* Стили текстового поля редактора */
@@ -4334,7 +4397,8 @@ body.ai-dot-on .ai-dot {
   .ro-bar-btn:hover {
     transform: none;
   }
+  .rz,
   .rz::after {
-    transition: background 0.15s;
+    transition: none;
   }
 }
