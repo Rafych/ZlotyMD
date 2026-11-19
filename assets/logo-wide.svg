@@ -6,9 +6,8 @@
 
   Typeface used for the wordmark "Złoty MD" (converted to outlines; no font file or font reference is embedded):
   Google Sans (variable font, static instance: wght 700, opsz 18, GRAD 0; obtained via @fontsource-variable/google-sans 5.3.2)
-    Copyright 2017 Google, Inc. All Rights Reserved.
-    SIL Open Font License 1.1 — https://openfontlicense.org/open-font-license-official-text/
-    (full text: https://github.com/google/fonts/blob/main/ofl/googlesans/OFL.txt)
+    Copyright 2025 The Google Sans Project Authors (https://github.com/googlefonts/googlesans)
+    SIL Open Font License 1.1 — https://github.com/google/fonts/blob/main/ofl/googlesans/OFL.txt
   Note: under OFL 1.1 the outlines of the font may be used in artwork such as logos; the font itself is not
   distributed with this file.
 -->
