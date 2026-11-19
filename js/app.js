@@ -2527,7 +2527,51 @@ document.addEventListener('mouseup', () => {
   drag = false;
   rz.classList.remove('on');
   document.body.style.cursor = '';
+  _syncRzAria();
 });
+
+// Ширина редактора в процентах от области панелей (для aria-valuenow)
+function _syncRzAria() {
+  const full = document.getElementById('panes').getBoundingClientRect().width;
+  if (full > 0) rz.setAttribute('aria-valuenow', Math.round((eP.getBoundingClientRect().width / full) * 100));
+}
+// Задаёт ширину редактора в пикселях с теми же ограничениями, что и при перетаскивании
+function _setEpWidth(w) {
+  const full = document.getElementById('panes').getBoundingClientRect().width;
+  const tot = full - 5 - _aiPanelReservedWidth();
+  if (full <= 0 || tot <= 400) return;
+  w = Math.max(200, Math.min(tot - 200, w));
+  eP.style.flex = `0 0 ${((w / full) * 100).toFixed(3)}%`;
+  _syncRzAria();
+}
+// Двойной щелчок — вернуть исходное соотношение (золотое сечение), как у разделителей в macOS
+rz.addEventListener('dblclick', () => {
+  eP.style.flex = '';
+  if (_aiPanelReservedWidth()) _splitForAiPanel(true);
+  _syncRzAria();
+});
+// Клавиатура: ←/→ — шаг 2 % (с Shift — 10 %), Home/End — крайние положения
+rz.addEventListener('keydown', e => {
+  const full = document.getElementById('panes').getBoundingClientRect().width;
+  const cur = eP.getBoundingClientRect().width;
+  const step = full * (e.shiftKey ? 0.1 : 0.02);
+  let w = null;
+  if (e.key === 'ArrowLeft') w = cur - step;
+  else if (e.key === 'ArrowRight') w = cur + step;
+  else if (e.key === 'Home') w = 0;
+  else if (e.key === 'End') w = Infinity;
+  else if (e.key === 'Enter') {
+    rz.dispatchEvent(new MouseEvent('dblclick'));
+    e.preventDefault();
+    return;
+  }
+  if (w === null) return;
+  e.preventDefault();
+  _setEpWidth(w);
+});
+rz.setAttribute('aria-valuemin', '0');
+rz.setAttribute('aria-valuemax', '100');
+requestAnimationFrame(_syncRzAria);
 
 // Словарь локализации интерфейса и шаблонов документа по умолчанию для каждого языка
 // Английский встроен в код (запасной язык); остальные языки загружаются по требованию
@@ -2619,6 +2663,7 @@ const LANGS = {
     errModalTitle: 'Error',
     errOk: 'OK',
     dlgClose: 'Close',
+    rzLabel: 'Resize editor and preview',
     dlgInsert: 'Insert',
     aiResetConfirmBtn: 'Reset',
     dlEmptyTitle: 'Nothing to download',
@@ -3142,6 +3187,10 @@ function applyLang(code) {
   document.querySelectorAll('[data-i18n-title]').forEach(el => {
     const key = el.getAttribute('data-i18n-title');
     if (t[key] !== undefined) el.title = t[key];
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => {
+    const key = el.getAttribute('data-i18n-aria');
+    if (t[key] !== undefined) el.setAttribute('aria-label', t[key]);
   });
   // Кнопки-крестики без текста: доступное имя «Закрыть» на текущем языке
   document.querySelectorAll('.about-close').forEach(el => el.setAttribute('aria-label', t.dlgClose || 'Close'));
