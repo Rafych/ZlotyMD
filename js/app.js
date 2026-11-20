@@ -5680,7 +5680,9 @@ function _aiEditDirective() {
 }
 // Формирует системный промпт для ИИ-ассистента
 function _aiSystem(isEdit) {
-  const base = (LANGS[currentLang] || LANGS['en']).aiSystemPrompt;
+  let base = (LANGS[currentLang] || LANGS['en']).aiSystemPrompt;
+  // Справочник синтаксиса редактора (js/ai-prompt.js): KaTeX, Mermaid, TikZ и расширения Złoty MD
+  if (typeof zmdAiSyntaxGuide === 'function') base += zmdAiSyntaxGuide({ htmlRendering: appSettings.htmlRendering });
   return isEdit ? base + _aiEditDirective() : base;
 }
 
