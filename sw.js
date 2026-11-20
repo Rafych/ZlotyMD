@@ -3,7 +3,7 @@
  * (docx для экспорта в DOCX, mammoth/fflate/pdf.js для открытия DOCX и PDF — с jsDelivr при первом использовании)
  * при установке и при использовании, поэтому редактор работает без сети.
  * При изменении файлов приложения увеличьте CACHE_VERSION. */
-const CACHE_VERSION = 'zmd-v83';
+const CACHE_VERSION = 'zmd-v84';
 const CACHE = CACHE_VERSION;
 
 const LOCAL_ASSETS = [
@@ -12,6 +12,7 @@ const LOCAL_ASSETS = [
   'index.html',
   'css/styles.css',
   'js/render.js',
+  'js/ai-prompt.js',
   'js/app.js',
   'js/pages.js',
   'js/export-formats.js',
